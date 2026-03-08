@@ -582,6 +582,8 @@ canvas.drawing-canvas {
     <button class="tab-btn" onclick="showPage('future')">✨ Gelecek</button>
     <button class="tab-btn" onclick="showPage('ai')">🤖 Yapay Zeka</button>
     <button class="tab-btn" onclick="showPage('places')">📍 Gidilen Yerler</button>
+    <button class="tab-btn" onclick="showPage('gorevler')">✅ Görevler</button>
+    <button class="tab-btn" onclick="showPage('enler')">🏆 Enler</button>
   </div>
 </nav>
 
@@ -673,6 +675,36 @@ canvas.drawing-canvas {
         </div>
       </div>
       <div class="kiss-reset-note">🕛 Her gece 24:00'da sıfırlanır</div>
+
+      <!-- ÖPÜCÜK GEÇMİŞİ -->
+      <div id="kiss-history-wrap" style="margin-top:18px;border-top:1px solid var(--rose-light);padding-top:14px;">
+        <div style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--rose-dark);margin-bottom:10px;text-align:center;">📊 Öpücük Geçmişi</div>
+        <!-- Rekorlar -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+          <div style="background:linear-gradient(135deg,#ffe0ec,#ffd0e0);border-radius:14px;padding:10px;text-align:center;">
+            <div style="font-size:0.72rem;color:var(--text-light);margin-bottom:2px;">💕 Tülay'ın Öpülme Rekoru</div>
+            <div style="font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--rose-dark);" id="kiss-record-tulay">0</div>
+            <div style="font-size:0.68rem;color:var(--text-light);" id="kiss-record-tulay-date">—</div>
+          </div>
+          <div style="background:linear-gradient(135deg,#d0e4ff,#bdd6ff);border-radius:14px;padding:10px;text-align:center;">
+            <div style="font-size:0.72rem;color:var(--text-light);margin-bottom:2px;">💙 Yiğit'in Öpülme Rekoru</div>
+            <div style="font-family:'Playfair Display',serif;font-size:1.4rem;color:#4a7ac0;" id="kiss-record-yigit">0</div>
+            <div style="font-size:0.68rem;color:var(--text-light);" id="kiss-record-yigit-date">—</div>
+          </div>
+        </div>
+        <!-- Toplam -->
+        <div style="background:linear-gradient(135deg,#fff0f5,#ffe8f2);border-radius:14px;padding:10px;text-align:center;margin-bottom:12px;">
+          <div style="font-size:0.72rem;color:var(--text-light);margin-bottom:2px;">💋 Toplam Öpücük</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--rose-dark);" id="kiss-total">0</div>
+        </div>
+        <!-- Son 7 gün bar grafik + tarih nav -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <button onclick="kissHistoryOffset=Math.min(kissHistoryOffset+7,0);renderKissHistory()" style="background:var(--rose-light);border:none;border-radius:8px;padding:4px 12px;cursor:pointer;font-size:1rem;color:var(--rose-dark);">‹</button>
+          <div style="font-size:0.78rem;font-weight:700;color:var(--text-light);text-align:center;" id="kiss-history-range-label">Son 7 Gün</div>
+          <button onclick="kissHistoryOffset=Math.max(kissHistoryOffset-7,-90);renderKissHistory()" style="background:var(--rose-light);border:none;border-radius:8px;padding:4px 12px;cursor:pointer;font-size:1rem;color:var(--rose-dark);">›</button>
+        </div>
+        <div id="kiss-history-chart" style="background:white;border-radius:16px;padding:14px;border:1px solid var(--rose-light);"></div>
+      </div>
     </div>
 
     <div class="zodiac-section">
@@ -685,6 +717,23 @@ canvas.drawing-canvas {
         <div class="zodiac-sign">♈</div>
         <div class="zodiac-name">Yiğit — Koç</div>
         <div class="zodiac-comment">Cesur, enerjik, tutkulu lider. Sevdiğini sonuna kadar korur. 🔥</div>
+      </div>
+    </div>
+
+    <!-- BUGÜNKÜ RUH HALİ -->
+    <div id="home-mood-section" style="display:none;margin-bottom:16px;">
+      <div style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--rose-dark);text-align:center;margin-bottom:10px;">😊 Bugünkü Ruh Haliniz</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div id="home-mood-tulay" style="background:linear-gradient(135deg,#fff0f5,#ffe8f2);border-radius:16px;padding:14px;text-align:center;border:1.5px solid var(--rose-light);">
+          <div style="font-size:0.75rem;color:var(--rose);font-weight:700;margin-bottom:6px;">💕 Tülay</div>
+          <div id="home-mood-tulay-emoji" style="font-size:2rem;"></div>
+          <div id="home-mood-tulay-label" style="font-size:0.82rem;color:var(--text);margin-top:4px;font-weight:600;"></div>
+        </div>
+        <div id="home-mood-yigit" style="background:linear-gradient(135deg,#eef4ff,#e0ecff);border-radius:16px;padding:14px;text-align:center;border:1.5px solid #c0d8f0;">
+          <div style="font-size:0.75rem;color:#4a7ac0;font-weight:700;margin-bottom:6px;">💙 Yiğit</div>
+          <div id="home-mood-yigit-emoji" style="font-size:2rem;"></div>
+          <div id="home-mood-yigit-label" style="font-size:0.82rem;color:var(--text);margin-top:4px;font-weight:600;"></div>
+        </div>
       </div>
     </div>
 
@@ -705,6 +754,12 @@ canvas.drawing-canvas {
 
     <div class="horoscope-section">
       <div class="horoscope-title">✨ Günlük Burç Yorumunuz</div>
+      <!-- Tarih Gezgini -->
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">
+        <button onclick="changeHoroscopeDay(-1)" style="background:var(--rose-light);border:none;border-radius:8px;padding:4px 12px;cursor:pointer;font-size:1rem;color:var(--rose-dark);">‹</button>
+        <div style="font-size:0.82rem;font-weight:700;color:var(--text-light);" id="horoscope-day-label">Bugün</div>
+        <button onclick="changeHoroscopeDay(1)" id="horoscope-next-btn" style="background:var(--rose-light);border:none;border-radius:8px;padding:4px 12px;cursor:pointer;font-size:1rem;color:var(--rose-dark);">›</button>
+      </div>
       <div class="horoscope-grid">
         <div class="horoscope-person">
           <div class="horoscope-person-name">♐ Tülay (Yay)</div>
@@ -715,7 +770,7 @@ canvas.drawing-canvas {
           <div class="horoscope-text" id="horoscope-yigit">⏳ Yükleniyor...</div>
         </div>
       </div>
-      <button class="horoscope-load-btn" onclick="loadHoroscope()">🔮 Yorumları Yenile</button>
+      <button class="horoscope-load-btn" id="horoscope-refresh-btn" onclick="refreshTodayHoroscope()">🔮 Yorumları Yenile</button>
     </div>
 
     <!-- UYUM METRESİ -->
@@ -727,6 +782,13 @@ canvas.drawing-canvas {
           <div id="compat-pct" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.95rem;color:var(--rose-dark);"></div>
         </div>
         <div id="compat-comment" style="font-size:0.83rem;color:var(--text-light);line-height:1.6;">⏳ Yükleniyor...</div>
+      </div>
+      <!-- UYUM GEÇMİŞİ TABLOSU -->
+      <div style="margin-top:16px;border-top:1px solid var(--rose-light);padding-top:14px;">
+        <div style="font-size:0.82rem;font-weight:700;color:var(--text-light);text-align:center;margin-bottom:10px;">📅 Son 7 Günün Uyumu</div>
+        <div id="compat-history-table" style="display:flex;flex-direction:column;gap:5px;">
+          <div style="text-align:center;color:var(--text-light);font-size:0.78rem;">Yükleniyor...</div>
+        </div>
       </div>
     </div>
 
@@ -980,6 +1042,7 @@ canvas.drawing-canvas {
       <div class="drawing-tools">
         <button class="tool-btn active" id="tool-tulay-draw" onclick="setTool('tulay','draw')">✏️ Çiz</button>
         <button class="tool-btn" id="tool-tulay-erase" onclick="setTool('tulay','erase')">🧹 Sil</button>
+        <button class="tool-btn" onclick="undoCanvas('tulay')">↩️ Geri Al</button>
         <button class="tool-btn" onclick="clearCanvas('tulay')">🗑️ Temizle</button>
         <button class="tool-btn" onclick="saveCanvasImg('tulay')">💾 Kaydet</button>
       </div>
@@ -992,6 +1055,7 @@ canvas.drawing-canvas {
       <div class="drawing-tools">
         <button class="tool-btn active" id="tool-yigit-draw" onclick="setTool('yigit','draw')">✏️ Çiz</button>
         <button class="tool-btn" id="tool-yigit-erase" onclick="setTool('yigit','erase')">🧹 Sil</button>
+        <button class="tool-btn" onclick="undoCanvas('yigit')">↩️ Geri Al</button>
         <button class="tool-btn" onclick="clearCanvas('yigit')">🗑️ Temizle</button>
         <button class="tool-btn" onclick="saveCanvasImg('yigit')">💾 Kaydet</button>
       </div>
@@ -1073,7 +1137,11 @@ let state = {
   drawings: {},
   profilePhotos: { tulay: null, yigit: null },
   places: {},
-  kisses: {}
+  kisses: {},
+  kissHistory: {},
+  compatHistory: {},
+  enler: { tulay: [], yigit: [] },
+  gorevler: {}
 };
 
 // Kayıt göstergesi
@@ -1091,35 +1159,99 @@ function showSaving() {
 }
 
 function saveState() {
-  set(ref(db, 'state'), state)
+  // Büyük binary verileri state'den çıkar — ayrı path'e kaydediliyorlar
+  const stateToSave = { ...state, profilePhotos: { tulay: null, yigit: null }, drawings: {}, album: [] };
+  set(ref(db, 'state'), stateToSave)
     .then(() => showSaving())
     .catch(err => console.error('Kayıt hatası:', err));
-  try { localStorage.setItem('ty-state', JSON.stringify(state)); } catch(e) {}
+  try { localStorage.setItem('ty-state', JSON.stringify(stateToSave)); } catch(e) {}
 }
 
 async function loadState() {
+  // Önce localStorage'dan hızlıca yükle
   try {
-    const snap = await get(ref(db, 'state'));
-    if(snap.exists()) {
-      const d = snap.val();
-      state.album = d.album || [];
-      state.memories = d.memories || {};
-      state.mood = d.mood || {};
-      state.dreams = d.dreams || [];
-      state.letters = d.letters || { tulay: null, yigit: null };
-      state.drawings = d.drawings || {};
-      state.profilePhotos = d.profilePhotos || { tulay: null, yigit: null };
-      state.places = d.places || {};
-      state.kisses = d.kisses || {};
-    } else {
-      const local = JSON.parse(localStorage.getItem('ty-state') || 'null');
-      if(local) { state = { ...state, ...local }; saveState(); }
-    }
-  } catch(err) {
     const local = JSON.parse(localStorage.getItem('ty-state') || 'null');
-    if(local) state = { ...state, ...local };
-  }
+    if(local) {
+      state.memories = local.memories || {};
+      state.mood = local.mood || {};
+      state.dreams = local.dreams || [];
+      state.letters = local.letters || { tulay: null, yigit: null };
+      state.places = local.places || {};
+      state.kisses = local.kisses || {};
+      state.kissHistory = local.kissHistory || {};
+      state.compatHistory = local.compatHistory || {};
+      state.enler = local.enler || { tulay: [], yigit: [] };
+      state.gorevler = local.gorevler || {};
+    }
+    // Çizimleri ayrı cache'ten yükle
+    const localDrawings = JSON.parse(localStorage.getItem('ty-drawings') || '{}');
+    if(Object.keys(localDrawings).length) state.drawings = localDrawings;
+    // Album cache'ten yükle
+    const localAlbum = JSON.parse(localStorage.getItem('ty-album') || '[]');
+    if(localAlbum.length) state.album = localAlbum;
+  } catch(e) {}
 
+  // Album'u Firebase'den direkt çek (bootApp öncesi)
+  try {
+    const albumSnap = await get(ref(db, 'album'));
+    if(albumSnap.exists() && albumSnap.val()?.length) {
+      state.album = albumSnap.val();
+      try { localStorage.setItem('ty-album', JSON.stringify(state.album)); } catch(e) {}
+    } else {
+      // Migration: eski state/album'dan taşı
+      const oldSnap = await get(ref(db, 'state/album'));
+      if(oldSnap.exists() && oldSnap.val()?.length) {
+        state.album = oldSnap.val();
+        await set(ref(db, 'album'), state.album).catch(e=>console.error(e));
+        try { localStorage.setItem('ty-album', JSON.stringify(state.album)); } catch(e) {}
+      }
+    }
+  } catch(e) { console.error('Album yükleme hatası:', e); }
+
+  // bootApp'i çalıştır
+  try { bootApp(); } catch(e) { console.error('bootApp error:', e); }
+
+  // Album realtime listener — yeni eklenen fotoğrafları yakala
+  onValue(ref(db, 'album'), (snap) => {
+    const albumData = snap.exists() ? (snap.val() || []) : [];
+    if(albumData.length !== state.album.length || JSON.stringify(albumData) !== JSON.stringify(state.album)) {
+      state.album = albumData;
+      try { localStorage.setItem('ty-album', JSON.stringify(state.album)); } catch(e) {}
+      if(typeof renderAlbum === 'function') renderAlbum();
+    }
+  });
+
+  // Firebase'den çizimleri çek (ayrı path)
+  onValue(ref(db, 'drawings'), (snap) => {
+    if(snap.exists()) {
+      state.drawings = snap.val() || {};
+      try { localStorage.setItem('ty-drawings', JSON.stringify(state.drawings)); } catch(e) {}
+      renderDrawingShowcase();
+      renderDrawCalendar();
+    }
+  });
+
+  // Kisses için ayrı listener — grafik anında güncellensin
+  onValue(ref(db, 'state/kisses'), (snap) => {
+    if(!snap.exists()) return;
+    state.kisses = snap.val() || {};
+    const _today = toDateStr(new Date());
+    const el1 = document.getElementById('kiss-count-tulay');
+    const el2 = document.getElementById('kiss-count-yigit');
+    if(el1) el1.textContent = state.kisses[_today]?.tulay || 0;
+    if(el2) el2.textContent = state.kisses[_today]?.yigit || 0;
+    if(typeof renderKissHistory === 'function') renderKissHistory();
+    else if(window.renderKissHistory) window.renderKissHistory();
+  });
+
+  // kissHistory için ayrı listener
+  onValue(ref(db, 'state/kissHistory'), (snap) => {
+    state.kissHistory = snap.exists() ? snap.val() : {};
+    if(typeof renderKissHistory === 'function') renderKissHistory();
+    else if(window.renderKissHistory) window.renderKissHistory();
+  });
+
+  // Firebase'den gerçek veriyi çek ve güncelle (onValue = realtime)
   onValue(ref(db, 'state'), (snap) => {
     if(!snap.exists()) return;
     const d = snap.val();
@@ -1128,10 +1260,13 @@ async function loadState() {
     state.mood = d.mood || {};
     state.dreams = d.dreams || [];
     state.letters = d.letters || { tulay: null, yigit: null };
-    state.drawings = d.drawings || {};
-    state.profilePhotos = d.profilePhotos || { tulay: null, yigit: null };
+    // drawings ayrı /drawings path'ten, profilePhotos ayrı /photos path'ten yükleniyor
     state.places = d.places || {};
     state.kisses = d.kisses || {};
+    state.kissHistory = d.kissHistory || {};
+    state.compatHistory = d.compatHistory || {};
+    state.enler = d.enler || { tulay: [], yigit: [] };
+    state.gorevler = d.gorevler || {};
     // Sadece sayıları güncelle, sıfırlama döngüsünü önle
     const _today = toDateStr(new Date());
     if(state.kisses[_today]) {
@@ -1149,13 +1284,21 @@ async function loadState() {
     renderFuture();
     updateMoodSongSuggestion();
     renderDrawingShowcase();
+    renderKissHistory();
+    renderCompatHistory();
+    if(typeof renderEnler === 'function') renderEnler();
+    else if(window.renderEnler) window.renderEnler();
+    if(typeof renderGorevCalendar === 'function') renderGorevCalendar();
+    else if(window.renderGorevCalendar) window.renderGorevCalendar();
   });
-
-  bootApp();
 }
 
 // Global helper (bootApp içinde de tanımlı ama dışarıdan da erişim için)
 function toDateStr(d) { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+// Global state variables (onclick handlers need these)
+let horoscopeDayOffset = 0;
+let kissHistoryOffset = 0;
 
 function bootApp() {
 
@@ -1186,10 +1329,13 @@ function showPage(id) {
     if(b.getAttribute('onclick') && b.getAttribute('onclick').includes("'"+id+"'")) b.classList.add('active');
   });
   if(id==='memories') renderMemCalendar();
-  if(id==='mood') renderMoodCalendar();
+  if(id==='mood') { renderMoodCalendar(); }
   if(id==='drawing') renderDrawCalendar();
   if(id==='future') renderFuture();
   if(id==='places') renderPlacesCalendar();
+  if(id==='gorevler') renderGorevCalendar();
+  if(id==='enler') renderEnler();
+  if(id==='home') updateMoodSongSuggestion();
 }
 
 // ===== HOME STATS =====
@@ -1221,6 +1367,7 @@ setInterval(updateStats, 1000);
 updateStats();
 
 // ===== PROFILE PHOTOS =====
+// Resimler ayrı Firebase path'e kaydedilir (state'den bağımsız, hızlı)
 let currentProfileTarget = null;
 function changeProfilePhoto(who) {
   currentProfileTarget = who;
@@ -1230,9 +1377,28 @@ function onProfileFileSelected(e) {
   const file = e.target.files[0]; if(!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
-    state.profilePhotos[currentProfileTarget] = ev.target.result;
-    saveState();
-    applyProfilePhoto(currentProfileTarget);
+    const dataUrl = ev.target.result;
+    // Resmi küçült (max 400px, kalite 0.7)
+    const img2 = new Image();
+    img2.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX = 400;
+      let w = img2.width, h = img2.height;
+      if(w > MAX || h > MAX) {
+        if(w > h) { h = Math.round(h*MAX/w); w = MAX; }
+        else { w = Math.round(w*MAX/h); h = MAX; }
+      }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img2, 0, 0, w, h);
+      const compressed = canvas.toDataURL('image/jpeg', 0.7);
+      // Firebase'e ayrı kaydet
+      set(ref(db, 'photos/' + currentProfileTarget), compressed).catch(e=>console.error(e));
+      // localStorage'a da kaydet (offline backup)
+      try { localStorage.setItem('ty-photo-'+currentProfileTarget, compressed); } catch(e) {}
+      state.profilePhotos[currentProfileTarget] = compressed;
+      applyProfilePhoto(currentProfileTarget);
+    };
+    img2.src = dataUrl;
   };
   reader.readAsDataURL(file);
   e.target.value='';
@@ -1251,36 +1417,110 @@ function applyProfilePhoto(who) {
 function removePhoto(who, e) {
   e.stopPropagation();
   state.profilePhotos[who] = null;
-  saveState(); applyProfilePhoto(who);
+  set(ref(db, 'photos/' + who), null).catch(e=>console.error(e));
+  try { localStorage.removeItem('ty-photo-'+who); } catch(e) {}
+  applyProfilePhoto(who);
 }
+
+// Resimleri yükle: önce localStorage (anlık), sonra Firebase (güncel)
+function loadPhotos() {
+  ['tulay','yigit'].forEach(who => {
+    // localStorage'dan anlık göster
+    try {
+      const cached = localStorage.getItem('ty-photo-'+who);
+      if(cached) { state.profilePhotos[who] = cached; applyProfilePhoto(who); }
+    } catch(e) {}
+    // Firebase'den gerçek veriyi çek
+    onValue(ref(db, 'photos/' + who), (snap) => {
+      const val = snap.exists() ? snap.val() : null;
+      state.profilePhotos[who] = val;
+      if(val) {
+        try { localStorage.setItem('ty-photo-'+who, val); } catch(e) {}
+      } else {
+        try { localStorage.removeItem('ty-photo-'+who); } catch(e) {}
+      }
+      applyProfilePhoto(who);
+    });
+  });
+}
+loadPhotos();
 applyProfilePhoto('tulay'); applyProfilePhoto('yigit');
 
 // ===== HOROSCOPE =====
-// Günlük cache key'i
-function horoscopeCacheKey() {
+
+function horoscopeDateKey(offset) {
   const d = new Date();
-  return `horoscope-${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  d.setDate(d.getDate() + (offset||0));
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function changeHoroscopeDay(delta) {
+  const newOffset = horoscopeDayOffset + delta;
+  if(newOffset > 0) return; // gelecek yok
+  horoscopeDayOffset = newOffset;
+  const todayKey = horoscopeDateKey(0);
+  const viewKey = horoscopeDateKey(horoscopeDayOffset);
+  // Tarih etiketi
+  const labelEl = document.getElementById('horoscope-day-label');
+  const nextBtn = document.getElementById('horoscope-next-btn');
+  const refreshBtn = document.getElementById('horoscope-refresh-btn');
+  if(horoscopeDayOffset === 0) {
+    if(labelEl) labelEl.textContent = 'Bugün';
+    if(nextBtn) nextBtn.style.opacity = '0.3';
+    if(refreshBtn) refreshBtn.style.display = 'block';
+  } else {
+    const d = new Date(); d.setDate(d.getDate() + horoscopeDayOffset);
+    if(labelEl) labelEl.textContent = d.toLocaleDateString('tr-TR',{day:'numeric',month:'long'});
+    if(nextBtn) nextBtn.style.opacity = '1';
+    if(refreshBtn) refreshBtn.style.display = 'none';
+  }
+  // Geçmişten yükle veya "yok" göster
+  if(!state.compatHistory) state.compatHistory = {};
+  const saved = state.compatHistory[viewKey];
+  if(saved && saved.sagittarius) {
+    applyHoroscope(saved);
+  } else if(horoscopeDayOffset < 0) {
+    document.getElementById('horoscope-tulay').textContent = '📭 Bu güne ait yorum kaydedilmemiş.';
+    document.getElementById('horoscope-yigit').textContent = '📭 Bu güne ait yorum kaydedilmemiş.';
+    document.getElementById('compat-bar').style.width = '0%';
+    document.getElementById('compat-pct').textContent = '—';
+    document.getElementById('compat-comment').textContent = '';
+  } else {
+    loadHoroscope();
+  }
+}
+
+async function refreshTodayHoroscope() {
+  horoscopeDayOffset = 0;
+  // Bugünkü kaydı sil → yeniden çek
+  const todayKey = horoscopeDateKey(0);
+  if(state.compatHistory) delete state.compatHistory[todayKey];
+  await loadHoroscope();
 }
 
 async function loadHoroscope() {
-  const btn = document.querySelector('.horoscope-load-btn');
-  btn.textContent = '⏳ Yükleniyor...';
-  btn.disabled = true;
+  const btn = document.getElementById('horoscope-refresh-btn');
+  if(btn) { btn.textContent = '⏳ Yükleniyor...'; btn.disabled = true; }
 
+  const todayKey = horoscopeDateKey(0);
   const today = new Date();
   const dateStr = today.toLocaleDateString('tr-TR', {day:'numeric', month:'long', year:'numeric'});
-  const cacheKey = horoscopeCacheKey();
 
-  // Bugünkü cache varsa kullan
-  try {
-    const cached = sessionStorage.getItem(cacheKey);
-    if(cached) {
-      const p = JSON.parse(cached);
-      applyHoroscope(p);
-      btn.textContent = '🔮 Yorumları Yenile'; btn.disabled = false;
-      return;
-    }
-  } catch(e) {}
+  // Güncelle label
+  const labelEl = document.getElementById('horoscope-day-label');
+  if(labelEl) labelEl.textContent = 'Bugün';
+  const nextBtn = document.getElementById('horoscope-next-btn');
+  if(nextBtn) nextBtn.style.opacity = '0.3';
+
+  // Firebase'de bugüne ait kayıt var mı?
+  if(!state.compatHistory) state.compatHistory = {};
+  const existing = state.compatHistory[todayKey];
+  if(existing && existing.sagittarius) {
+    applyHoroscope(existing);
+    renderCompatHistory();
+    if(btn) { btn.textContent = '🔮 Yorumları Yenile'; btn.disabled = false; }
+    return;
+  }
 
   try {
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1291,7 +1531,7 @@ async function loadHoroscope() {
         max_tokens: 600,
         messages: [{
           role: 'user',
-          content: `Bugün ${dateStr} için Yay ve Koç burçlarına kısa, romantik, pozitif günlük burç yorumu yaz. Ayrıca bu iki burcun bugünkü uyumunu 55-99 arasında bir sayı ve tek cümle yorum olarak ver. JSON olarak döndür: {"sagittarius":"yorum","aries":"yorum","compat_pct":85,"compat_comment":"yorum"}. Türkçe, max 60 kelime her yorum.`
+          content: `Bugün ${dateStr} tarihi için Yay ve Koç burçlarına özgün, romantik, pozitif günlük burç yorumu yaz. Her gün farklı ve taze yorumlar olsun. Ayrıca bu iki burcun bugünkü uyumunu 55-99 arasında bir sayı ve tek cümle yorum ver. JSON döndür: {"sagittarius":"yorum","aries":"yorum","compat_pct":85,"compat_comment":"yorum"}. Türkçe, max 60 kelime her yorum.`
         }]
       })
     });
@@ -1299,8 +1539,16 @@ async function loadHoroscope() {
     const text = data.content?.[0]?.text || '';
     const clean = text.replace(/```json?/g,'').replace(/```/g,'').trim();
     const parsed = JSON.parse(clean);
-    try { sessionStorage.setItem(cacheKey, JSON.stringify(parsed)); } catch(e) {}
+    parsed.date = todayKey;
+
+    // Firebase'e kaydet
+    state.compatHistory[todayKey] = parsed;
+    const keys = Object.keys(state.compatHistory).sort();
+    while(keys.length > 60) { delete state.compatHistory[keys.shift()]; }
+    set(ref(db, 'state/compatHistory'), state.compatHistory).catch(e => console.error(e));
+
     applyHoroscope(parsed);
+    renderCompatHistory();
   } catch(err) {
     const fallback = {
       sagittarius: '✨ Bugün aşk enerjisi çok yüksek! Partnerinizle kaliteli zaman geçirin, duygularınızı paylaşın. Samimiyetiniz ilişkinizi güçlendirecek.',
@@ -1309,14 +1557,14 @@ async function loadHoroscope() {
       compat_comment: '💞 Yay ve Koç enerjileri bugün mükemmel uyum içinde — birlikte her şey daha parlak!'
     };
     applyHoroscope(fallback);
+    renderCompatHistory();
   }
-  btn.textContent = '🔮 Yorumları Yenile'; btn.disabled = false;
+  if(btn) { btn.textContent = '🔮 Yorumları Yenile'; btn.disabled = false; }
 }
 
 function applyHoroscope(parsed) {
   document.getElementById('horoscope-tulay').textContent = parsed.sagittarius || 'Yorum alınamadı.';
   document.getElementById('horoscope-yigit').textContent = parsed.aries || 'Yorum alınamadı.';
-  // Uyum metresi
   const pct = Math.min(99, Math.max(1, parseInt(parsed.compat_pct) || 88));
   setTimeout(() => {
     document.getElementById('compat-bar').style.width = pct + '%';
@@ -1325,8 +1573,67 @@ function applyHoroscope(parsed) {
   document.getElementById('compat-comment').textContent = parsed.compat_comment || '';
 }
 
+function renderCompatHistory() {
+  const tableEl = document.getElementById('compat-history-table');
+  if(!tableEl) return;
+  const history = state.compatHistory || {};
+  const todayKey = horoscopeDateKey(0);
+  const sorted = Object.keys(history).sort().reverse().slice(0, 7);
+  if(!sorted.length) {
+    tableEl.innerHTML = '<div style="text-align:center;color:var(--text-light);font-size:0.78rem;">Henüz geçmiş yok — yarın tekrar gel!</div>';
+    return;
+  }
+  tableEl.innerHTML = sorted.map(d => {
+    const v = history[d];
+    const pct = parseInt(v.compat_pct) || 0;
+    const isToday = d === todayKey;
+    const fmtDate = new Date(d+'T12:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'short'});
+    const barColor = pct >= 85 ? 'linear-gradient(90deg,#e8698a,#d4a853)' : pct >= 70 ? 'linear-gradient(90deg,#d4a853,#e8c070)' : 'linear-gradient(90deg,#6a9ae8,#a0c4f5)';
+    return `
+      <div style="background:${isToday?'linear-gradient(135deg,#fff0f5,#ffe8f2)':'white'};border:1.5px solid ${isToday?'var(--rose-light)':'#f0e0e8'};border-radius:12px;padding:10px 12px;cursor:pointer;" onclick="viewHoroscopeDay('${d}')">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-size:0.75rem;font-weight:700;color:var(--text-light);">${fmtDate}${isToday?' ✨':''}</span>
+          <span style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--rose-dark);">${pct}%</span>
+        </div>
+        <div style="background:#fce8f0;border-radius:8px;height:10px;overflow:hidden;margin-bottom:6px;">
+          <div style="width:${pct}%;background:${barColor};height:100%;border-radius:8px;transition:width 0.8s;"></div>
+        </div>
+        <div style="font-size:0.75rem;color:var(--text-light);line-height:1.4;">${v.compat_comment||''}</div>
+        <div style="font-size:0.68rem;color:var(--rose);margin-top:4px;">👆 Burç yorumunu gör</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function viewHoroscopeDay(dateKey) {
+  const todayKey = horoscopeDateKey(0);
+  const today = new Date(todayKey+'T12:00:00');
+  const target = new Date(dateKey+'T12:00:00');
+  const diffDays = Math.round((target - today) / (1000*60*60*24));
+  horoscopeDayOffset = diffDays;
+  // Scroll to horoscope
+  document.querySelector('.horoscope-section')?.scrollIntoView({behavior:'smooth'});
+  changeHoroscopeDay(0); // re-render at new offset (no delta)
+  // Force re-read since changeHoroscopeDay(0) won't change offset
+  const labelEl = document.getElementById('horoscope-day-label');
+  const nextBtn = document.getElementById('horoscope-next-btn');
+  const refreshBtn = document.getElementById('horoscope-refresh-btn');
+  const d = new Date(dateKey+'T12:00:00');
+  if(diffDays === 0) {
+    if(labelEl) labelEl.textContent = 'Bugün';
+    if(nextBtn) nextBtn.style.opacity = '0.3';
+    if(refreshBtn) refreshBtn.style.display = 'block';
+  } else {
+    if(labelEl) labelEl.textContent = d.toLocaleDateString('tr-TR',{day:'numeric',month:'long'});
+    if(nextBtn) nextBtn.style.opacity = '1';
+    if(refreshBtn) refreshBtn.style.display = 'none';
+  }
+  const saved = (state.compatHistory||{})[dateKey];
+  if(saved && saved.sagittarius) applyHoroscope(saved);
+}
+
 // Sayfa yüklenince otomatik yükle
-setTimeout(() => loadHoroscope(), 800);
+setTimeout(() => { loadHoroscope(); }, 800);
 
 // ===== ALBUM =====
 let albumFileData = null;
@@ -1349,10 +1656,37 @@ function onAlbumFileSelected(e) {
 function saveAlbumPhoto() {
   if(!albumFileData) { alert('Lütfen bir fotoğraf seçin.'); return; }
   const caption = document.getElementById('album-caption-input').value.trim();
-  state.album.push({ id: Date.now(), src: albumFileData, caption });
-  saveState(); renderAlbum();
+
+  // Sıkıştır
+  const compressed = (() => {
+    const img2 = new Image();
+    img2.src = albumFileData;
+    const c2 = document.createElement('canvas');
+    const MAX = 800;
+    let w = img2.width || 800, h = img2.height || 600;
+    if(w > MAX) { h = Math.round(h*MAX/w); w = MAX; }
+    c2.width = w; c2.height = h;
+    c2.getContext('2d').drawImage(img2, 0, 0, w, h);
+    return c2.toDataURL('image/jpeg', 0.75);
+  })();
+
+  const item = { id: Date.now(), src: compressed, caption };
+  state.album.push(item);
+
+  // Ayrı Firebase path'e kaydet
+  set(ref(db, 'album'), state.album).catch(e => console.error(e));
+  try { localStorage.setItem('ty-album', JSON.stringify(state.album)); } catch(e) {}
+
+  renderAlbum();
   closeModal('album-modal');
   document.getElementById('album-file-input').value='';
+}
+function deleteAlbumPhoto(id) {
+  if(!confirm('Bu fotoğrafı silmek istiyor musunuz?')) return;
+  state.album = state.album.filter(p=>p.id!==id);
+  set(ref(db, 'album'), state.album).catch(e => console.error(e));
+  try { localStorage.setItem('ty-album', JSON.stringify(state.album)); } catch(e) {}
+  renderAlbum();
 }
 function renderAlbum() {
   const grid = document.getElementById('album-grid');
@@ -1369,11 +1703,6 @@ function renderAlbum() {
       ${p.caption ? `<div class="album-caption">${p.caption}</div>` : ''}
     </div>
   `).join('');
-}
-function deleteAlbumPhoto(id) {
-  if(!confirm('Bu fotoğrafı silmek istiyor musunuz?')) return;
-  state.album = state.album.filter(p=>p.id!==id);
-  saveState(); renderAlbum();
 }
 renderAlbum();
 
@@ -1487,7 +1816,7 @@ const MOODS = [
   {emoji:'😊',label:'Mutlu'},{emoji:'🥰',label:'Aşık'},{emoji:'😴',label:'Yorgun'},
   {emoji:'😢',label:'Üzgün'},{emoji:'😠',label:'Kızgın'},{emoji:'😌',label:'Huzurlu'},
   {emoji:'🤩',label:'Heyecanlı'},{emoji:'😐',label:'Nötr'},{emoji:'🤒',label:'Hasta'},
-  {emoji:'🥳',label:'Neşeli'}
+  {emoji:'🥳',label:'Neşeli'},{emoji:'🍽️',label:'Aç'}
 ];
 let moodMonth = new Date().getMonth(), moodYear = new Date().getFullYear();
 let currentMoodDate = null, selectedMoodTulay = null, selectedMoodYigit = null;
@@ -1551,7 +1880,13 @@ function clearMood(who) {
 // ===== DRAWING =====
 let drawMonth = new Date().getMonth(), drawYear = new Date().getFullYear();
 let currentDrawDate = null;
-const COLORS = ['#000000','#e8698a','#c0435f','#d4a853','#6ca96c','#4488cc','#aa44cc','#ffffff','#ff8800','#44cccc'];
+const COLORS = [
+  '#000000','#ffffff','#e8698a','#c0435f','#ff6b6b','#ff8800',
+  '#d4a853','#f5e642','#6ca96c','#2ecc71','#4488cc','#1a6bb5',
+  '#aa44cc','#7b2fff','#44cccc','#00bcd4','#795548','#9e9e9e',
+  '#ff4081','#ff6f00'
+];
+const canvasBg = { tulay: '#ffffff', yigit: '#ffffff' };
 const tools = {tulay:'draw', yigit:'draw'};
 const colors = {tulay:'#e8698a', yigit:'#4488cc'};
 const brushes = {tulay:5, yigit:5};
@@ -1617,8 +1952,26 @@ function openDrawDay(ds) {
 }
 function setupPalette(who) {
   const cont=document.getElementById('palette-'+who);
-  cont.innerHTML=COLORS.map(c=>`<div class="color-swatch ${colors[who]===c?'active':''}" style="background:${c}" onclick="setColor('${who}','${c}',this)"></div>`).join('');
+  cont.innerHTML = COLORS.map(c=>`<div class="color-swatch ${colors[who]===c?'active':''}" style="background:${c};${c==='#ffffff'?'border:1.5px solid #ddd;':''}" onclick="setColor('${who}','${c}',this)" title="${c}"></div>`).join('') +
+    `<div title="Arka plan rengi seç" style="display:flex;align-items:center;gap:4px;margin-left:6px;">
+      <span style="font-size:0.7rem;color:var(--text-light);white-space:nowrap;">Zemin:</span>
+      <input type="color" value="${canvasBg[who]}" onchange="setCanvasBg('${who}',this.value)" style="width:26px;height:26px;border:none;border-radius:6px;cursor:pointer;padding:0;">
+    </div>`;
 }
+function setCanvasBg(who, color) {
+  canvasBg[who] = color;
+  const canvas = document.getElementById('canvas-' + who);
+  const ctx = canvas.getContext('2d');
+  // Mevcut içeriği koru, sadece arka planı değiştir
+  const img = new Image();
+  img.onload = () => {
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0);
+  };
+  img.src = canvas.toDataURL();
+}
+window.setCanvasBg = setCanvasBg;
 function setColor(who,c,el) {
   colors[who]=c;
   document.querySelectorAll(`#palette-${who} .color-swatch`).forEach(s=>s.classList.remove('active'));
@@ -1631,11 +1984,33 @@ function setTool(who,tool) {
 }
 function updateBrush(who,val) { brushes[who]=parseInt(val); document.getElementById(`brush-val-${who}`).textContent=val+'px'; }
 const _manuallyCleared = { tulay: false, yigit: false };
-function clearCanvas(who) {
+const _undoStack = { tulay: [], yigit: [] };
+const MAX_UNDO = 20;
+
+function saveUndoSnapshot(who) {
   const canvas = document.getElementById('canvas-' + who);
-  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+  if(!canvas) return;
+  _undoStack[who].push(canvas.toDataURL());
+  if(_undoStack[who].length > MAX_UNDO) _undoStack[who].shift();
+}
+
+function undoCanvas(who) {
+  if(!_undoStack[who].length) return;
+  const canvas = document.getElementById('canvas-' + who);
+  const ctx = canvas.getContext('2d');
+  const prev = _undoStack[who].pop();
+  const img = new Image();
+  img.onload = () => { ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0); };
+  img.src = prev;
+}
+
+function clearCanvas(who) {
+  saveUndoSnapshot(who);
+  const canvas = document.getElementById('canvas-' + who);
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = canvasBg[who] || '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   _manuallyCleared[who] = true;
-  // State'den de sil
   if (currentDrawDate) {
     if (state.drawings[currentDrawDate]) {
       delete state.drawings[currentDrawDate][who];
@@ -1647,11 +2022,40 @@ function clearCanvas(who) {
     renderDrawCalendar();
   }
 }
+
 function saveCanvasImg(who) {
-  const canvas=document.getElementById('canvas-'+who);
-  if(!state.drawings[currentDrawDate]) state.drawings[currentDrawDate]={};
-  state.drawings[currentDrawDate][who]=canvas.toDataURL();
-  saveState(); renderDrawCalendar(); renderDrawingShowcase(); alert('Çizim kaydedildi! 🎨');
+  const canvas = document.getElementById('canvas-' + who);
+  if(!currentDrawDate) { alert('Önce takvimden bir gün seçin! 📅'); return; }
+  if(!state.drawings[currentDrawDate]) state.drawings[currentDrawDate] = {};
+
+  // Sıkıştır (max 600px, jpeg 0.75)
+  const compressed = (() => {
+    const c2 = document.createElement('canvas');
+    const MAX = 600;
+    let w = canvas.width, h = canvas.height;
+    if(w > MAX) { h = Math.round(h*MAX/w); w = MAX; }
+    c2.width = w; c2.height = h;
+    c2.getContext('2d').drawImage(canvas, 0, 0, w, h);
+    return c2.toDataURL('image/jpeg', 0.75);
+  })();
+
+  state.drawings[currentDrawDate][who] = compressed;
+  _manuallyCleared[who] = false;
+
+  // Çizimleri ayrı Firebase path'e kaydet (state'i şişirme)
+  set(ref(db, `drawings/${currentDrawDate}/${who}`), compressed).catch(e=>console.error(e));
+  // localStorage'a cache
+  try {
+    const dc = JSON.parse(localStorage.getItem('ty-drawings') || '{}');
+    if(!dc[currentDrawDate]) dc[currentDrawDate] = {};
+    dc[currentDrawDate][who] = compressed;
+    localStorage.setItem('ty-drawings', JSON.stringify(dc));
+  } catch(e) {}
+
+  renderDrawCalendar();
+  renderDrawingShowcase();
+  const btn = document.querySelector(`#drawing-canvases button[onclick="saveCanvasImg('${who}')"]`);
+  if(btn) { const orig = btn.textContent; btn.textContent = '✅ Kaydedildi!'; setTimeout(()=>btn.textContent=orig, 1500); }
 }
 
 function getPos(canvas, e) {
@@ -1662,7 +2066,21 @@ function getPos(canvas, e) {
 }
 function setupCanvas(who) {
   const canvas=document.getElementById('canvas-'+who);
-  const start=(e)=>{e.preventDefault(); isDrawing[who]=true; const p=getPos(canvas,e); lastPos[who]=p; };
+  // Beyaz arka plan ile başlat (sadece boşsa)
+  const ctx0 = canvas.getContext('2d');
+  const blank = document.createElement('canvas');
+  blank.width=canvas.width; blank.height=canvas.height;
+  const isBlankNow = canvas.toDataURL() === blank.toDataURL();
+  if(isBlankNow) {
+    ctx0.fillStyle = canvasBg[who] || '#ffffff';
+    ctx0.fillRect(0, 0, canvas.width, canvas.height);
+  }
+  const start=(e)=>{
+    e.preventDefault();
+    saveUndoSnapshot(who);
+    isDrawing[who]=true;
+    const p=getPos(canvas,e); lastPos[who]=p;
+  };
   const move=(e)=>{e.preventDefault(); if(!isDrawing[who]) return; const p=getPos(canvas,e); const ctx=canvas.getContext('2d'); ctx.beginPath(); ctx.moveTo(lastPos[who].x,lastPos[who].y); ctx.lineTo(p.x,p.y); ctx.strokeStyle=tools[who]==='erase'?'#ffffff':colors[who]; ctx.lineWidth=brushes[who]; ctx.lineCap='round'; ctx.stroke(); lastPos[who]=p; };
   const end=(e)=>{isDrawing[who]=false;};
   canvas.removeEventListener('mousedown',canvas._mdown); canvas.removeEventListener('mousemove',canvas._mmove); canvas.removeEventListener('mouseup',canvas._mup); canvas.removeEventListener('touchstart',canvas._tstart); canvas.removeEventListener('touchmove',canvas._tmove); canvas.removeEventListener('touchend',canvas._tend);
@@ -1884,6 +2302,15 @@ const SONG_MAP = {
     { name:'Good Days – SZA', spotify:'6D0P4PjQCjalJORALCYSAP' },
     { name:'Peaches – Justin Bieber', spotify:'4iJyoBOLtHqaWYs3wyVkFI' },
   ],
+  'Aç': [
+    { name:'Hungry Like the Wolf – Duran Duran', spotify:'0gplL1WMoJ6iYaPgMCL0gX' },
+    { name:'Cookie Jar – Gym Class Heroes', spotify:'0pqKEF4cRcLhHrJBp7JO8g' },
+    { name:'Sugar – Maroon 5', spotify:'4JehYebiI9JE8sR8MisGVb' },
+    { name:'Cheeseburger in Paradise – Jimmy Buffett', spotify:'5H6LKXFzrpqJfYB1GGUiCX' },
+    { name:'Peaches & Cream – 112', spotify:'3i0a8MCBMXJA3sHKPSQFnb' },
+    { name:'Butter – BTS', spotify:'4iJyoBOLtHqaWYs3wyVkFI' },
+    { name:'Birthday Cake – Rihanna', spotify:'2Lq2qX3hYVZDeuqBtskDGP' },
+  ],
 };
 
 function getRandSong(moodLabel) {
@@ -1895,6 +2322,32 @@ function getRandSong(moodLabel) {
 function updateMoodSongSuggestion() {
   const todayStr = toDateStr(new Date());
   const mood = state.mood[todayStr] || {};
+  
+  // Ana sayfada ruh hali göster
+  const homeMoodSection = document.getElementById('home-mood-section');
+  if(homeMoodSection) {
+    if(mood.tulay || mood.yigit) {
+      homeMoodSection.style.display = 'block';
+      const MOOD_MAP = {};
+      if(typeof MOODS !== 'undefined') MOODS.forEach(m => MOOD_MAP[m.label] = m.emoji);
+      ['tulay','yigit'].forEach(who => {
+        const emojiEl = document.getElementById(`home-mood-${who}-emoji`);
+        const labelEl = document.getElementById(`home-mood-${who}-label`);
+        if(emojiEl && labelEl) {
+          if(mood[who]) {
+            emojiEl.textContent = MOOD_MAP[mood[who]] || '😊';
+            labelEl.textContent = mood[who];
+          } else {
+            emojiEl.textContent = '—';
+            labelEl.textContent = 'Seçilmedi';
+          }
+        }
+      });
+    } else {
+      homeMoodSection.style.display = 'none';
+    }
+  }
+
   const section = document.getElementById('mood-music-section');
   const cards = document.getElementById('mood-music-cards');
   if(!mood.tulay && !mood.yigit) { section.style.display='none'; return; }
@@ -1920,11 +2373,16 @@ function playSong(who, moodLabel) {
   const container = document.getElementById('music-player-container');
   const name = who==='tulay'?'Tülay':'Yiğit';
   container.style.display='block';
+  // Use search link as fallback for tracks that may have wrong IDs
+  const embedUrl = `https://open.spotify.com/embed/track/${song.spotify}?utm_source=generator&theme=0`;
   container.innerHTML=`
     <div style="font-size:0.8rem;color:#f5b8c8;margin-bottom:6px;text-align:center;">${name} ${moodLabel} hissediyor 💕</div>
     <div style="font-size:0.9rem;font-weight:700;text-align:center;margin-bottom:12px;">🎵 ${song.name}</div>
-    <iframe style="border-radius:14px;display:block;" src="https://open.spotify.com/embed/track/${song.spotify}?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
-    <div style="font-size:0.7rem;color:rgba(255,255,255,0.4);text-align:center;margin-top:8px;">Tekrar bas = farklı şarkı gelir 🔀</div>
+    <iframe style="border-radius:14px;display:block;" src="${embedUrl}" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" onerror="this.style.display='none'"></iframe>
+    <div style="text-align:center;margin-top:8px;">
+      <a href="https://open.spotify.com/search/${encodeURIComponent(song.name)}" target="_blank" style="font-size:0.75rem;color:#1DB954;text-decoration:none;">🎵 Spotify'da Aç ↗</a>
+    </div>
+    <div style="font-size:0.7rem;color:rgba(255,255,255,0.4);text-align:center;margin-top:4px;">Tekrar bas = farklı şarkı gelir 🔀</div>
   `;
   updateMoodSongSuggestion();
 }
@@ -1934,6 +2392,8 @@ updateMoodSongSuggestion();
 
 // Init kiss counter on load
 if(typeof initKissCounter === 'function') initKissCounter();
+// Grafiği hemen çiz
+renderKissHistory();
 
 // ===== DRAWING FIX: auto-save before switching =====
 const _origChangeDrawMonth = window.changeDrawMonth;
@@ -2297,6 +2757,15 @@ window.addKiss = addKiss;
 window.initKissCounter = initKissCounter;
 window.closeModal = closeModal;
 window.renderDrawingShowcase = renderDrawingShowcase;
+window.undoCanvas = undoCanvas;
+window.renderKissHistory = renderKissHistory;
+window.renderCompatHistory = renderCompatHistory;
+window.changeHoroscopeDay = changeHoroscopeDay;
+window.refreshTodayHoroscope = refreshTodayHoroscope;
+window.viewHoroscopeDay = viewHoroscopeDay;
+// Expose offset vars so inline onclick can read/write them
+Object.defineProperty(window, 'kissHistoryOffset', { get: () => kissHistoryOffset, set: v => { kissHistoryOffset = v; } });
+Object.defineProperty(window, 'horoscopeDayOffset', { get: () => horoscopeDayOffset, set: v => { horoscopeDayOffset = v; } });
 
 
 // ===== GİDİLEN YERLER =====
@@ -2458,13 +2927,6 @@ function deleteMap(id) {
 function initKissCounter() {
   const today = toDateStr(new Date());
   if (!state.kisses) state.kisses = {};
-  
-  // Eski günlerin verisini temizle (sadece bugününkü kalsın, diğer günler silinsin)
-  const keys = Object.keys(state.kisses);
-  let changed = false;
-  keys.forEach(k => { if(k !== today) { delete state.kisses[k]; changed = true; } });
-  if (changed) saveState();
-
   if (!state.kisses[today]) state.kisses[today] = { tulay: 0, yigit: 0 };
 
   document.getElementById('kiss-count-tulay').textContent = state.kisses[today].tulay || 0;
@@ -2473,7 +2935,7 @@ function initKissCounter() {
   const label = document.getElementById('kiss-date-label');
   if(label) label.textContent = new Date().toLocaleDateString('tr-TR', {day:'numeric', month:'long', year:'numeric'});
   
-  // Gece 24:00 otomatik sıfırlama
+  renderKissHistory();
   scheduleKissReset();
 }
 
@@ -2483,6 +2945,16 @@ function scheduleKissReset() {
   midnight.setHours(24, 0, 0, 0);
   const msToMidnight = midnight - now;
   setTimeout(() => {
+    const yesterday = toDateStr(new Date(Date.now() - 1000));
+    const todayData = state.kisses[yesterday] || state.kisses[toDateStr(new Date())];
+    // Geçmişe kaydet
+    if(!state.kissHistory) state.kissHistory = {};
+    if(todayData && (todayData.tulay > 0 || todayData.yigit > 0)) {
+      state.kissHistory[yesterday] = { tulay: todayData.tulay || 0, yigit: todayData.yigit || 0 };
+      // Son 60 günü tut
+      const keys = Object.keys(state.kissHistory).sort();
+      while(keys.length > 60) { delete state.kissHistory[keys.shift()]; }
+    }
     const today = toDateStr(new Date());
     state.kisses = { [today]: { tulay: 0, yigit: 0 } };
     saveState();
@@ -2490,8 +2962,116 @@ function scheduleKissReset() {
     document.getElementById('kiss-count-yigit').textContent = '0';
     const label = document.getElementById('kiss-date-label');
     if(label) label.textContent = new Date().toLocaleDateString('tr-TR', {day:'numeric', month:'long', year:'numeric'});
-    scheduleKissReset(); // bir sonraki gün için yeniden planla
+    renderKissHistory();
+    scheduleKissReset();
   }, msToMidnight);
+}
+
+function renderKissHistory() {
+  if(!state.kissHistory) state.kissHistory = {};
+  const history = state.kissHistory;
+  const today = toDateStr(new Date());
+  const todayKisses = state.kisses?.[today] || { tulay: 0, yigit: 0 };
+
+  // Her zaman bugünü ekle (öpücük olsun olmasın)
+  const allDays = { ...history, [today]: todayKisses };
+
+  const sortedAll = Object.keys(allDays).sort().reverse();
+
+  // Records (from all days)
+  let recTulay = 0, recTulayDate = '', recYigit = 0, recYigitDate = '', total = 0;
+  for(const [d, v] of Object.entries(allDays)) {
+    if((v.tulay||0) > recTulay) { recTulay = v.tulay; recTulayDate = d; }
+    if((v.yigit||0) > recYigit) { recYigit = v.yigit; recYigitDate = d; }
+    total += (v.tulay||0) + (v.yigit||0);
+  }
+
+  const fmtDate = d => d ? new Date(d+'T12:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'short'}) : '—';
+
+  const recTEl = document.getElementById('kiss-record-tulay');
+  const recYEl = document.getElementById('kiss-record-yigit');
+  const recTDEl = document.getElementById('kiss-record-tulay-date');
+  const recYDEl = document.getElementById('kiss-record-yigit-date');
+  const totalEl = document.getElementById('kiss-total');
+  if(recTEl) recTEl.textContent = recTulay;
+  if(recYEl) recYEl.textContent = recYigit;
+  if(recTDEl) recTDEl.textContent = recTulayDate ? fmtDate(recTulayDate) : '—';
+  if(recYDEl) recYDEl.textContent = recYigitDate ? fmtDate(recYigitDate) : '—';
+  if(totalEl) totalEl.textContent = total;
+
+  // Date window: 7 days ending at (today + kissHistoryOffset)
+  const windowEnd = new Date();
+  windowEnd.setDate(windowEnd.getDate() + kissHistoryOffset);
+  const windowStart = new Date(windowEnd);
+  windowStart.setDate(windowStart.getDate() - 6);
+
+  // Build 7 consecutive days
+  const days7 = [];
+  for(let i = 0; i < 7; i++) {
+    const d = new Date(windowStart);
+    d.setDate(d.getDate() + i);
+    days7.push(toDateStr(d));
+  }
+
+  // Update range label
+  const rangeEl = document.getElementById('kiss-history-range-label');
+  if(rangeEl) {
+    const s = fmtDate(days7[0]), e = fmtDate(days7[6]);
+    rangeEl.textContent = kissHistoryOffset === 0 ? 'Son 7 Gün' : `${s} – ${e}`;
+  }
+
+  const chartEl = document.getElementById('kiss-history-chart');
+  if(!chartEl) return;
+
+  const maxVal = Math.max(...days7.map(d => Math.max(allDays[d]?.tulay||0, allDays[d]?.yigit||0)), 1);
+  const chartH = 80; // px height of bar area
+
+  // SVG bar chart
+  const barW = 28, gap = 10, leftPad = 32, totalW = days7.length * (barW + gap) + leftPad + 10;
+  const svgH = chartH + 50;
+
+  let svgBars = '';
+  days7.forEach((d, i) => {
+    const v = allDays[d] || {tulay:0, yigit:0};
+    const t = v.tulay||0, y = v.yigit||0;
+    const isToday = d === today;
+    const x = leftPad + i * (barW + gap);
+    const tH = Math.round((t/maxVal) * chartH);
+    const yH = Math.round((y/maxVal) * chartH);
+    const halfW = (barW-2)/2;
+
+    // Tülay bar (left half)
+    if(t > 0) svgBars += `<rect x="${x}" y="${chartH - tH}" width="${halfW}" height="${tH}" rx="3" fill="${isToday?'#e8698a':'#f5b8c8'}"/>`;
+    // Yiğit bar (right half)
+    if(y > 0) svgBars += `<rect x="${x+halfW+2}" y="${chartH - yH}" width="${halfW}" height="${yH}" rx="3" fill="${isToday?'#6a9ae8':'#a0c4f5'}"/>`;
+    // Today highlight
+    if(isToday) svgBars += `<rect x="${x-2}" y="0" width="${barW+4}" height="${chartH}" rx="4" fill="rgba(232,105,138,0.06)" stroke="#f5b8c8" stroke-width="1"/>`;
+    // Date label
+    const dObj = new Date(d+'T12:00:00');
+    const dayLabel = dObj.toLocaleDateString('tr-TR',{day:'numeric',month:'short'}).replace(' ','\n');
+    svgBars += `<text x="${x+barW/2}" y="${chartH+14}" text-anchor="middle" font-size="8.5" fill="#7a5c68">${dObj.getDate()}</text>`;
+    svgBars += `<text x="${x+barW/2}" y="${chartH+24}" text-anchor="middle" font-size="7.5" fill="#b09098">${dObj.toLocaleDateString('tr-TR',{month:'short'})}</text>`;
+    // Values on top
+    if(t > 0) svgBars += `<text x="${x+halfW/2}" y="${chartH - tH - 2}" text-anchor="middle" font-size="8" font-weight="bold" fill="#c0435f">${t}</text>`;
+    if(y > 0) svgBars += `<text x="${x+halfW+2+halfW/2}" y="${chartH - yH - 2}" text-anchor="middle" font-size="8" font-weight="bold" fill="#4a7ac0">${y}</text>`;
+  });
+
+  // Y axis lines
+  let yLines = '';
+  [0,0.25,0.5,0.75,1].forEach(pct => {
+    const yy = Math.round(chartH * (1-pct));
+    const val = Math.round(maxVal * pct);
+    yLines += `<line x1="${leftPad-4}" y1="${yy}" x2="${totalW}" y2="${yy}" stroke="#f0e0e8" stroke-width="0.8"/>`;
+    if(val > 0) yLines += `<text x="${leftPad-6}" y="${yy+3}" text-anchor="end" font-size="8" fill="#b09098">${val}</text>`;
+  });
+
+  chartEl.innerHTML = `
+    <div style="display:flex;gap:14px;margin-bottom:8px;justify-content:center;">
+      <span style="display:flex;align-items:center;gap:4px;font-size:0.72rem;color:var(--rose);"><span style="width:12px;height:10px;background:#e8698a;border-radius:2px;display:inline-block;"></span>Tülay</span>
+      <span style="display:flex;align-items:center;gap:4px;font-size:0.72rem;color:#6a9ae8;"><span style="width:12px;height:10px;background:#6a9ae8;border-radius:2px;display:inline-block;"></span>Yiğit</span>
+    </div>
+    <svg width="100%" viewBox="0 0 ${totalW} ${svgH}" style="overflow:visible;">${yLines}${svgBars}</svg>
+  `;
 }
 
 function addKiss(who, btn) {
@@ -2526,6 +3106,9 @@ function addKiss(who, btn) {
       setTimeout(() => el.remove(), 1000);
     }, i * 80);
   }
+
+  // Grafiği hemen güncelle
+  renderKissHistory();
 }
 
 // ===== YEMEK ÇARKI =====
@@ -2724,20 +3307,477 @@ window.flipCoin = function() {
 
 drawCoin('yazi', 0);
 
+// ===== GÖREVLER =====
+const GOREVLER = [
+  // 🔥 ÇOK CESUR (%40 - 120 görev)
+  "Bir sonraki buluşmada onu dudaklarından en az 1 dakika öp, hiç ara verme",
+  "Bugün ona tam olarak ne yapmak istediğini detaylı anlat — utanma 😏",
+  "Bir sonraki buluşmada boynuna ısırık bırak",
+  "Ona bu gece yatmadan en çok neresini sevdiğini yaz",
+  "Bir sonraki buluşmada belinden tutup kendine çek ve kulağına ne istediğini fısılda",
+  "Bugün ona 'seni düşününce kendimi tutamıyorum' diye yaz",
+  "Bir sonraki buluşmada popona dokunmasına izin ver ve sen de aynısını yap",
+  "Ona bu gece sesli mesajla tam olarak ne hayal ettiğini anlat",
+  "Bir sonraki buluşmada üst düğmesini aç",
+  "Bugün ona 'seninle baş başa olmak istiyorum, sadece ikimiz' diye yaz ve ne için olduğunu açıkla",
+  "Bir sonraki buluşmada dizlerine otur, gözlerine bak ve ne hissettirdiğini söyle",
+  "Ona 'seni düşününce uyuyamıyorum' diye yaz ve nedenini açıkla 😈",
+  "Bir sonraki buluşmada tişörtünün altından sırtını ok şa",
+  "Bugün ona 'bir sonraki buluşmamızda sana bir sürprizim var' de ve ipucu verme",
+  "Bir sonraki buluşmada kulağını ısır, sonra öp",
+  "Ona bu gece 'seninle aynı yastığa başımı koymak istiyorum' diye yaz",
+  "Bir sonraki buluşmada gözlerini kapatmasını iste ve dudaklarına sürpriz yap",
+  "Bugün ona vücudunda en çok hangi yerini sevdiğini yaz",
+  "Bir sonraki buluşmada dizlerine oturken belinden kavra",
+  "Ona 'seni gördüğümde aklım başka yerlere gidiyor' diye yaz 😏",
+  "Bir sonraki buluşmada boynuna uzun uzun öpücük kondur",
+  "Bugün ona bir roleplay teklif et — karakterleri sen seç",
+  "Bir sonraki buluşmada elini tutup kendi tenine götür",
+  "Ona bu gece 'seninle çok şey yapmak istiyorum' diye başlayan bir mesaj yaz, devamını getir",
+  "Bir sonraki buluşmada onu duvara yasla ve gözlerine bak",
+  "Bugün ona 'seni öpmek yetmiyor' diye yaz ve devamını açıkla",
+  "Bir sonraki buluşmada bacağına dokunmasına izin ver",
+  "Ona 'sabah uyandığımda aklımda sen vardın, seninle ilgili şeyler düşünüyordum' diye yaz",
+  "Bir sonraki buluşmada karanlık bir köşe bul ve uzun uzun öp",
+  "Bugün ona favori fantezini yaz — utanma, o da anlatsın",
+  "Bir sonraki buluşmada üzerine eğil ve 'seni çok istiyorum' fısılda",
+  "Ona bu gece 'seninle baş başa kalsak ne yapardım' diye detaylı anlat",
+  "Bir sonraki buluşmada tişörtünü kaldır ve karnına öp",
+  "Bugün ona 'seni düşününce yanaklarım kızarıyor, başka yerler de' diye yaz 😏",
+  "Bir sonraki buluşmada bacaklarına otur ve sarılırken sıkıca kavra",
+  "Ona 'seninle aynı yatakta uyumak istiyorum, sabaha kadar' diye yaz",
+  "Bir sonraki buluşmada onu kimsenin göremeyeceği bir yere götür ve öp",
+  "Bugün ona fiziksel olarak en çok ne yapmak istediğini 3 madde halinde yaz",
+  "Bir sonraki buluşmada elini tutup dudaklarına götür ve öp",
+  "Ona bu gece 'seni sadece düşünmek bile beni etkiliyor' diye yaz",
+  "Bir sonraki buluşmada boynuna sarılırken kulağına 'seni istiyorum' fısılda",
+  "Bugün ona 'bir sonraki buluşmamızda ne yapacağımı hayal ediyorum' de ve anlat",
+  "Bir sonraki buluşmada arkasından sarılıp sıkıca tut, hiç bırakma",
+  "Ona 'seninle yakın olduğumda kendimi kaybediyorum' diye yaz",
+  "Bir sonraki buluşmada yavaşça saçlarını çek ve öp",
+  "Bugün ona en cesur fantezini yaz — o da anlatsın",
+  "Bir sonraki buluşmada dizlerine başını koy ve gözlerine bak",
+  "Ona bu gece 'seninle olmak istiyorum, gerçekten' diye sesli mesaj gönder",
+  "Bir sonraki buluşmada omzuna oturma noktasına öpücük kondur",
+  "Bugün ona 'seninle tek başımıza olsak ne yapardık' diye sor",
+  "Bir sonraki buluşmada göğsüne yaslan ve elini tut",
+  "Ona 'teninin sıcaklığını hissetmek istiyorum' diye yaz",
+  "Bir sonraki buluşmada derin bir nefes al ve 'seni çok istiyorum' de",
+  "Bugün ona en uzun ve en ateşli mesajı yaz — sansürsüz",
+  "Bir sonraki buluşmada kucağına oturup yüzüne bak ve ne hissettirdiğini söyle",
+  "Ona bu gece 'seninle olmak beni çıldırtıyor' diye yaz ve açıkla",
+  "Bir sonraki buluşmada dudaklarını ısır — hafifçe, sonra öp",
+  "Bugün ona 'seni her yerinden öpmek istiyorum' diye yaz",
+  "Bir sonraki buluşmada onu durdur ve aniden öp",
+  "Ona 'seninle baş başa kalmak istiyorum, telefonsuz, sadece biz' diye yaz ve ne planlıyorsun anlat",
+  "Bir sonraki buluşmada kulağına en cesur şeyi fısılda",
+  "Bugün ona gecenin en ateşli saatinde mesaj at",
+  "Bir sonraki buluşmada onu sandalyeye oturup önünde diz çök ve ellerini tut",
+  "Ona 'seninle olmak istiyorum, bu gece' diye yaz",
+  "Bir sonraki buluşmada yavaşça yaklaş ve burnunu boynuna göm",
+  "Bugün ona 'seni düşündüğümde bedenimi kontrol edemiyorum' diye yaz 😈",
+  "Bir sonraki buluşmada saçlarından tut ve öp",
+  "Ona bu gece en uzun aşk mesajını yaz — ama sadece fiziksel isteklerini anlat",
+  "Bir sonraki buluşmada belinden tutup döndür ve öp",
+  "Bugün ona 'seninle her şeyi denemek istiyorum' diye yaz",
+  "Bir sonraki buluşmada karnına öp ve yukarı doğru çık",
+  "Ona 'seni istemek bağımlılık gibi' diye yaz ve açıkla",
+  "Bir sonraki buluşmada omzuna hafifçe ısır",
+  "Bugün ona gece yatarken ne düşündüğünü anlat — dürüstçe 😏",
+  "Bir sonraki buluşmada göğsüne başını yasla ve nabzını say",
+  "Ona 'seninle aynı battaniyenin altında olmak istiyorum' diye yaz",
+  "Bir sonraki buluşmada sırtına uzun uzun masaj yap",
+  "Bugün ona 'beni çıldırtan şeyin ne olduğunu biliyor musun?' diye sor ve anlat",
+  "Bir sonraki buluşmada ellerini tutup dudaklarına bak",
+  "Ona bu gece 'seni düşünürken uyuyakaldım, rüyamda da senin yanındaydım' diye yaz",
+  "Bir sonraki buluşmada arkana geç ve beline sarıl",
+  "Bugün ona 'seninle tek başımıza olduğumuzda ne yapacağımı düşünüyorum' diye yaz",
+  "Bir sonraki buluşmada onu bir köşeye çek ve sadece ikiniz öpüşün",
+  "Ona 'tenin beni çıldırtıyor' diye yaz",
+  "Bir sonraki buluşmada yanaklarını avuçla ve dudaklarına bak",
+  "Bugün ona en cesur sesli mesajı gönder — ne düşündüğünü anlat",
+  "Bir sonraki buluşmada bacaklarını ok şa",
+  "Ona 'seninle sabaha kadar uyanık kalmak istiyorum' diye yaz ve ne yapacağınızı anlat",
+  "Bir sonraki buluşmada onu durdur, gözlerine bak ve 'seni çok istiyorum' de",
+  "Bugün ona 'en çok hangi yerimi seviyorsun?' diye sor",
+  "Bir sonraki buluşmada onu arkadan öp, sürpriz olsun",
+  "Ona 'seninle her dokunuş elektrik gibi' diye yaz",
+  "Bir sonraki buluşmada dudaklarının yanına öp — dudaklarının tam yanına",
+  "Bugün ona 'seninle olmak istiyorum, bu gece uyuyamıyorum' diye yaz",
+  "Bir sonraki buluşmada onu kaldır ve öp",
+  "Ona bu gece hayal ettiğin bir sahneyi adım adım anlat",
+  "Bir sonraki buluşmada tenine dokununca ne hissettirdiğini söyle",
+  "Bugün ona 'seni her gördüğümde kendimi tutmak zorundayım' diye yaz",
+  "Bir sonraki buluşmada karanlıkta uzun uzun öpüşün",
+  "Ona 'seninle baş başa kalmak istiyorum, sadece bu gece' diye yaz",
+  "Bir sonraki buluşmada elini tutup nefes al, sonra öp",
+  "Bugün ona 'seni en çok hangi anında istiyorum biliyor musun?' diye anlat",
+  "Bir sonraki buluşmada göğsüne yaslanıp gözlerini kapat ve sadece hisset",
+  "Ona bu gece 'seninle olmak istiyorum, sabaha kadar' diye yaz",
+  "Bir sonraki buluşmada tişörtünü kaldır ve karnına uzun uzun bak",
+  "Bugün ona en açık mesajını yaz — ne istediğini net söyle 🔥",
+  "Bir sonraki buluşmada yavaşça sarıl ve kulaklarına nefes ver",
+  "Ona 'senin yanında aklım hep başka yerlere gidiyor' diye yaz ve açıkla 😏",
+  "Bir sonraki buluşmada onu duvara dayandır ve uzun uzun öp",
+  "Bugün ona 'seni düşününce kalbim değil başka şeyler de hızlanıyor' diye yaz 😈",
+  "Bir sonraki buluşmada saçlarından tutarak öp",
+  "Ona bu gece 'seninle olmak en büyük isteğim' diye yaz ve detaylandır",
+  "Bir sonraki buluşmada ellerini teninde gezdirmesine izin ver",
+  "Bugün ona 'bir sonraki buluşmamızda sana doymak istemiyorum' diye yaz",
+
+  // 😄 EĞLENCELİ (%40 - 120 görev)
+  "Bugün ona her mesajın sonuna 🍑 emojisi koy, hiçbir şey açıklama",
+  "Bir sonraki buluşmada taş kağıt makas oynayın, kaybeden diğerinin istediği şeyi yapar",
+  "Ona en aptal selfie'ni gönder, o da göndersin",
+  "Bugün konuşmanızda her cümleyi 'aşkım' diye bitir",
+  "Bir sonraki buluşmada 5 dakika boyunca sadece emoji ile iletişim kurun",
+  "Ona bugün rastgele bir saatte 'düşünüyorum seni' yaz",
+  "Bir sonraki buluşmada körebe oynayın, kaybeden öpücük borçlanır",
+  "Bugün ona sesli mesaj gönder ama içinde sadece komik sesler çıkar",
+  "Bir sonraki buluşmada kim daha uzun süreli öpücük verirse kazanır yarışması yapın",
+  "Ona şu an aklına gelen en saçma şeyi yaz",
+  "Bir sonraki buluşmada diğerinin gözlerine 1 dakika bak, kim önce güler kaybeder",
+  "Bugün ona 'seni seviyorum' yerine farklı bir dil ile yaz (Fransızca, İspanyolca vs.)",
+  "Bir sonraki buluşmada yemek siparişini diğeri versin",
+  "Ona bu gece 'en garip rüyam' diye bir uydurma hikaye yaz",
+  "Bir sonraki buluşmada kamera önünde dans edin, en komik dans kazanır",
+  "Bugün ona 5 farklı formatta 'özledim' yaz",
+  "Bir sonraki buluşmada çizgi film izleyin ve hangi karakter olduğunuza karar verin",
+  "Ona şu an baktığın ilk şeyin fotoğrafını gönder",
+  "Bir sonraki buluşmada yüzünüze maske yapın, birbirinize bakın ve gülmeyin",
+  "Bugün ona 'tahmin et şu an ne yapıyorum' diye sor",
+  "Bir sonraki buluşmada birbirinizin saçını yapın",
+  "Ona bugün sadece GIF ile cevap ver",
+  "Bir sonraki buluşmada en kötü şarkıyı söyleyin, kim daha kötü söyler kazanır",
+  "Bugün ona rastgele bir meme gönder ve 'bu sensin' de",
+  "Bir sonraki buluşmada eski fotoğraflarınıza bakın",
+  "Ona bu hafta içinde 'bugün seni görünce...' diye başlayan bir cümle yaz",
+  "Bir sonraki buluşmada yemek yapın, malzemeleri çekiliş ile belirleyin",
+  "Bugün ona en saçma tweetini gönder",
+  "Bir sonraki buluşmada birbirinizi çizin, sonuçları paylaşın",
+  "Ona bugün 'sabah uyandım ilk düşündüğüm senin o gülüşündü' yaz",
+  "Bir sonraki buluşmada 'eğer' oyunu oynayın",
+  "Bugün ona favori emojileriyle bir hikaye yaz",
+  "Bir sonraki buluşmada yavaş yarış yapın, kim en yavaş yürürse kazanır",
+  "Ona bu gece 'seni en çok ne zaman özledim biliyor musun?' diye sor",
+  "Bir sonraki buluşmada müzik yarışması yapın, birbirinize şarkı söyleyin",
+  "Bugün ona her saat başı bir emoji gönder, açıklama yapma",
+  "Bir sonraki buluşmada diğerinin favori yemeklerinden birini sipariş edin",
+  "Ona 'şu an düşündüklerimi bi tahmin et' diye yaz",
+  "Bir sonraki buluşmada birlikte yıldız sayın",
+  "Bugün ona 3 şey sor: bir renk, bir hayvan, bir şarkı — sonra bunları onunla ilişkilendir",
+  "Bir sonraki buluşmada kim daha çok bilgi sorusunu bilir yarışması yapın",
+  "Ona bugün 'seninle ilgili 3 şeyi tahmin et' diye sor",
+  "Bir sonraki buluşmada yürüyüşe çıkın ve yolu karşı taraf belirlesin",
+  "Bugün ona 'en komik anımız ne?' diye sor",
+  "Bir sonraki buluşmada birlikte playlist yapın",
+  "Ona şu an içinde bulunduğun odayı anlat",
+  "Bir sonraki buluşmada diğerinin favori filminden sahne canlandırın",
+  "Bugün ona 'seni düşündüğümde hep aklıma bu geliyor' diye bir fotoğraf gönder",
+  "Bir sonraki buluşmada birlikte ne yesek diye çark çevirin",
+  "Ona bu gece 'sen olmasaydın ne yapardım' diye sorun",
+  "Bir sonraki buluşmada fotoğraf çekilin, poz diğeri seçsin",
+  "Bugün ona rastgele bir 'neden seni seviyorum' listesi yaz",
+  "Bir sonraki buluşmada birlikte bir şey öğrenin (origami, sihirbazlık vs.)",
+  "Ona bugün 'bugün mutlu musun?' diye sor ve nedenini sor",
+  "Bir sonraki buluşmada birbirini taklit edin",
+  "Bugün ona 'seninle yaşamak istediğim 3 an' listesi yaz",
+  "Bir sonraki buluşmada renk renk mum alıp birlikte yak",
+  "Ona bu hafta 'hatırladın mı?' diye bir ortak anıyı anlat",
+  "Bir sonraki buluşmada dondurma yiyin, hangisi daha çabuk yer yarışması",
+  "Bugün ona en çok hangi özelliğini sevdiğini söyle",
+  "Bir sonraki buluşmada çay/kahve içerken derin bir soru sor",
+  "Ona bugün 'seni düşündüğümde ne hissediyorum' diye bir paragraf yaz",
+  "Bir sonraki buluşmada diğerinin telefonundaki müziği çal",
+  "Bugün ona 'şu an yanında olsaydım ne yapardım' diye yaz",
+  "Bir sonraki buluşmada birlikte fotoğraf albümü yapın",
+  "Ona bu gece 'en güzel hatıramız' diye sorun",
+  "Bir sonraki buluşmada birbirinizdeki en sevimli alışkanlığı söyleyin",
+  "Bugün ona 'seninle ilgili en çok neyi özlüyorum' diye yaz",
+  "Bir sonraki buluşmada birlikte bir şey pişirin",
+  "Ona bu hafta 'seninle ilgili bugün ne fark ettim' diye yaz",
+  "Bir sonraki buluşmada karanlıkta el ele yürüyün",
+  "Bugün ona en sevdiği şarkının sözlerinden bir kısmını yaz",
+  "Bir sonraki buluşmada 'daha önce hiç yapmadığımız bir şey yapalım' de",
+  "Ona bugün 'bugün seni kaç kez düşündüm biliyor musun?' diye sor",
+  "Bir sonraki buluşmada sadece gülüşünüzü fotoğraflayın",
+  "Bugün ona 'seninle olan en komik anımız' diye bir şey yaz",
+  "Bir sonraki buluşmada karşılıklı oturun ve sessizce bakın, kim önce konuşursa kaybeder",
+  "Ona bu gece 'seninle olduğumda zamanın nasıl geçtiğini fark etmiyorum' diye yaz",
+  "Bir sonraki buluşmada el ele tutuşarak bir şey izleyin",
+  "Bugün ona 'seninle yaşlanmak istiyorum' diye yaz",
+  "Bir sonraki buluşmada diğerini bir şeye davet et, nereye gittiğini söyleme",
+  "Ona bu hafta 'hayatımda olduğun için teşekkür ederim' diye yaz",
+  "Bir sonraki buluşmada birlikte bir film başlayın ama yarısında bırakın ve konuşun",
+  "Bugün ona 'şu an keşke yanımda olsaydın' de ve neden söyle",
+  "Bir sonraki buluşmada diğerinin istediği bir şeyi yapın, itiraz etmeden",
+  "Ona bugün 'hayatımın en güzel kararı sensinsin' diye yaz",
+  "Bir sonraki buluşmada birlikte yeni bir cafe/restoran keşfedin",
+  "Bugün ona rastgele bir saatte selfie gönder",
+  "Bir sonraki buluşmada karanlık bir parkta yürüyün",
+  "Ona bu gece 'seninle uyumak hayalim' diye yaz",
+  "Bir sonraki buluşmada diğerinin saçını tarayın",
+  "Bugün ona 'seninle ilk tanıştığımda ne düşündüm biliyor musun?' diye anlat",
+  "Bir sonraki buluşmada birlikte bir şey satın alın, ortak anı olsun",
+  "Ona bu hafta 'seninle her gün daha çok tanışıyorum' diye yaz",
+  "Bir sonraki buluşmada birlikte bir hediye paketleyin (birine göndermek için)",
+  "Bugün ona 'seninle hiç yaşamadığım bir şeyi yaşamak istiyorum' diye yaz",
+  "Bir sonraki buluşmada birbirinize şarkı söyleyin, en utanmadan söyleyen kazanır",
+  "Ona bu gece 'seninle bir yere kaçmak istiyorum' diye yaz",
+  "Bir sonraki buluşmada yıldızlı bir gecede dışarıda oturun",
+  "Bugün ona 'gelecekte birlikte ne yapmak istiyorum' listesi yaz",
+  "Bir sonraki buluşmada el ele gözler kapalı yürüyün",
+  "Ona bu hafta 'seninle her şeyi paylaşmak istiyorum' diye sesli mesaj gönder",
+  "Bir sonraki buluşmada kim önce uyursa kaybeder yarışması yapın",
+  "Bugün ona 'seninle olmak bağımlılık yapıyor' diye yaz",
+  "Bir sonraki buluşmada birlikte güneş batışı izleyin",
+  "Ona bu gece 'seninle sabaha kadar konuşmak istiyorum' diye yaz",
+  "Bir sonraki buluşmada diğerini güldürmeye çalışın, kim önce güler kaybeder",
+  "Bugün ona 'seninle her yerde evmiş gibi hissediyorum' diye yaz",
+  "Bir sonraki buluşmada el ele yürüyüp bir şeyler alın",
+  "Ona bu hafta 'seninle olmak en güzel his' diye sesli mesaj gönder",
+  "Bir sonraki buluşmada karşılıklı oturup birbirini anlatan şeyler söyleyin",
+  "Bugün ona 'seni gördüğümde kalbim ilk buluşmamızdaki gibi çarpıyor' diye yaz",
+
+  // 💕 ROMANTİK (%20 - 60 görev)
+  "Ona el yazısıyla kısa bir not yaz, fotoğrafını çekip gönder",
+  "Bir sonraki buluşmada gittiğiniz ilk yere tekrar gidin",
+  "Ona bu hafta 'seninle olan ilk anımı hala hatırlıyorum' diye anlat",
+  "Bir sonraki buluşmada ona bir çiçek al",
+  "Bugün ona sesli mesaj gönder, sadece neden onu sevdiğini anlat",
+  "Bir sonraki buluşmada fotoğraf çektirin, çerçevelemeye söz verin",
+  "Ona bu gece 'hayatıma girdiğin gün her şey değişti' diye yaz",
+  "Bir sonraki buluşmada diğerinin en sevdiği şeyi yapın",
+  "Bugün ona 'seninle geçen her an hazine gibi' diye yaz",
+  "Bir sonraki buluşmada birlikte yeni bir şey deneyin",
+  "Ona bu hafta için özel bir çalma listesi yap ve gönder",
+  "Bir sonraki buluşmada geçmiş fotoğraflarınıza bakın",
+  "Bugün ona 'seni tanıdığım için ne kadar şanslıyım' diye yaz",
+  "Bir sonraki buluşmada beraber bir mum yak ve dilekler isteyin",
+  "Ona bu gece 'seni düşünerek uyuyacağım' diye yaz",
+  "Bir sonraki buluşmada telefonsuz 1 saat geçirin",
+  "Bugün ona 'seninle her şey daha anlamlı' diye sesli mesaj gönder",
+  "Bir sonraki buluşmada diğerine sürpriz yap",
+  "Ona bu hafta 'hayatımın en iyi kararı seni sevmek' diye yaz",
+  "Bir sonraki buluşmada birlikte yeni bir cafe keşfedin",
+  "Bugün ona 'seninle her gün daha güzel' diye yaz",
+  "Bir sonraki buluşmada el ele yürüyüşe çıkın",
+  "Ona bu gece hiç söylemediğin bir korkunu anlat",
+  "Bir sonraki buluşmada diğerinin gözleri içine bak ve ne hissettirdiğini anlat",
+  "Bugün ona 'seni kaybetmekten en çok ne korkutuyor biliyor musun?' diye aç",
+  "Bir sonraki buluşmada birlikte bir film seçin ve hiç konuşmadan izleyin",
+  "Ona bu hafta 'seninle bir ömür geçirmek istiyorum' diye yaz",
+  "Bir sonraki buluşmada diğerine teşekkür et, somut bir şey için",
+  "Bugün ona 'seni ilk gördüğümde ne hissetmiştim biliyor musun?' diye anlat",
+  "Bir sonraki buluşmada birlikte gün batımı izleyin",
+  "Ona bu gece 'seninle her şeyi paylaşmak istiyorum' diye yaz",
+  "Bir sonraki buluşmada çocukluğundan bir fotoğraf göster",
+  "Bugün ona 'hayallerimde hep sen varsın' diye sesli mesaj gönder",
+  "Bir sonraki buluşmada diğerini övün, sadece güzelliği değil karakterini",
+  "Ona bu hafta 'seninle olmak beni huzurlu yapıyor' diye yaz",
+  "Bir sonraki buluşmada birlikte 1 yıl sonra nerede olmak istediğinizi konuşun",
+  "Bugün ona 'seni her gördüğümde şükrediyorum' diye yaz",
+  "Bir sonraki buluşmada diğerinin gözlerine bak ve 'seni seviyorum' de",
+  "Ona bu gece 'seninle her şey yolunda gibi hissediyorum' diye yaz",
+  "Bir sonraki buluşmada birlikte bir şey üretin (yemek, çizim, video)",
+  "Bugün ona 'seni tanıyan en şanslı insanım' diye yaz",
+  "Bir sonraki buluşmada diğerine 5 yıl sonra ne hayal ettiğini sor",
+  "Ona bu hafta 'seninle olmak hayatımın en güzel bölümü' diye yaz",
+  "Bir sonraki buluşmada birlikte bir anı defteri başlatın",
+  "Bugün ona 'seninle her sabah uyanmak istiyorum' diye sesli mesaj gönder",
+  "Bir sonraki buluşmada diğerine en sevdiği şeyi sürpriz olarak getir",
+  "Ona bu gece 'seni düşünerek güldüm bugün' diye ve nedenini anlat",
+  "Bir sonraki buluşmada birlikte bir yıldızın altında oturun",
+  "Bugün ona 'seninle geçen her saniye değerli' diye yaz",
+  "Bir sonraki buluşmada diğerine 'seni ne zaman en çok özledim' söyle",
+  "Ona bu hafta 'varlığın benim için ne kadar önemli' diye uzun bir mesaj yaz",
+  "Bir sonraki buluşmada birlikte şiir okuyun veya yazın",
+  "Bugün ona 'seninle olmak en büyük armağan' diye yaz",
+  "Bir sonraki buluşmada diğerinin en sevdiği müziği çal ve birlikte dinleyin",
+  "Ona bu gece 'seninle ağlamak bile güzel olur' diye yaz",
+  "Bir sonraki buluşmada birlikte ilk nereye gitmek istediğinizi konuşun",
+  "Bugün ona 'seni sevmek en kolay şey' diye sesli mesaj gönder",
+  "Bir sonraki buluşmada diğerine 'seni en çok ne için seviyorum' söyle",
+  "Ona bu hafta 'seninle her gün aşık oluyorum' diye yaz",
+  "Bir sonraki buluşmada birlikte bir dilekte bulunun",
+  "Bugün ona 'hayatımın geri kalanını seninle geçirmek istiyorum' diye yaz",
+];
+
+let gorevMonth = new Date().getMonth(), gorevYear = new Date().getFullYear();
+let currentGorevDate = null;
+
+function renderGorevCalendar() {
+  const body = document.getElementById('gorev-calendar-body');
+  const label = document.getElementById('gorev-month-label');
+  if(!body || !label) return;
+  label.textContent = new Date(gorevYear, gorevMonth).toLocaleDateString('tr-TR', {month:'long', year:'numeric'});
+  body.innerHTML = '';
+  const first = new Date(gorevYear, gorevMonth, 1).getDay();
+  const days = new Date(gorevYear, gorevMonth+1, 0).getDate();
+  const prev = new Date(gorevYear, gorevMonth, 0).getDate();
+  const todayStr = toDateStr(new Date());
+  for(let i=0;i<first;i++){const d=document.createElement('div');d.className='cal-day other-month';d.textContent=prev-first+i+1;body.appendChild(d);}
+  for(let d=1;d<=days;d++){
+    const el=document.createElement('div'); el.className='cal-day';
+    const ds=`${gorevYear}-${String(gorevMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    if(ds===todayStr) el.classList.add('today');
+    if(ds===currentGorevDate) el.classList.add('selected-draw-day');
+    const gv = state.gorevler[ds];
+    if(gv) {
+      const doneCount = (gv.tulay?.done?1:0)+(gv.yigit?.done?1:0);
+      const hasAny = gv.tulay?.text || gv.yigit?.text;
+      if(hasAny) el.innerHTML+=`<div style="font-size:0.65rem;line-height:1.2;">${doneCount===2?'✅✅':doneCount===1?'✅':''}</div>`;
+    }
+    el.innerHTML+=`<div style="font-size:0.8rem;font-weight:600;">${d}</div>`;
+    el.onclick=()=>openGorevDay(ds);
+    body.appendChild(el);
+  }
+}
+
+function changeGorevMonth(dir) {
+  gorevMonth+=dir;
+  if(gorevMonth>11){gorevMonth=0;gorevYear++;}
+  if(gorevMonth<0){gorevMonth=11;gorevYear--;}
+  renderGorevCalendar();
+}
+
+function openGorevDay(ds) {
+  currentGorevDate = ds;
+  document.getElementById('gorev-panel').style.display='block';
+  document.getElementById('gorev-pick-msg').style.display='none';
+  const d = new Date(ds+'T12:00:00');
+  document.getElementById('gorev-date-label').textContent = d.toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
+  renderGorevCalendar();
+  renderGorevPanel();
+}
+
+function renderGorevPanel() {
+  const ds = currentGorevDate;
+  if(!ds) return;
+  const gv = state.gorevler[ds] || {};
+
+  ['tulay','yigit'].forEach(who => {
+    const g = gv[who];
+    const textEl = document.getElementById(`gorev-${who}-text`);
+    const doneBtn = document.getElementById(`gorev-${who}-done-btn`);
+    const statusEl = document.getElementById(`gorev-${who}-status`);
+    if(g && g.text) {
+      textEl.textContent = g.text;
+      if(g.done) {
+        doneBtn.style.display='none';
+        statusEl.textContent='✅ Tamamlandı! 🎉';
+      } else {
+        doneBtn.style.display='inline-block';
+        statusEl.textContent='';
+      }
+    } else {
+      textEl.textContent='—';
+      doneBtn.style.display='none';
+      statusEl.textContent='';
+    }
+  });
+}
+
+function gorevAl(who) {
+  const ds = currentGorevDate;
+  if(!ds) return;
+  if(!state.gorevler[ds]) state.gorevler[ds] = {};
+  // Pick a random task (avoid repeating same task if possible)
+  const usedTasks = Object.values(state.gorevler).flatMap(g => [g.tulay?.text, g.yigit?.text]).filter(Boolean);
+  let available = GOREVLER.filter(t => !usedTasks.includes(t));
+  if(available.length === 0) available = GOREVLER; // reset if all used
+  const task = available[Math.floor(Math.random() * available.length)];
+  state.gorevler[ds][who] = { text: task, done: false };
+  set(ref(db, `state/gorevler/${ds}`), state.gorevler[ds]).catch(e=>console.error(e));
+  renderGorevPanel();
+  renderGorevCalendar();
+}
+
+function gorevTamamla(who) {
+  const ds = currentGorevDate;
+  if(!ds || !state.gorevler[ds]?.[who]) return;
+  state.gorevler[ds][who].done = true;
+  set(ref(db, `state/gorevler/${ds}`), state.gorevler[ds]).catch(e=>console.error(e));
+  renderGorevPanel();
+  renderGorevCalendar();
+  // Confetti 🎉
+  for(let i=0;i<20;i++){
+    setTimeout(()=>{
+      const el=document.createElement('div');
+      el.textContent=['💕','🎉','✨','💋','🌹','💖'][Math.floor(Math.random()*6)];
+      el.style.cssText=`position:fixed;left:${Math.random()*100}vw;top:-40px;font-size:1.5rem;z-index:9999;pointer-events:none;animation:fall 1.5s linear forwards;`;
+      document.body.appendChild(el);
+      setTimeout(()=>el.remove(),1500);
+    },i*80);
+  }
+}
+
+// ===== ENLER =====
+let enlerWho = null;
+
+function renderEnler() {
+  ['tulay','yigit'].forEach(who=>{
+    const list = document.getElementById(`enler-${who}-list`);
+    if(!list) return;
+    const items = state.enler?.[who] || [];
+    if(!items.length) {
+      list.innerHTML='<div style="text-align:center;color:var(--text-light);font-size:0.8rem;padding:10px;">Henüz eklenmedi 🌸</div>';
+      return;
+    }
+    list.innerHTML = items.map((item,i)=>`
+      <div style="background:white;border:1.5px solid ${who==='tulay'?'var(--rose-light)':'#c0d8f0'};border-radius:14px;padding:10px 12px;position:relative;">
+        <div style="font-size:0.72rem;font-weight:700;color:${who==='tulay'?'var(--rose)':'#4a7ac0'};margin-bottom:3px;">${item.baslik}</div>
+        <div style="font-size:0.88rem;color:var(--text);">${item.deger}</div>
+        <button onclick="enlerSil('${who}',${i})" style="position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;font-size:0.8rem;color:var(--text-light);">✕</button>
+      </div>
+    `).join('');
+  });
+}
+
+function enlerEkle(who) {
+  enlerWho = who;
+  document.getElementById('enler-modal-title').textContent = who==='tulay'?'💕 Tülay — Başlık Ekle':'💙 Yiğit — Başlık Ekle';
+  document.getElementById('enler-baslik-input').value='';
+  document.getElementById('enler-deger-input').value='';
+  openModal('enler-modal');
+}
+
+function enlerKaydet() {
+  const baslik = document.getElementById('enler-baslik-input').value.trim();
+  const deger = document.getElementById('enler-deger-input').value.trim();
+  if(!baslik || !deger) return;
+  if(!state.enler) state.enler = {tulay:[], yigit:[]};
+  if(!state.enler[enlerWho]) state.enler[enlerWho]=[];
+  state.enler[enlerWho].push({baslik, deger});
+  saveState();
+  closeModal('enler-modal');
+  renderEnler();
+}
+
+function enlerSil(who, index) {
+  if(!confirm('Bu eni silmek istiyor musun?')) return;
+  state.enler[who].splice(index,1);
+  saveState();
+  renderEnler();
+}
+
+// Init — called after bootApp sets up DOM
+// (renderGorevCalendar and renderEnler called from onValue after state loads)
+
+window.changeGorevMonth = changeGorevMonth;
+window.openGorevDay = openGorevDay;
+window.gorevAl = gorevAl;
+window.gorevTamamla = gorevTamamla;
+window.enlerEkle = enlerEkle;
+window.enlerKaydet = enlerKaydet;
+window.enlerSil = enlerSil;
+window.renderEnler = renderEnler;
+window.renderGorevCalendar = renderGorevCalendar;
+
 } // end bootApp
 
-
-// ===== BAŞLAT =====
-const loadOverlay = document.createElement('div');
-loadOverlay.style.cssText = 'position:fixed;inset:0;background:rgba(255,248,240,0.97);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;';
-loadOverlay.innerHTML = '<div style="font-size:3rem;animation:spin 1.2s linear infinite;">💞</div><div style="font-size:1rem;color:#c0435f;margin-top:14px;font-family:Playfair Display,serif;">Yükleniyor...</div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
-document.body.appendChild(loadOverlay);
-
-loadState().finally(() => {
-  loadOverlay.style.transition = 'opacity 0.5s';
-  loadOverlay.style.opacity = '0';
-  setTimeout(() => loadOverlay.remove(), 500);
-});
+// ===== BAŞLAT — bootApp dışında, tek çağrı =====
+loadState();
 </script>
 
 <!-- ======================== PLACES PAGE ======================== -->
@@ -2802,6 +3842,88 @@ loadState().finally(() => {
     <input type="hidden" id="map-lat">
     <input type="hidden" id="map-lng">
     <button class="modal-save-btn" onclick="saveMap()">💾 Kaydet</button>
+  </div>
+</div>
+
+<!-- ======================== GÖREVLER PAGE ======================== -->
+<div class="page" id="page-gorevler">
+  <div class="page-title-bar">✅ Görevler</div>
+  <p style="font-size:0.88rem;color:var(--text-light);margin-bottom:16px;">Takvimden bir gün seç, görev al! 💕</p>
+
+  <div class="memories-header" style="margin-bottom:14px;">
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="changeGorevMonth(-1)">‹</button>
+      <div class="cal-month-label" id="gorev-month-label"></div>
+      <button class="cal-nav-btn" onclick="changeGorevMonth(1)">›</button>
+    </div>
+  </div>
+  <div class="calendar-grid" style="margin-bottom:16px;">
+    <div class="cal-days-header">
+      <div class="cal-day-header">Paz</div><div class="cal-day-header">Pzt</div>
+      <div class="cal-day-header">Sal</div><div class="cal-day-header">Çar</div>
+      <div class="cal-day-header">Per</div><div class="cal-day-header">Cum</div>
+      <div class="cal-day-header">Cmt</div>
+    </div>
+    <div class="cal-days-body" id="gorev-calendar-body"></div>
+  </div>
+
+  <div id="gorev-panel" style="display:none;">
+    <div style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--rose-dark);text-align:center;margin-bottom:14px;" id="gorev-date-label"></div>
+
+    <!-- Tülay Görevi -->
+    <div style="background:linear-gradient(135deg,#fff0f5,#ffe8f2);border-radius:18px;padding:16px;margin-bottom:12px;border:1.5px solid var(--rose-light);">
+      <div style="font-weight:700;color:var(--rose);margin-bottom:10px;font-size:0.9rem;">💕 Tülay'ın Görevi</div>
+      <div id="gorev-tulay-text" style="font-size:0.88rem;color:var(--text);line-height:1.6;min-height:40px;font-style:italic;margin-bottom:10px;">—</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="gorevAl('tulay')" style="background:var(--rose);color:white;border:none;border-radius:12px;padding:8px 16px;cursor:pointer;font-size:0.82rem;font-weight:700;">🎲 Görev Al</button>
+        <button id="gorev-tulay-done-btn" onclick="gorevTamamla('tulay')" style="display:none;background:#4CAF50;color:white;border:none;border-radius:12px;padding:8px 16px;cursor:pointer;font-size:0.82rem;font-weight:700;">✅ Tamamlandı!</button>
+      </div>
+      <div id="gorev-tulay-status" style="font-size:0.75rem;color:#4CAF50;margin-top:6px;font-weight:700;"></div>
+    </div>
+
+    <!-- Yiğit Görevi -->
+    <div style="background:linear-gradient(135deg,#eef4ff,#e0ecff);border-radius:18px;padding:16px;border:1.5px solid #c0d8f0;">
+      <div style="font-weight:700;color:#4a7ac0;margin-bottom:10px;font-size:0.9rem;">💙 Yiğit'in Görevi</div>
+      <div id="gorev-yigit-text" style="font-size:0.88rem;color:var(--text);line-height:1.6;min-height:40px;font-style:italic;margin-bottom:10px;">—</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="gorevAl('yigit')" style="background:#4a7ac0;color:white;border:none;border-radius:12px;padding:8px 16px;cursor:pointer;font-size:0.82rem;font-weight:700;">🎲 Görev Al</button>
+        <button id="gorev-yigit-done-btn" onclick="gorevTamamla('yigit')" style="display:none;background:#4CAF50;color:white;border:none;border-radius:12px;padding:8px 16px;cursor:pointer;font-size:0.82rem;font-weight:700;">✅ Tamamlandı!</button>
+      </div>
+      <div id="gorev-yigit-status" style="font-size:0.75rem;color:#4CAF50;margin-top:6px;font-weight:700;"></div>
+    </div>
+  </div>
+  <div id="gorev-pick-msg" style="text-align:center;padding:30px;color:var(--text-light);font-size:0.9rem;">Bir gün seçin ve görev alın! ✅</div>
+</div>
+
+<!-- ======================== ENLER PAGE ======================== -->
+<div class="page" id="page-enler">
+  <div class="page-title-bar">🏆 Enler Köşesi</div>
+  <p style="font-size:0.88rem;color:var(--text-light);margin-bottom:20px;">Kendinize ait "enler"i ekleyin! 💕</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+    <!-- Tülay -->
+    <div>
+      <div style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--rose-dark);margin-bottom:12px;text-align:center;">💕 Tülay</div>
+      <div id="enler-tulay-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+      <button onclick="enlerEkle('tulay')" style="width:100%;background:var(--rose);color:white;border:none;border-radius:14px;padding:10px;cursor:pointer;font-size:0.85rem;font-weight:700;">+ Başlık Ekle</button>
+    </div>
+    <!-- Yiğit -->
+    <div>
+      <div style="font-family:'Playfair Display',serif;font-size:1rem;color:#4a7ac0;margin-bottom:12px;text-align:center;">💙 Yiğit</div>
+      <div id="enler-yigit-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+      <button onclick="enlerEkle('yigit')" style="width:100%;background:#4a7ac0;color:white;border:none;border-radius:14px;padding:10px;cursor:pointer;font-size:0.85rem;font-weight:700;">+ Başlık Ekle</button>
+    </div>
+  </div>
+</div>
+
+<!-- ENLER MODAL -->
+<div class="modal-backdrop" id="enler-modal">
+  <div class="modal">
+    <div class="modal-title" id="enler-modal-title">Başlık Ekle</div>
+    <button class="modal-close" onclick="closeModal('enler-modal')">✕</button>
+    <input type="text" id="enler-baslik-input" placeholder="Başlık (örn: En sevdiğim yemek)" style="width:100%;border:1.5px solid var(--rose-light);border-radius:12px;padding:10px;font-size:0.88rem;margin-bottom:10px;font-family:Lato,sans-serif;outline:none;">
+    <input type="text" id="enler-deger-input" placeholder="Cevap (örn: Lahmacun 🥙)" style="width:100%;border:1.5px solid var(--rose-light);border-radius:12px;padding:10px;font-size:0.88rem;margin-bottom:14px;font-family:Lato,sans-serif;outline:none;">
+    <button class="modal-save-btn" onclick="enlerKaydet()">💾 Kaydet</button>
   </div>
 </div>
 
