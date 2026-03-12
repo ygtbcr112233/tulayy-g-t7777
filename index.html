@@ -836,65 +836,107 @@ canvas.drawing-canvas {
 
   <!-- OYUN REKORLARI -->
   <div id="home-rekorlar" style="background:linear-gradient(135deg,#0f0f1a,#1a1020);border-radius:24px;padding:22px 18px;margin-bottom:20px;border:1.5px solid #3a2a4a;box-shadow:0 8px 32px rgba(0,0,0,0.3),0 0 0 1px rgba(232,105,138,0.1);position:relative;overflow:hidden;">
-    <!-- Arka plan parlama -->
     <div style="position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:200px;height:200px;background:radial-gradient(circle,rgba(232,105,138,0.12) 0%,transparent 70%);pointer-events:none;"></div>
-
     <div style="text-align:center;margin-bottom:18px;position:relative;">
       <div style="font-size:1.6rem;margin-bottom:4px;">🏆</div>
       <div style="font-family:'Playfair Display',serif;font-size:1.2rem;color:white;font-weight:700;letter-spacing:1px;">Oyun Rekorları</div>
       <div style="width:40px;height:2px;background:linear-gradient(90deg,#e8698a,#d4a853);margin:8px auto 0;border-radius:2px;"></div>
     </div>
-
     <!-- Engelli Yol -->
     <div style="margin-bottom:14px;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-        <span style="font-size:1.1rem;">🚗</span>
-        <span style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:2px;text-transform:uppercase;">Engelli Yol</span>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="font-size:1rem;">🚗</span>
+        <span style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:2px;text-transform:uppercase;">Engelli Yol</span>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div id="home-rek-araba-tulay-card" style="background:rgba(255,143,171,0.1);border:1px solid rgba(255,143,171,0.25);border-radius:16px;padding:14px;text-align:center;position:relative;transition:all 0.3s;">
-          <div style="font-size:0.68rem;color:rgba(255,143,171,0.7);font-weight:700;margin-bottom:4px;">💕 TÜLAY</div>
-          <div style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;color:#ff8fab;line-height:1;" id="home-rek-araba-tulay">0</div>
-          <div style="font-size:0.62rem;color:rgba(255,255,255,0.3);margin-top:3px;">saniye</div>
-          <div id="home-rek-araba-tulay-crown" style="display:none;position:absolute;top:-10px;right:-4px;font-size:1.2rem;">👑</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div id="home-rek-araba-tulay-card" style="background:rgba(255,143,171,0.1);border:1px solid rgba(255,143,171,0.25);border-radius:14px;padding:12px;text-align:center;position:relative;transition:all 0.3s;">
+          <div style="font-size:0.65rem;color:rgba(255,143,171,0.7);font-weight:700;margin-bottom:3px;">💕 TÜLAY</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:#ff8fab;line-height:1;" id="home-rek-araba-tulay">0</div>
+          <div style="font-size:0.6rem;color:rgba(255,255,255,0.3);margin-top:2px;">saniye</div>
+          <div id="home-rek-araba-tulay-crown" style="display:none;position:absolute;top:-10px;right:-4px;font-size:1.1rem;">👑</div>
         </div>
-        <div id="home-rek-araba-yigit-card" style="background:rgba(91,168,232,0.1);border:1px solid rgba(91,168,232,0.25);border-radius:16px;padding:14px;text-align:center;position:relative;transition:all 0.3s;">
-          <div style="font-size:0.68rem;color:rgba(91,168,232,0.7);font-weight:700;margin-bottom:4px;">💙 YİĞİT</div>
-          <div style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;color:#5ba8e8;line-height:1;" id="home-rek-araba-yigit">0</div>
-          <div style="font-size:0.62rem;color:rgba(255,255,255,0.3);margin-top:3px;">saniye</div>
-          <div id="home-rek-araba-yigit-crown" style="display:none;position:absolute;top:-10px;right:-4px;font-size:1.2rem;">👑</div>
+        <div id="home-rek-araba-yigit-card" style="background:rgba(91,168,232,0.1);border:1px solid rgba(91,168,232,0.25);border-radius:14px;padding:12px;text-align:center;position:relative;transition:all 0.3s;">
+          <div style="font-size:0.65rem;color:rgba(91,168,232,0.7);font-weight:700;margin-bottom:3px;">💙 YİĞİT</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:#5ba8e8;line-height:1;" id="home-rek-araba-yigit">0</div>
+          <div style="font-size:0.6rem;color:rgba(255,255,255,0.3);margin-top:2px;">saniye</div>
+          <div id="home-rek-araba-yigit-crown" style="display:none;position:absolute;top:-10px;right:-4px;font-size:1.1rem;">👑</div>
         </div>
       </div>
-      <div id="home-rek-araba-taunt" style="text-align:center;font-size:0.75rem;color:rgba(255,255,255,0.45);margin-top:8px;font-style:italic;min-height:18px;"></div>
+      <div id="home-rek-araba-taunt" style="text-align:center;font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:6px;font-style:italic;min-height:16px;"></div>
     </div>
-
     <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent);margin-bottom:14px;"></div>
-
     <!-- Snake -->
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="font-size:1rem;">🐍</span>
+        <span style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:2px;text-transform:uppercase;">Snake</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div id="home-rek-snake-tulay-card" style="background:rgba(255,143,171,0.1);border:1px solid rgba(255,143,171,0.25);border-radius:14px;padding:12px;text-align:center;position:relative;transition:all 0.3s;">
+          <div style="font-size:0.65rem;color:rgba(255,143,171,0.7);font-weight:700;margin-bottom:3px;">💕 TÜLAY</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:#ff8fab;line-height:1;" id="home-rek-snake-tulay">0</div>
+          <div style="font-size:0.6rem;color:rgba(255,255,255,0.3);margin-top:2px;">puan</div>
+          <div id="home-rek-snake-tulay-crown" style="display:none;position:absolute;top:-10px;right:-4px;font-size:1.1rem;">👑</div>
+        </div>
+        <div id="home-rek-snake-yigit-card" style="background:rgba(91,168,232,0.1);border:1px solid rgba(91,168,232,0.25);border-radius:14px;padding:12px;text-align:center;position:relative;transition:all 0.3s;">
+          <div style="font-size:0.65rem;color:rgba(91,168,232,0.7);font-weight:700;margin-bottom:3px;">💙 YİĞİT</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:#5ba8e8;line-height:1;" id="home-rek-snake-yigit">0</div>
+          <div style="font-size:0.6rem;color:rgba(255,255,255,0.3);margin-top:2px;">puan</div>
+          <div id="home-rek-snake-yigit-crown" style="display:none;position:absolute;top:-10px;right:-4px;font-size:1.1rem;">👑</div>
+        </div>
+      </div>
+      <div id="home-rek-snake-taunt" style="text-align:center;font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:6px;font-style:italic;min-height:16px;"></div>
+    </div>
+    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent);margin-bottom:14px;"></div>
+    <!-- Simon Says -->
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="font-size:1rem;">🧩</span>
+        <span style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:2px;text-transform:uppercase;">Simon Says</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div id="home-rek-simon-tulay-card" style="background:rgba(255,143,171,0.1);border:1px solid rgba(255,143,171,0.25);border-radius:14px;padding:12px;text-align:center;position:relative;transition:all 0.3s;">
+          <div style="font-size:0.65rem;color:rgba(255,143,171,0.7);font-weight:700;margin-bottom:3px;">💕 TÜLAY</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:#ff8fab;line-height:1;" id="home-rek-simon-tulay">0</div>
+          <div style="font-size:0.6rem;color:rgba(255,255,255,0.3);margin-top:2px;">seviye</div>
+          <div id="home-rek-simon-tulay-crown" style="display:none;position:absolute;top:-10px;right:-4px;font-size:1.1rem;">👑</div>
+        </div>
+        <div id="home-rek-simon-yigit-card" style="background:rgba(91,168,232,0.1);border:1px solid rgba(91,168,232,0.25);border-radius:14px;padding:12px;text-align:center;position:relative;transition:all 0.3s;">
+          <div style="font-size:0.65rem;color:rgba(91,168,232,0.7);font-weight:700;margin-bottom:3px;">💙 YİĞİT</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:#5ba8e8;line-height:1;" id="home-rek-simon-yigit">0</div>
+          <div style="font-size:0.6rem;color:rgba(255,255,255,0.3);margin-top:2px;">seviye</div>
+          <div id="home-rek-simon-yigit-crown" style="display:none;position:absolute;top:-10px;right:-4px;font-size:1.1rem;">👑</div>
+        </div>
+      </div>
+      <div id="home-rek-simon-taunt" style="text-align:center;font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:6px;font-style:italic;min-height:16px;"></div>
+    </div>
+    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent);margin-bottom:14px;"></div>
+    <!-- Kelime Bul -->
     <div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-        <span style="font-size:1.1rem;">🐍</span>
-        <span style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:2px;text-transform:uppercase;">Snake</span>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="font-size:1rem;">🔤</span>
+        <span style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:2px;text-transform:uppercase;">Kelime Bul</span>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div id="home-rek-snake-tulay-card" style="background:rgba(255,143,171,0.1);border:1px solid rgba(255,143,171,0.25);border-radius:16px;padding:14px;text-align:center;position:relative;transition:all 0.3s;">
-          <div style="font-size:0.68rem;color:rgba(255,143,171,0.7);font-weight:700;margin-bottom:4px;">💕 TÜLAY</div>
-          <div style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;color:#ff8fab;line-height:1;" id="home-rek-snake-tulay">0</div>
-          <div style="font-size:0.62rem;color:rgba(255,255,255,0.3);margin-top:3px;">puan</div>
-          <div id="home-rek-snake-tulay-crown" style="display:none;position:absolute;top:-10px;right:-4px;font-size:1.2rem;">👑</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div id="home-rek-kelime-tulay-card" style="background:rgba(255,143,171,0.1);border:1px solid rgba(255,143,171,0.25);border-radius:14px;padding:12px;text-align:center;position:relative;transition:all 0.3s;">
+          <div style="font-size:0.65rem;color:rgba(255,143,171,0.7);font-weight:700;margin-bottom:3px;">💕 TÜLAY</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:#ff8fab;line-height:1;" id="home-rek-kelime-tulay">0</div>
+          <div style="font-size:0.6rem;color:rgba(255,255,255,0.3);margin-top:2px;">puan</div>
+          <div id="home-rek-kelime-tulay-crown" style="display:none;position:absolute;top:-10px;right:-4px;font-size:1.1rem;">👑</div>
         </div>
-        <div id="home-rek-snake-yigit-card" style="background:rgba(91,168,232,0.1);border:1px solid rgba(91,168,232,0.25);border-radius:16px;padding:14px;text-align:center;position:relative;transition:all 0.3s;">
-          <div style="font-size:0.68rem;color:rgba(91,168,232,0.7);font-weight:700;margin-bottom:4px;">💙 YİĞİT</div>
-          <div style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;color:#5ba8e8;line-height:1;" id="home-rek-snake-yigit">0</div>
-          <div style="font-size:0.62rem;color:rgba(255,255,255,0.3);margin-top:3px;">puan</div>
-          <div id="home-rek-snake-yigit-crown" style="display:none;position:absolute;top:-10px;right:-4px;font-size:1.2rem;">👑</div>
+        <div id="home-rek-kelime-yigit-card" style="background:rgba(91,168,232,0.1);border:1px solid rgba(91,168,232,0.25);border-radius:14px;padding:12px;text-align:center;position:relative;transition:all 0.3s;">
+          <div style="font-size:0.65rem;color:rgba(91,168,232,0.7);font-weight:700;margin-bottom:3px;">💙 YİĞİT</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:#5ba8e8;line-height:1;" id="home-rek-kelime-yigit">0</div>
+          <div style="font-size:0.6rem;color:rgba(255,255,255,0.3);margin-top:2px;">puan</div>
+          <div id="home-rek-kelime-yigit-crown" style="display:none;position:absolute;top:-10px;right:-4px;font-size:1.1rem;">👑</div>
         </div>
       </div>
-      <div id="home-rek-snake-taunt" style="text-align:center;font-size:0.75rem;color:rgba(255,255,255,0.45);margin-top:8px;font-style:italic;min-height:18px;"></div>
+      <div id="home-rek-kelime-taunt" style="text-align:center;font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:6px;font-style:italic;min-height:16px;"></div>
     </div>
   </div>
 
   <!-- YEMEK ÇARKI -->
+  
   <div style="background:linear-gradient(135deg,#fff0f5,#fff8f0);border-radius:24px;padding:24px;margin-bottom:20px;border:1px solid var(--rose-light);box-shadow:var(--shadow);">
     <div style="font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--rose-dark);text-align:center;margin-bottom:6px;">🍽️ Ne Yesek Çarkı</div>
     <div style="font-size:0.8rem;color:var(--text-light);text-align:center;margin-bottom:16px;">Karar veremiyorsanız çarka bırakın! 😄</div>
@@ -4243,10 +4285,10 @@ window.renderKissUyum = renderKissUyum;
 // ===== OYUN =====
 let oyunCurrentPlayer = null;
 let oyunCurrentGame = null;
-let oyunScores = { tulay: { araba: 0, snake: 0 }, yigit: { araba: 0, snake: 0 } };
+let oyunScores = { tulay: { araba: 0, snake: 0, simon: 0, kelime: 0 }, yigit: { araba: 0, snake: 0, simon: 0, kelime: 0 } };
 
 function oyunLoadScores() {
-  get(ref(db, 'state/oyunScores2')).then(snap => {
+  get(ref(db, 'oyunRekorlar')).then(snap => {
     if(snap.exists()) oyunScores = snap.val();
     oyunRefreshRekorBoard();
     if(typeof renderHomeRekorlar === 'function') renderHomeRekorlar();
@@ -4256,10 +4298,17 @@ function oyunLoadScores() {
 function oyunRefreshRekorBoard() {
   const s = oyunScores;
   const el = (id) => document.getElementById(id);
-  if(el('oyun-rekor-tulay-araba')) el('oyun-rekor-tulay-araba').textContent = s.tulay?.araba || 0;
-  if(el('oyun-rekor-yigit-araba')) el('oyun-rekor-yigit-araba').textContent = s.yigit?.araba || 0;
-  if(el('oyun-rekor-tulay-snake')) el('oyun-rekor-tulay-snake').textContent = s.tulay?.snake || 0;
-  if(el('oyun-rekor-yigit-snake')) el('oyun-rekor-yigit-snake').textContent = s.yigit?.snake || 0;
+  ['araba','snake','simon','kelime'].forEach(g => {
+    ['tulay','yigit'].forEach(p => {
+      const el2 = el(`oyun-rekor-${p}-${g}`);
+      if(el2) el2.textContent = s[p]?.[g] || 0;
+    });
+  });
+  // personal rekor panel
+  ['araba','snake','simon','kelime'].forEach(g => {
+    const el2 = el(`oyun-my-rekor-${g}`);
+    if(el2 && oyunCurrentPlayer) el2.textContent = s[oyunCurrentPlayer]?.[g] || 0;
+  });
 }
 
 function oyunPlayerSec(who) {
@@ -4270,8 +4319,10 @@ function oyunPlayerSec(who) {
   document.getElementById('oyun-current-player-label').textContent = who === 'tulay' ? '💕 Tülay' : '💙 Yiğit';
   // Personal records
   const s = oyunScores[who] || {};
-  document.getElementById('oyun-my-rekor-araba').textContent = s.araba || 0;
-  document.getElementById('oyun-my-rekor-snake').textContent = s.snake || 0;
+  ['araba','snake','simon','kelime'].forEach(g => {
+    const el2 = document.getElementById('oyun-my-rekor-'+g);
+    if(el2) el2.textContent = s[g] || 0;
+  });
 }
 
 function oyunSec(game) {
@@ -4282,10 +4333,14 @@ function oyunSec(game) {
   document.getElementById('oyun-current-score').textContent = '0';
   const rec = (oyunScores[oyunCurrentPlayer] || {})[game] || 0;
   document.getElementById('oyun-area-rekor').textContent = rec;
-  document.getElementById('game-araba-wrap').style.display = game === 'araba' ? 'block' : 'none';
-  document.getElementById('game-snake-wrap').style.display = game === 'snake' ? 'block' : 'none';
+  ['araba','snake','simon','kelime'].forEach(g => {
+    const w = document.getElementById('game-'+g+'-wrap');
+    if(w) w.style.display = game === g ? 'block' : 'none';
+  });
   if(game === 'araba') arabaInit();
   if(game === 'snake') snakeInit();
+  if(game === 'simon') simonInit();
+  if(game === 'kelime') kelimeInit();
 }
 
 function oyunGeriDon() {
@@ -4305,8 +4360,10 @@ function oyunGameGeri() {
   oyunCurrentGame = null;
   // Refresh personal records
   const s = oyunScores[oyunCurrentPlayer] || {};
-  document.getElementById('oyun-my-rekor-araba').textContent = s.araba || 0;
-  document.getElementById('oyun-my-rekor-snake').textContent = s.snake || 0;
+  ['araba','snake','simon','kelime'].forEach(g => {
+    const el2 = document.getElementById('oyun-my-rekor-'+g);
+    if(el2) el2.textContent = s[g] || 0;
+  });
 }
 
 function oyunSaveScore(game, score) {
@@ -4315,7 +4372,7 @@ function oyunSaveScore(game, score) {
   const current = oyunScores[oyunCurrentPlayer][game] || 0;
   if(score > current) {
     oyunScores[oyunCurrentPlayer][game] = score;
-    set(ref(db, 'state/oyunScores2'), oyunScores).catch(e=>console.error(e));
+    set(ref(db, 'oyunRekorlar'), oyunScores).catch(e=>console.error(e));
     document.getElementById('oyun-area-rekor').textContent = score;
     oyunRefreshRekorBoard();
     if(typeof renderHomeRekorlar === 'function') renderHomeRekorlar();
@@ -4660,70 +4717,94 @@ const SNAKE_TAUNTS = {
   ]
 };
 
+const SIMON_TAUNTS = {
+  tulay_leads: [
+    "Tülay renkleri ezberledi, Yiğit karıştı 🟥🟩",
+    "Tülay hafızası çok iyi, Yiğit 'haa neydi' dedi 😂",
+    "Tülay seriyi ezberliyor, Yiğit saydı bile 🧩",
+    "Tülay ileride! Yiğit 'bir daha' dedi 🔄",
+    "Tülay her rengi gördü, Yiğit görmedi 😅",
+    "Tülay çok dikkatli, Yiğit dikkat dağıtıcı 😵",
+    "Tülay Simon'ı geçti, Yiğit hâlâ renklere bakıyor 👀",
+    "Tülay bu rekorla gurur duyuyor, Yiğit utanıyor 😂",
+    "Tülay hafıza şampiyonu, Yiğit 'bu kadar çok renk vardı?' dedi 😩",
+    "Tülay inanılmaz, Yiğit 'nasıl yaptın?' diye soruyor 🤩"
+  ],
+  yigit_leads: [
+    "Yiğit renk ustası çıktı, Tülay şoke oldu 😲",
+    "Yiğit seriyi ezberledi, Tülay 'dur dur' dedi 🛑",
+    "Yiğit Simon'ı geçti, Tülay 'hile mi?' dedi 😤",
+    "Yiğit ileride, Tülay tekrar oynamak istiyor 🔄",
+    "Yiğit bu oyunda iyi çıktı, Tülay kabullenmekte zorlanıyor 😅",
+    "Yiğit hafızası güçlü, Tülay 'yeniden!' dedi 💪",
+    "Yiğit rekor kırdı, Tülay 'ben daha iyiyim' diyor 😤",
+    "Yiğit önde, Tülay konsantre olmaya çalışıyor 🎯",
+    "Yiğit seviyeleri geçti, Tülay 'şimdi ben' dedi 🎮",
+    "Yiğit inanılmaz — Tülay bunu hazmedemiyor 👀"
+  ],
+  equal: ["Aynı seviyede! Kim daha fazla renk hatırlar? 🟥🟩🔵🟡","Berabere! Simon ikisini de zorluyor 😅","Eşit hafıza! Bu çekişme kızışacak 🧩"]
+};
+const KELIME_TAUNTS = {
+  tulay_leads: [
+    "Tülay kelime ustası, Yiğit harf sayıyor 🔤",
+    "Tülay çok kelime buldu, Yiğit 'bu kelime mi?' dedi 😂",
+    "Tülay Türkçeyi iyi kullanıyor, Yiğit sözlüğe baktı 📖",
+    "Tülay harikalar yaratıyor, Yiğit karanlıkta mı? 🌑",
+    "Tülay puan topluyor, Yiğit hâlâ ilk kelimeyi arıyor 😅",
+    "Tülay çok zeki, Yiğit bunu kabul etmekte zorlanıyor 😤",
+    "Tülay kelimeleri gördü, Yiğit harflere baktı 🔡",
+    "Tülay ileride, Yiğit 'bu harflerden kelime çıkar mı?' dedi 😩",
+    "Tülay dilbaz çıktı, Yiğit 'sayılır mı bu?' diyor 🤔",
+    "Tülay rekoru kırdı, Yiğit tekrar oynamak istiyor 🔄"
+  ],
+  yigit_leads: [
+    "Yiğit kelime buldukça Tülay şoke oldu 😲",
+    "Yiğit dilbaz çıktı, Tülay inanmıyor 😅",
+    "Yiğit puan topladı, Tülay 'ben de bilirim' dedi 💪",
+    "Yiğit ileride, Tülay hızlı yazmaya çalışıyor ⌨️",
+    "Yiğit bu oyunda iyi çıktı, Tülay 'bir daha!' dedi 🔄",
+    "Yiğit harika kelimeler buldu, Tülay 'bunlar kelime mi?' dedi 😂",
+    "Yiğit rekorcu, Tülay sözlük açtı 📖",
+    "Yiğit önde, Tülay hazmedemiyor 😤",
+    "Yiğit zaferi kaptı, Tülay 'hile var' dedi 🤨",
+    "Yiğit kelime ustası — Tülay buna inanmakta zorlanıyor 👀"
+  ],
+  equal: ["İkisi de kelime ustası! Kim daha çok bulur? 🔤","Berabere! Türkçe ikisini de zorluyor 😅","Eşit puan — sözlük ikisine de lazım 📖"]
+};
+
+function applyGameRekor(key, tVal, yVal, taunts) {
+  const el = id => document.getElementById(id);
+  const tid = 'home-rek-'+key+'-tulay';
+  const yid = 'home-rek-'+key+'-yigit';
+  if(!el(tid)) return;
+  el(tid).textContent = tVal;
+  el(yid).textContent = yVal;
+  const tCard = el('home-rek-'+key+'-tulay-card');
+  const yCard = el('home-rek-'+key+'-yigit-card');
+  el('home-rek-'+key+'-tulay-crown').style.display = tVal > yVal ? 'block' : 'none';
+  el('home-rek-'+key+'-yigit-crown').style.display = yVal > tVal ? 'block' : 'none';
+  if(tVal > yVal) {
+    tCard.style.borderColor='rgba(255,143,171,0.7)'; tCard.style.boxShadow='0 0 16px rgba(255,143,171,0.25)';
+    yCard.style.borderColor='rgba(91,168,232,0.2)'; yCard.style.boxShadow='none';
+    const pool=taunts.tulay_leads; el('home-rek-'+key+'-taunt').textContent=pool[Math.floor(Math.random()*pool.length)];
+  } else if(yVal > tVal) {
+    yCard.style.borderColor='rgba(91,168,232,0.7)'; yCard.style.boxShadow='0 0 16px rgba(91,168,232,0.25)';
+    tCard.style.borderColor='rgba(255,143,171,0.2)'; tCard.style.boxShadow='none';
+    const pool=taunts.yigit_leads; el('home-rek-'+key+'-taunt').textContent=pool[Math.floor(Math.random()*pool.length)];
+  } else {
+    tCard.style.borderColor='rgba(255,143,171,0.25)'; tCard.style.boxShadow='none';
+    yCard.style.borderColor='rgba(91,168,232,0.25)'; yCard.style.boxShadow='none';
+    const pool=taunts.equal; el('home-rek-'+key+'-taunt').textContent=tVal>0?pool[Math.floor(Math.random()*pool.length)]:'';
+  }
+}
+
 function renderHomeRekorlar() {
   const s = oyunScores;
-  const tAraba = s.tulay?.araba || 0;
-  const yAraba = s.yigit?.araba || 0;
-  const tSnake = s.tulay?.snake || 0;
-  const ySnake = s.yigit?.snake || 0;
-
-  const el = id => document.getElementById(id);
-  if(!el('home-rek-araba-tulay')) return;
-
-  el('home-rek-araba-tulay').textContent = tAraba;
-  el('home-rek-araba-yigit').textContent = yAraba;
-  el('home-rek-snake-tulay').textContent = tSnake;
-  el('home-rek-snake-yigit').textContent = ySnake;
-
-  // Crowns + glow + taunts — Araba
-  const arabaTulayCard = el('home-rek-araba-tulay-card');
-  const arabaYigitCard = el('home-rek-araba-yigit-card');
-  el('home-rek-araba-tulay-crown').style.display = tAraba > yAraba ? 'block' : 'none';
-  el('home-rek-araba-yigit-crown').style.display = yAraba > tAraba ? 'block' : 'none';
-  if(tAraba > yAraba) {
-    arabaTulayCard.style.borderColor = 'rgba(255,143,171,0.7)';
-    arabaTulayCard.style.boxShadow = '0 0 16px rgba(255,143,171,0.25)';
-    arabaYigitCard.style.borderColor = 'rgba(91,168,232,0.2)';
-    arabaYigitCard.style.boxShadow = 'none';
-    const pool = ARABA_TAUNTS.tulay_leads;
-    el('home-rek-araba-taunt').textContent = pool[Math.floor(Math.random()*pool.length)];
-  } else if(yAraba > tAraba) {
-    arabaYigitCard.style.borderColor = 'rgba(91,168,232,0.7)';
-    arabaYigitCard.style.boxShadow = '0 0 16px rgba(91,168,232,0.25)';
-    arabaTulayCard.style.borderColor = 'rgba(255,143,171,0.2)';
-    arabaTulayCard.style.boxShadow = 'none';
-    const pool = ARABA_TAUNTS.yigit_leads;
-    el('home-rek-araba-taunt').textContent = pool[Math.floor(Math.random()*pool.length)];
-  } else {
-    arabaTulayCard.style.borderColor = 'rgba(255,143,171,0.25)'; arabaTulayCard.style.boxShadow = 'none';
-    arabaYigitCard.style.borderColor = 'rgba(91,168,232,0.25)'; arabaYigitCard.style.boxShadow = 'none';
-    el('home-rek-araba-taunt').textContent = tAraba > 0 ? ARABA_TAUNTS.equal[0] : '';
-  }
-
-  // Crowns + glow + taunts — Snake
-  const snakeTulayCard = el('home-rek-snake-tulay-card');
-  const snakeYigitCard = el('home-rek-snake-yigit-card');
-  el('home-rek-snake-tulay-crown').style.display = tSnake > ySnake ? 'block' : 'none';
-  el('home-rek-snake-yigit-crown').style.display = ySnake > tSnake ? 'block' : 'none';
-  if(tSnake > ySnake) {
-    snakeTulayCard.style.borderColor = 'rgba(255,143,171,0.7)';
-    snakeTulayCard.style.boxShadow = '0 0 16px rgba(255,143,171,0.25)';
-    snakeYigitCard.style.borderColor = 'rgba(91,168,232,0.2)';
-    snakeYigitCard.style.boxShadow = 'none';
-    const pool = SNAKE_TAUNTS.tulay_leads;
-    el('home-rek-snake-taunt').textContent = pool[Math.floor(Math.random()*pool.length)];
-  } else if(ySnake > tSnake) {
-    snakeYigitCard.style.borderColor = 'rgba(91,168,232,0.7)';
-    snakeYigitCard.style.boxShadow = '0 0 16px rgba(91,168,232,0.25)';
-    snakeTulayCard.style.borderColor = 'rgba(255,143,171,0.2)';
-    snakeTulayCard.style.boxShadow = 'none';
-    const pool = SNAKE_TAUNTS.yigit_leads;
-    el('home-rek-snake-taunt').textContent = pool[Math.floor(Math.random()*pool.length)];
-  } else {
-    snakeTulayCard.style.borderColor = 'rgba(255,143,171,0.25)'; snakeTulayCard.style.boxShadow = 'none';
-    snakeYigitCard.style.borderColor = 'rgba(91,168,232,0.25)'; snakeYigitCard.style.boxShadow = 'none';
-    el('home-rek-snake-taunt').textContent = tSnake > 0 ? SNAKE_TAUNTS.equal[0] : '';
-  }
+  if(!document.getElementById('home-rek-araba-tulay')) return;
+  applyGameRekor('araba', s.tulay?.araba||0, s.yigit?.araba||0, ARABA_TAUNTS);
+  applyGameRekor('snake', s.tulay?.snake||0, s.yigit?.snake||0, SNAKE_TAUNTS);
+  applyGameRekor('simon', s.tulay?.simon||0, s.yigit?.simon||0, SIMON_TAUNTS);
+  applyGameRekor('kelime', s.tulay?.kelime||0, s.yigit?.kelime||0, KELIME_TAUNTS);
 }
 window.renderHomeRekorlar = renderHomeRekorlar;
 
@@ -4921,6 +5002,209 @@ document.addEventListener('keydown', (e) => {
 
 // Load scores on page load
 oyunLoadScores();
+
+// ===== SİMON SAYS =====
+let simonSeq = [];
+let simonPlayerSeq = [];
+let simonPlaying = false;
+let simonWaiting = false;
+const SIMON_COLORS = ['#e74c3c','#2ecc71','#3498db','#f1c40f'];
+
+function simonInit() {
+  simonSeq = [];
+  simonPlayerSeq = [];
+  simonPlaying = false;
+  simonWaiting = false;
+  document.getElementById('simon-status').textContent = 'Hazır mısın?';
+  document.getElementById('simon-level').textContent = 'Seviye: 0';
+  document.getElementById('simon-start-btn').style.display = 'inline-block';
+  simonDimAll();
+}
+
+function simonStart() {
+  document.getElementById('simon-start-btn').style.display = 'none';
+  simonSeq = [];
+  simonPlayerSeq = [];
+  simonNextRound();
+}
+
+function simonNextRound() {
+  simonPlayerSeq = [];
+  simonWaiting = false;
+  simonSeq.push(Math.floor(Math.random() * 4));
+  document.getElementById('simon-level').textContent = 'Seviye: ' + simonSeq.length;
+  document.getElementById('simon-status').textContent = 'İzle...';
+  simonDimAll();
+  simonPlaySeq(0);
+}
+
+function simonPlaySeq(i) {
+  if(i >= simonSeq.length) {
+    setTimeout(() => {
+      document.getElementById('simon-status').textContent = 'Şimdi sen!';
+      simonWaiting = true;
+    }, 400);
+    return;
+  }
+  setTimeout(() => {
+    simonLight(simonSeq[i]);
+    setTimeout(() => { simonDimAll(); simonPlaySeq(i+1); }, 500);
+  }, i === 0 ? 600 : 300);
+}
+
+function simonLight(idx) {
+  const btn = document.getElementById('simon-btn-' + idx);
+  if(btn) { btn.style.opacity = '1'; btn.style.transform = 'scale(1.08)'; }
+  setTimeout(() => { if(btn) { btn.style.opacity = '0.5'; btn.style.transform = 'scale(1)'; } }, 450);
+}
+
+function simonDimAll() {
+  for(let i=0;i<4;i++) {
+    const btn = document.getElementById('simon-btn-'+i);
+    if(btn) { btn.style.opacity = '0.5'; btn.style.transform = 'scale(1)'; }
+  }
+}
+
+function simonPlayerPress(idx) {
+  if(!simonWaiting) return;
+  simonLight(idx);
+  simonPlayerSeq.push(idx);
+  const pos = simonPlayerSeq.length - 1;
+  if(simonPlayerSeq[pos] !== simonSeq[pos]) {
+    // Wrong!
+    document.getElementById('simon-status').textContent = '❌ Yanlış! Skor: ' + (simonSeq.length - 1);
+    simonWaiting = false;
+    const isRecord = oyunSaveScore('simon', simonSeq.length - 1);
+    document.getElementById('simon-start-btn').textContent = '🔄 Tekrar';
+    document.getElementById('simon-start-btn').style.display = 'inline-block';
+    if(isRecord) document.getElementById('simon-status').textContent = '🏆 YENİ REKOR! ' + (simonSeq.length-1) + ' seviye!';
+    return;
+  }
+  if(simonPlayerSeq.length === simonSeq.length) {
+    document.getElementById('simon-status').textContent = '✅ Harika! Sonraki tur...';
+    simonWaiting = false;
+    setTimeout(simonNextRound, 900);
+  }
+}
+
+window.simonInit = simonInit;
+window.simonStart = simonStart;
+window.simonPlayerPress = simonPlayerPress;
+
+// ===== KELİME BUL =====
+let kelimeScore = 0;
+let kelimeTimer = 60;
+let kelimeInterval2 = null;
+let kelimeLetters = [];
+let kelimeFound = [];
+let kelimeStarted = false;
+
+// Türkçe kelime seti — harf gruplarına göre
+const KELIME_SETLERI = [
+  { harfler: ['A','R','A','B','A','T','U','L'], kelimeler: ['ARA','ARABA','ART','BAL','BAR','BUL','LAR','RUH','TUR','TULA','ALTU','BURA','LARA'] },
+  { harfler: ['S','E','V','G','İ','L','E','R'], kelimeler: ['SEV','SEVGİ','GEL','GELİR','GİL','RES','RESM','SERGİ','VERGİ','ELİ','SİL'] },
+  { harfler: ['Ç','İ','Ç','E','K','G','Ü','L'], kelimeler: ['ÇEK','ÇİÇEK','GEL','GÜL','GÜLCE','EKİ','KELİ','ÇEKİ','GÜLECİ'] },
+  { harfler: ['Y','I','L','D','I','Z','A','Y'], kelimeler: ['YAL','YALDIZ','YAY','AYI','ALI','DAL','DALI','YALI','ALDIZ'] },
+  { harfler: ['M','U','T','L','U','L','U','K'], kelimeler: ['MUT','MUTLU','KUL','TUL','LUK','TUM','KUT','KUTLU'] },
+  { harfler: ['A','Ş','K','R','O','M','A','N'], kelimeler: ['AŞK','ROMAN','KAR','RAN','MAN','OKA','NOM','KARMA','MAKRO'] },
+  { harfler: ['H','A','Y','A','L','R','Ü','Y'], kelimeler: ['HAL','HAYAL','RÜYA','YAL','HAR','AYL','LAYR','HAYA'] },
+  { harfler: ['T','A','T','L','I','C','A','N'], kelimeler: ['TAT','TATLI','CAN','LAN','ALT','TAN','TATIN','TALC','ANTI'] },
+  { harfler: ['K','A','L','P','S','E','S','İ'], kelimeler: ['KAL','KALP','SES','ALİ','PES','LAK','SEKİ','KALPS'] },
+  { harfler: ['B','A','H','Ç','E','G','Ü','N'], kelimeler: ['BAĞ','BAHÇE','GÜN','NEG','HAC','BEĞ','GÜNE','BAHÇEG'] },
+];
+
+function kelimeInit() {
+  kelimeScore = 0;
+  kelimeTimer = 60;
+  kelimeFound = [];
+  kelimeStarted = false;
+  if(kelimeInterval2) { clearInterval(kelimeInterval2); kelimeInterval2 = null; }
+  document.getElementById('kelime-overlay').style.display = 'none';
+  document.getElementById('kelime-score-display').textContent = '0';
+  document.getElementById('kelime-timer').textContent = '60';
+  document.getElementById('kelime-found').innerHTML = '';
+  document.getElementById('kelime-feedback').textContent = '';
+  document.getElementById('kelime-input').value = '';
+  kelimePickSet();
+  kelimeStart();
+}
+
+function kelimePickSet() {
+  const set = KELIME_SETLERI[Math.floor(Math.random() * KELIME_SETLERI.length)];
+  kelimeLetters = [...set.harfler];
+  window._kelimeSet = set;
+  const lettersEl = document.getElementById('kelime-letters');
+  lettersEl.innerHTML = kelimeLetters.map(l =>
+    `<div style="background:white;border:2px solid #f0d080;border-radius:10px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;color:#8a6000;">${l}</div>`
+  ).join('');
+}
+
+function kelimeStart() {
+  kelimeScore = 0;
+  kelimeTimer = 60;
+  kelimeFound = [];
+  kelimeStarted = true;
+  document.getElementById('kelime-overlay').style.display = 'none';
+  document.getElementById('kelime-score-display').textContent = '0';
+  document.getElementById('kelime-found').innerHTML = '';
+  document.getElementById('kelime-feedback').textContent = '';
+  document.getElementById('kelime-input').value = '';
+  kelimePickSet();
+  if(kelimeInterval2) clearInterval(kelimeInterval2);
+  kelimeInterval2 = setInterval(() => {
+    kelimeTimer--;
+    document.getElementById('kelime-timer').textContent = kelimeTimer;
+    if(kelimeTimer <= 0) {
+      clearInterval(kelimeInterval2);
+      kelimeBitis();
+    }
+  }, 1000);
+  document.getElementById('kelime-input').focus();
+}
+
+function kelimeKontrol() {
+  if(!kelimeStarted) return;
+  const input = document.getElementById('kelime-input');
+  const word = input.value.trim().toUpperCase();
+  input.value = '';
+  if(!word || word.length < 2) return;
+  const fb = document.getElementById('kelime-feedback');
+  if(kelimeFound.includes(word)) { fb.textContent = '⚠️ Bu kelimeyi zaten buldun!'; fb.style.color = '#e8a000'; return; }
+  // Check if word can be formed from letters
+  const avail = [...kelimeLetters];
+  let ok = true;
+  for(const ch of word) {
+    const idx = avail.indexOf(ch);
+    if(idx === -1) { ok = false; break; }
+    avail.splice(idx, 1);
+  }
+  if(!ok) { fb.textContent = '❌ Bu harfler mevcut değil!'; fb.style.color = '#e84040'; return; }
+  // Check if valid word
+  const validWords = window._kelimeSet?.kelimeler || [];
+  if(!validWords.includes(word)) { fb.textContent = '❌ Geçerli kelime değil!'; fb.style.color = '#e84040'; return; }
+  // Found!
+  kelimeFound.push(word);
+  kelimeScore += word.length;
+  fb.textContent = '✅ Harika! +' + word.length + ' puan';
+  fb.style.color = '#2a8a2a';
+  document.getElementById('kelime-score-display').textContent = kelimeScore;
+  document.getElementById('kelime-found').innerHTML = kelimeFound.map(w =>
+    `<span style="background:#f0d040;color:#8a6000;border-radius:8px;padding:3px 8px;font-size:0.8rem;font-weight:700;">${w}</span>`
+  ).join('');
+}
+
+function kelimeBitis() {
+  kelimeStarted = false;
+  const isRecord = oyunSaveScore('kelime', kelimeScore);
+  document.getElementById('kelime-overlay-emoji').textContent = isRecord ? '🏆' : '⏰';
+  document.getElementById('kelime-overlay-title').textContent = isRecord ? 'YENİ REKOR!' : 'Süre Doldu!';
+  document.getElementById('kelime-overlay-sub').textContent = (oyunCurrentPlayer==='tulay'?'💕 Tülay':'💙 Yiğit') + ' — ' + kelimeScore + ' puan, ' + kelimeFound.length + ' kelime!';
+  document.getElementById('kelime-overlay').style.display = 'block';
+}
+
+window.kelimeInit = kelimeInit;
+window.kelimeStart = kelimeStart;
+window.kelimeKontrol = kelimeKontrol;
 
 } // end bootApp
 
@@ -5162,28 +5446,31 @@ loadState();
     <!-- Rekorlar -->
     <div style="background:white;border-radius:18px;padding:16px;border:1.5px solid var(--rose-light);">
       <div style="font-size:0.8rem;font-weight:700;color:var(--text-light);text-align:center;margin-bottom:12px;">🏆 Tüm Zamanların Rekorları</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-        <div style="background:linear-gradient(135deg,#fff0f5,#ffe0ee);border-radius:14px;padding:12px;text-align:center;">
-          <div style="font-size:0.7rem;color:var(--text-light);margin-bottom:2px;">💕 Tülay</div>
-          <div style="font-size:0.65rem;color:var(--rose);font-weight:700;margin-bottom:4px;">Engelli Yol</div>
-          <div style="font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--rose-dark);" id="oyun-rekor-tulay-araba">0</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:6px;align-items:center;font-size:0.72rem;">
+          <div></div>
+          <div style="text-align:center;font-weight:700;color:#e8698a;">💕 Tülay</div>
+          <div style="text-align:center;font-weight:700;color:#4a7ac0;">💙 Yiğit</div>
         </div>
-        <div style="background:linear-gradient(135deg,#eef4ff,#dceeff);border-radius:14px;padding:12px;text-align:center;">
-          <div style="font-size:0.7rem;color:var(--text-light);margin-bottom:2px;">💙 Yiğit</div>
-          <div style="font-size:0.65rem;color:#4a7ac0;font-weight:700;margin-bottom:4px;">Engelli Yol</div>
-          <div style="font-family:'Playfair Display',serif;font-size:1.2rem;color:#4a7ac0;" id="oyun-rekor-yigit-araba">0</div>
+        <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:6px;align-items:center;">
+          <div style="font-size:0.68rem;font-weight:700;color:var(--text-light);">🚗 Engelli</div>
+          <div style="background:linear-gradient(135deg,#fff0f5,#ffe0ee);border-radius:10px;padding:8px;text-align:center;font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--rose-dark);" id="oyun-rekor-tulay-araba">0</div>
+          <div style="background:linear-gradient(135deg,#eef4ff,#dceeff);border-radius:10px;padding:8px;text-align:center;font-family:'Playfair Display',serif;font-size:1.1rem;color:#4a7ac0;" id="oyun-rekor-yigit-araba">0</div>
         </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div style="background:linear-gradient(135deg,#fff0f5,#ffe0ee);border-radius:14px;padding:12px;text-align:center;">
-          <div style="font-size:0.7rem;color:var(--text-light);margin-bottom:2px;">💕 Tülay</div>
-          <div style="font-size:0.65rem;color:var(--rose);font-weight:700;margin-bottom:4px;">Snake</div>
-          <div style="font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--rose-dark);" id="oyun-rekor-tulay-snake">0</div>
+        <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:6px;align-items:center;">
+          <div style="font-size:0.68rem;font-weight:700;color:var(--text-light);">🐍 Snake</div>
+          <div style="background:linear-gradient(135deg,#fff0f5,#ffe0ee);border-radius:10px;padding:8px;text-align:center;font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--rose-dark);" id="oyun-rekor-tulay-snake">0</div>
+          <div style="background:linear-gradient(135deg,#eef4ff,#dceeff);border-radius:10px;padding:8px;text-align:center;font-family:'Playfair Display',serif;font-size:1.1rem;color:#4a7ac0;" id="oyun-rekor-yigit-snake">0</div>
         </div>
-        <div style="background:linear-gradient(135deg,#eef4ff,#dceeff);border-radius:14px;padding:12px;text-align:center;">
-          <div style="font-size:0.7rem;color:var(--text-light);margin-bottom:2px;">💙 Yiğit</div>
-          <div style="font-size:0.65rem;color:#4a7ac0;font-weight:700;margin-bottom:4px;">Snake</div>
-          <div style="font-family:'Playfair Display',serif;font-size:1.2rem;color:#4a7ac0;" id="oyun-rekor-yigit-snake">0</div>
+        <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:6px;align-items:center;">
+          <div style="font-size:0.68rem;font-weight:700;color:var(--text-light);">🧩 Simon</div>
+          <div style="background:linear-gradient(135deg,#fff0f5,#ffe0ee);border-radius:10px;padding:8px;text-align:center;font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--rose-dark);" id="oyun-rekor-tulay-simon">0</div>
+          <div style="background:linear-gradient(135deg,#eef4ff,#dceeff);border-radius:10px;padding:8px;text-align:center;font-family:'Playfair Display',serif;font-size:1.1rem;color:#4a7ac0;" id="oyun-rekor-yigit-simon">0</div>
+        </div>
+        <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:6px;align-items:center;">
+          <div style="font-size:0.68rem;font-weight:700;color:var(--text-light);">🔤 Kelime</div>
+          <div style="background:linear-gradient(135deg,#fff0f5,#ffe0ee);border-radius:10px;padding:8px;text-align:center;font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--rose-dark);" id="oyun-rekor-tulay-kelime">0</div>
+          <div style="background:linear-gradient(135deg,#eef4ff,#dceeff);border-radius:10px;padding:8px;text-align:center;font-family:'Playfair Display',serif;font-size:1.1rem;color:#4a7ac0;" id="oyun-rekor-yigit-kelime">0</div>
         </div>
       </div>
     </div>
@@ -5196,24 +5483,36 @@ loadState();
       <span style="font-size:0.9rem;color:var(--text-light);">Oynayan: <strong id="oyun-current-player-label">—</strong></span>
     </div>
     <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--rose-dark);text-align:center;margin-bottom:16px;">Hangi oyunu oynayalım?</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
-      <button onclick="oyunSec('araba')" style="background:linear-gradient(135deg,#fff0f5,#ffd6e7);border:2px solid var(--rose-light);border-radius:20px;padding:20px 10px;cursor:pointer;transition:transform 0.15s;text-align:center;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-        <div style="font-size:2.2rem;margin-bottom:6px;">🚗</div>
-        <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--rose-dark);">Engelli Yol</div>
-        <div style="font-size:0.72rem;color:var(--text-light);margin-top:4px;">Engellerden kaçarak yol al!</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <button onclick="oyunSec('araba')" style="background:linear-gradient(135deg,#fff0f5,#ffd6e7);border:2px solid var(--rose-light);border-radius:18px;padding:16px 8px;cursor:pointer;transition:transform 0.15s;text-align:center;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+        <div style="font-size:2rem;margin-bottom:4px;">🚗</div>
+        <div style="font-family:'Playfair Display',serif;font-size:0.95rem;font-weight:700;color:var(--rose-dark);">Engelli Yol</div>
+        <div style="font-size:0.65rem;color:var(--text-light);margin-top:3px;">Engellerden kaçarak yol al!</div>
       </button>
-      <button onclick="oyunSec('snake')" style="background:linear-gradient(135deg,#eef4ff,#d8ecff);border:2px solid #c0d8f0;border-radius:20px;padding:20px 10px;cursor:pointer;transition:transform 0.15s;text-align:center;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-        <div style="font-size:2.2rem;margin-bottom:6px;">🐍</div>
-        <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:#4a7ac0;">Snake</div>
-        <div style="font-size:0.72rem;color:var(--text-light);margin-top:4px;">Yılanı yönlendir, yem ye!</div>
+      <button onclick="oyunSec('snake')" style="background:linear-gradient(135deg,#eef4ff,#d8ecff);border:2px solid #c0d8f0;border-radius:18px;padding:16px 8px;cursor:pointer;transition:transform 0.15s;text-align:center;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+        <div style="font-size:2rem;margin-bottom:4px;">🐍</div>
+        <div style="font-family:'Playfair Display',serif;font-size:0.95rem;font-weight:700;color:#4a7ac0;">Snake</div>
+        <div style="font-size:0.65rem;color:var(--text-light);margin-top:3px;">Yılanı yönlendir, yem ye!</div>
+      </button>
+      <button onclick="oyunSec('simon')" style="background:linear-gradient(135deg,#f0fff0,#d8f5d8);border:2px solid #a0d8a0;border-radius:18px;padding:16px 8px;cursor:pointer;transition:transform 0.15s;text-align:center;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+        <div style="font-size:2rem;margin-bottom:4px;">🧩</div>
+        <div style="font-family:'Playfair Display',serif;font-size:0.95rem;font-weight:700;color:#2a7a2a;">Simon Says</div>
+        <div style="font-size:0.65rem;color:var(--text-light);margin-top:3px;">Renk dizisini ezberle!</div>
+      </button>
+      <button onclick="oyunSec('kelime')" style="background:linear-gradient(135deg,#fff8e8,#ffedb8);border:2px solid #f0d080;border-radius:18px;padding:16px 8px;cursor:pointer;transition:transform 0.15s;text-align:center;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+        <div style="font-size:2rem;margin-bottom:4px;">🔤</div>
+        <div style="font-family:'Playfair Display',serif;font-size:0.95rem;font-weight:700;color:#8a6000;">Kelime Bul</div>
+        <div style="font-size:0.65rem;color:var(--text-light);margin-top:3px;">Harfleri birleştir, kelime yap!</div>
       </button>
     </div>
     <!-- Kişisel rekorlar -->
-    <div style="background:white;border-radius:16px;padding:14px;border:1px solid var(--rose-light);text-align:center;">
+    <div style="background:white;border-radius:16px;padding:12px;border:1px solid var(--rose-light);text-align:center;">
       <div style="font-size:0.75rem;color:var(--text-light);margin-bottom:8px;">Senin Rekorların</div>
-      <div style="display:flex;justify-content:center;gap:24px;">
-        <div><div style="font-size:0.7rem;color:var(--rose);font-weight:700;">Engelli Yol</div><div style="font-family:'Playfair Display',serif;font-size:1.2rem;" id="oyun-my-rekor-araba">0</div></div>
-        <div><div style="font-size:0.7rem;color:#4a7ac0;font-weight:700;">Snake</div><div style="font-family:'Playfair Display',serif;font-size:1.2rem;" id="oyun-my-rekor-snake">0</div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;">
+        <div><div style="font-size:0.6rem;color:var(--rose);font-weight:700;">🚗</div><div style="font-family:'Playfair Display',serif;font-size:1rem;" id="oyun-my-rekor-araba">0</div></div>
+        <div><div style="font-size:0.6rem;color:#4a7ac0;font-weight:700;">🐍</div><div style="font-family:'Playfair Display',serif;font-size:1rem;" id="oyun-my-rekor-snake">0</div></div>
+        <div><div style="font-size:0.6rem;color:#2a7a2a;font-weight:700;">🧩</div><div style="font-family:'Playfair Display',serif;font-size:1rem;" id="oyun-my-rekor-simon">0</div></div>
+        <div><div style="font-size:0.6rem;color:#8a6000;font-weight:700;">🔤</div><div style="font-family:'Playfair Display',serif;font-size:1rem;" id="oyun-my-rekor-kelime">0</div></div>
       </div>
     </div>
   </div>
@@ -5267,6 +5566,52 @@ loadState();
         <button onclick="snakeDir(-1,0)" style="background:var(--rose-light);border:none;border-radius:10px;padding:12px;font-size:1.3rem;cursor:pointer;">←</button>
         <button onclick="snakeDir(0,1)" style="background:var(--rose-light);border:none;border-radius:10px;padding:12px;font-size:1.3rem;cursor:pointer;">↓</button>
         <button onclick="snakeDir(1,0)" style="background:var(--rose-light);border:none;border-radius:10px;padding:12px;font-size:1.3rem;cursor:pointer;">→</button>
+      </div>
+    </div>
+
+    <!-- Simon Says -->
+    <div id="game-simon-wrap" style="display:none;">
+      <div style="background:linear-gradient(135deg,#0d1a0d,#1a2d1a);border-radius:20px;padding:20px;margin-bottom:12px;text-align:center;position:relative;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+          <button id="simon-btn-0" onclick="simonPlayerPress(0)" style="background:#e74c3c;border:none;border-radius:16px;height:90px;cursor:pointer;font-size:2rem;opacity:0.5;transition:all 0.1s;box-shadow:0 4px 15px rgba(231,76,60,0.3);">🔴</button>
+          <button id="simon-btn-1" onclick="simonPlayerPress(1)" style="background:#2ecc71;border:none;border-radius:16px;height:90px;cursor:pointer;font-size:2rem;opacity:0.5;transition:all 0.1s;box-shadow:0 4px 15px rgba(46,204,113,0.3);">🟢</button>
+          <button id="simon-btn-2" onclick="simonPlayerPress(2)" style="background:#3498db;border:none;border-radius:16px;height:90px;cursor:pointer;font-size:2rem;opacity:0.5;transition:all 0.1s;box-shadow:0 4px 15px rgba(52,152,219,0.3);">🔵</button>
+          <button id="simon-btn-3" onclick="simonPlayerPress(3)" style="background:#f1c40f;border:none;border-radius:16px;height:90px;cursor:pointer;font-size:2rem;opacity:0.5;transition:all 0.1s;box-shadow:0 4px 15px rgba(241,196,15,0.3);">🟡</button>
+        </div>
+        <div style="color:white;font-family:'Playfair Display',serif;font-size:1.1rem;margin-bottom:6px;" id="simon-status">Hazır mısın?</div>
+        <div style="color:rgba(255,255,255,0.6);font-size:0.8rem;margin-bottom:14px;" id="simon-level">Seviye: 0</div>
+        <button onclick="simonStart()" id="simon-start-btn" style="background:linear-gradient(135deg,#e8698a,#c0416a);color:white;border:none;border-radius:14px;padding:10px 28px;font-size:1rem;font-weight:700;cursor:pointer;">▶ Başla</button>
+      </div>
+    </div>
+
+    <!-- Kelime Bul -->
+    <div id="game-kelime-wrap" style="display:none;">
+      <div style="background:linear-gradient(135deg,#fffbf0,#fff3d0);border-radius:20px;padding:16px;margin-bottom:12px;border:2px solid #f0d080;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div style="font-family:'Playfair Display',serif;font-size:1rem;color:#8a6000;">🔤 Kelime Bul</div>
+          <div style="font-size:0.85rem;color:#8a6000;">⏱ <span id="kelime-timer">60</span>s | ✅ <span id="kelime-score-display">0</span></div>
+        </div>
+        <!-- Verilen harfler -->
+        <div style="text-align:center;margin-bottom:14px;">
+          <div style="font-size:0.75rem;color:#8a6000;margin-bottom:8px;font-weight:700;">Bu harfleri kullanarak Türkçe kelime yaz:</div>
+          <div id="kelime-letters" style="display:flex;justify-content:center;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>
+        </div>
+        <!-- Input -->
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <input type="text" id="kelime-input" placeholder="Kelime yaz..." style="flex:1;border:2px solid #f0d080;border-radius:12px;padding:10px 14px;font-size:1rem;outline:none;background:white;color:#333;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter') kelimeKontrol()">
+          <button onclick="kelimeKontrol()" style="background:linear-gradient(135deg,#f0d040,#d4a800);color:white;border:none;border-radius:12px;padding:10px 16px;font-weight:700;cursor:pointer;font-size:0.9rem;">✓ Gönder</button>
+        </div>
+        <div id="kelime-feedback" style="text-align:center;font-size:0.85rem;min-height:22px;margin-bottom:8px;"></div>
+        <!-- Bulunan kelimeler -->
+        <div style="font-size:0.75rem;color:#8a6000;font-weight:700;margin-bottom:6px;">Bulunan kelimeler:</div>
+        <div id="kelime-found" style="display:flex;flex-wrap:wrap;gap:6px;min-height:30px;"></div>
+        <!-- Overlay -->
+        <div id="kelime-overlay" style="display:none;text-align:center;padding:20px;">
+          <div style="font-size:2rem;margin-bottom:8px;" id="kelime-overlay-emoji">⏰</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:#8a6000;margin-bottom:6px;" id="kelime-overlay-title">Süre Doldu!</div>
+          <div style="font-size:0.85rem;color:#8a6000;margin-bottom:14px;" id="kelime-overlay-sub"></div>
+          <button onclick="kelimeStart()" style="background:linear-gradient(135deg,#f0d040,#d4a800);color:white;border:none;border-radius:14px;padding:10px 24px;font-weight:700;cursor:pointer;">🔄 Tekrar</button>
+        </div>
       </div>
     </div>
   </div>
