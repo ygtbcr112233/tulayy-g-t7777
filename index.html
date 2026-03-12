@@ -581,7 +581,7 @@ canvas.drawing-canvas {
     <button class="tab-btn" onclick="showPage('drawing')">🎨 Çizim</button>
     <button class="tab-btn" onclick="showPage('future')">✨ Gelecek</button>
     <button class="tab-btn" onclick="showPage('ai')">🤖 Yapay Zeka</button>
-    <button class="tab-btn" onclick="showPage('places')">📍 Gidilen Yerler</button>
+    <button class="tab-btn" onclick="showPage('places')">📍 Gidilen/Gidilecek</button>
     <button class="tab-btn" onclick="showPage('gorevler')">✅ Görevler</button>
     <button class="tab-btn" onclick="showPage('enler')">🏆 Enler</button>
     <button class="tab-btn" onclick="showPage('oyun')">🎮 Oyun</button>
@@ -2824,6 +2824,193 @@ window.searchMapPlace = searchMapPlace;
 window.selectPlace = selectPlace;
 window.saveMap = saveMap;
 window.deleteMap = deleteMap;
+
+// ===== GİDİLECEK YERLER (BUCKET LIST) =====
+let bucketList = [];
+let bucketEditId = null;
+let bucketSelectedLat = null;
+let bucketSelectedLng = null;
+
+function loadBucketList() {
+  get(ref(db, 'state/bucketList')).then(snap => {
+    if(snap.exists()) bucketList = snap.val() || [];
+    renderBucketList();
+  }).catch(() => {
+    try { const lc = localStorage.getItem('ty-bucket'); if(lc) bucketList = JSON.parse(lc); } catch(e) {}
+    renderBucketList();
+  });
+}
+
+function saveBucketList() {
+  set(ref(db, 'state/bucketList'), bucketList).catch(e => console.error(e));
+  try { localStorage.setItem('ty-bucket', JSON.stringify(bucketList)); } catch(e) {}
+}
+
+function openBucketAdd() {
+  bucketEditId = null;
+  bucketSelectedLat = null;
+  bucketSelectedLng = null;
+  document.getElementById('bucket-name-input').value = '';
+  document.getElementById('bucket-note-input').value = '';
+  document.getElementById('bucket-search-input').value = '';
+  document.getElementById('bucket-search-results').style.display = 'none';
+  document.getElementById('bucket-map-preview').style.display = 'none';
+  document.getElementById('bucket-lat').value = '';
+  document.getElementById('bucket-lng').value = '';
+  document.querySelectorAll('input[name="bucket-priority"]').forEach(r => r.checked = r.value === 'orta');
+  document.getElementById('bucket-modal').style.display = 'flex';
+}
+
+function saveBucketItem() {
+  const name = document.getElementById('bucket-name-input').value.trim();
+  if(!name) { alert('Yer adı gir!'); return; }
+  const note = document.getElementById('bucket-note-input').value.trim();
+  const lat = document.getElementById('bucket-lat').value;
+  const lng = document.getElementById('bucket-lng').value;
+  const priority = document.querySelector('input[name="bucket-priority"]:checked')?.value || 'orta';
+  const item = {
+    id: bucketEditId || Date.now().toString(),
+    name, note, lat, lng, priority,
+    done: bucketEditId ? (bucketList.find(b=>b.id===bucketEditId)?.done || false) : false,
+    addedAt: bucketEditId ? (bucketList.find(b=>b.id===bucketEditId)?.addedAt || toDateStr(new Date())) : toDateStr(new Date())
+  };
+  if(bucketEditId) {
+    const idx = bucketList.findIndex(b => b.id === bucketEditId);
+    if(idx >= 0) bucketList[idx] = item;
+  } else {
+    bucketList.push(item);
+  }
+  saveBucketList();
+  renderBucketList();
+  closeModal('bucket-modal');
+}
+
+function toggleBucketDone(id) {
+  const item = bucketList.find(b => b.id === id);
+  if(item) {
+    item.done = !item.done;
+    if(item.done) item.visitedAt = toDateStr(new Date());
+    saveBucketList();
+    renderBucketList();
+  }
+}
+
+function deleteBucketItem(id) {
+  if(!confirm('Bu yeri listeden sil?')) return;
+  bucketList = bucketList.filter(b => b.id !== id);
+  saveBucketList();
+  renderBucketList();
+}
+
+function editBucketItem(id) {
+  const item = bucketList.find(b => b.id === id);
+  if(!item) return;
+  bucketEditId = id;
+  document.getElementById('bucket-name-input').value = item.name;
+  document.getElementById('bucket-note-input').value = item.note || '';
+  document.getElementById('bucket-search-input').value = '';
+  document.getElementById('bucket-search-results').style.display = 'none';
+  document.getElementById('bucket-lat').value = item.lat || '';
+  document.getElementById('bucket-lng').value = item.lng || '';
+  document.querySelectorAll('input[name="bucket-priority"]').forEach(r => r.checked = r.value === item.priority);
+  if(item.lat && item.lng) {
+    const src = `https://maps.google.com/maps?q=${item.lat},${item.lng}&z=14&output=embed`;
+    document.getElementById('bucket-map-iframe').src = src;
+    document.getElementById('bucket-map-preview').style.display = 'block';
+  } else {
+    document.getElementById('bucket-map-preview').style.display = 'none';
+  }
+  document.getElementById('bucket-modal').style.display = 'flex';
+}
+
+function renderBucketList() {
+  const container = document.getElementById('bucket-list-container');
+  const emptyMsg = document.getElementById('bucket-empty-msg');
+  if(!container) return;
+  if(!bucketList || !bucketList.length) {
+    if(emptyMsg) emptyMsg.style.display = 'block';
+    container.innerHTML = '';
+    container.appendChild(emptyMsg || document.createElement('div'));
+    return;
+  }
+  if(emptyMsg) emptyMsg.style.display = 'none';
+  const priorityOrder = { 'yüksek': 0, 'orta': 1, 'düşük': 2 };
+  const sorted = [...bucketList].sort((a,b) => {
+    if(a.done !== b.done) return a.done ? 1 : -1;
+    return (priorityOrder[a.priority]||1) - (priorityOrder[b.priority]||1);
+  });
+  const priorityConfig = {
+    'yüksek': { emoji: '🔥', label: 'Çok istiyoruz', color: '#e8698a', bg: 'linear-gradient(135deg,#fff0f5,#ffe0ee)', border: 'var(--rose-light)' },
+    'orta':   { emoji: '💕', label: 'Gitmek isteriz', color: 'var(--rose-dark)', bg: 'linear-gradient(135deg,#fff5f8,#ffeef5)', border: '#f5d0e0' },
+    'düşük':  { emoji: '🌸', label: 'Belki bir gün', color: '#a06080', bg: 'linear-gradient(135deg,#fdf5ff,#f5eeff)', border: '#e0d0f0' }
+  };
+  container.innerHTML = sorted.map(item => {
+    const cfg = priorityConfig[item.priority] || priorityConfig['orta'];
+    const hasMap = item.lat && item.lng;
+    return `<div style="background:${item.done ? '#f0f0f0' : cfg.bg};border:1.5px solid ${item.done ? '#ddd' : cfg.border};border-radius:18px;padding:14px 16px;opacity:${item.done ? '0.7' : '1'};transition:all 0.2s;">
+      <div style="display:flex;align-items:flex-start;gap:10px;">
+        <button onclick="toggleBucketDone('${item.id}')" style="background:${item.done ? '#bbb' : cfg.color};color:white;border:none;border-radius:50%;width:28px;height:28px;font-size:0.85rem;cursor:pointer;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;">${item.done ? '✓' : '○'}</button>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
+            <span style="font-size:0.8rem;">${cfg.emoji}</span>
+            <span style="font-weight:700;color:${item.done ? '#888' : cfg.color};font-size:0.95rem;${item.done ? 'text-decoration:line-through;' : ''}">${item.name}</span>
+            ${item.done ? `<span style="font-size:0.65rem;background:#4caf50;color:white;border-radius:8px;padding:1px 7px;font-weight:700;">✓ Gidildi!</span>` : `<span style="font-size:0.65rem;background:${cfg.color};color:white;border-radius:8px;padding:1px 7px;opacity:0.8;">${cfg.label}</span>`}
+          </div>
+          ${item.note ? `<div style="font-size:0.78rem;color:var(--text-light);margin-bottom:6px;line-height:1.4;">${item.note}</div>` : ''}
+          ${item.done && item.visitedAt ? `<div style="font-size:0.7rem;color:#4caf50;margin-bottom:4px;">📅 ${item.visitedAt} tarihinde gidildi 🎉</div>` : ''}
+          ${hasMap ? `<div style="border-radius:12px;overflow:hidden;margin-top:6px;border:1px solid ${cfg.border};">
+            <iframe src="https://maps.google.com/maps?q=${item.lat},${item.lng}&z=13&output=embed" width="100%" height="140" frameborder="0" style="display:block;" loading="lazy"></iframe>
+          </div>` : ''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
+          <button onclick="editBucketItem('${item.id}')" style="background:var(--rose-light);color:var(--rose-dark);border:none;border-radius:8px;padding:4px 8px;font-size:0.75rem;cursor:pointer;">✏️</button>
+          <button onclick="deleteBucketItem('${item.id}')" style="background:#ffe0e0;color:#c04040;border:none;border-radius:8px;padding:4px 8px;font-size:0.75rem;cursor:pointer;">🗑️</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function searchBucketPlace() {
+  const q = document.getElementById('bucket-search-input').value.trim();
+  if(!q) return;
+  const resultsEl = document.getElementById('bucket-search-results');
+  resultsEl.style.display = 'block';
+  resultsEl.innerHTML = '<div style="padding:10px;text-align:center;color:var(--text-light);font-size:0.82rem;">🔍 Aranıyor...</div>';
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&accept-language=tr`;
+    const resp = await fetch(url, { headers: { 'User-Agent': 'TulayYigitApp/1.0' } });
+    const data = await resp.json();
+    if(!data.length) { resultsEl.innerHTML = '<div style="padding:10px;text-align:center;color:var(--text-light);font-size:0.82rem;">Sonuç bulunamadı 😔</div>'; return; }
+    resultsEl.innerHTML = data.map(r => `<div onclick="selectBucketResult(${r.lat},${r.lon},'${r.display_name.replace(/'/g,"\'").substring(0,60)}')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--rose-light);font-size:0.82rem;color:var(--text);" onmouseover="this.style.background='var(--rose-light)'" onmouseout="this.style.background=''">${r.display_name.substring(0,80)}</div>`).join('');
+  } catch(e) {
+    resultsEl.innerHTML = '<div style="padding:10px;text-align:center;color:var(--text-light);font-size:0.82rem;">Arama hatası 😔</div>';
+  }
+}
+
+function selectBucketResult(lat, lng, name) {
+  bucketSelectedLat = lat;
+  bucketSelectedLng = lng;
+  document.getElementById('bucket-lat').value = lat;
+  document.getElementById('bucket-lng').value = lng;
+  if(!document.getElementById('bucket-name-input').value) {
+    document.getElementById('bucket-name-input').value = name;
+  }
+  document.getElementById('bucket-search-results').style.display = 'none';
+  const src = `https://maps.google.com/maps?q=${lat},${lng}&z=14&output=embed`;
+  document.getElementById('bucket-map-iframe').src = src;
+  document.getElementById('bucket-map-preview').style.display = 'block';
+}
+
+window.openBucketAdd = openBucketAdd;
+window.saveBucketItem = saveBucketItem;
+window.toggleBucketDone = toggleBucketDone;
+window.deleteBucketItem = deleteBucketItem;
+window.editBucketItem = editBucketItem;
+window.searchBucketPlace = searchBucketPlace;
+window.selectBucketResult = selectBucketResult;
+
+loadBucketList();
 window.renderPlacesCalendar = renderPlacesCalendar;
 window.toDateStr = toDateStr;
 window.renderPlacesMaps = renderPlacesMaps;
@@ -4744,8 +4931,8 @@ loadState();
 
 <!-- ======================== PLACES PAGE ======================== -->
 <div class="page" id="page-places">
-  <div class="page-title-bar">📍 Gidilen Yerler</div>
-  <p style="font-size:0.88rem;color:var(--text-light);margin-bottom:20px;">Birlikte gittiğiniz tüm yerler burada! 🗺️</p>
+  <div class="page-title-bar">📍 Gidilen / Gidilecek Yerler</div>
+  <p style="font-size:0.88rem;color:var(--text-light);margin-bottom:20px;">Gittiğiniz ve gitmek istediğiniz tüm yerler burada! 🗺️</p>
   <div style="font-size:0.8rem;color:var(--text-light);display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;">
     <span>📍 Gidilen yer sayısı</span>
     <span>🗺️ Harita eklendi</span>
@@ -4783,6 +4970,52 @@ loadState();
       </div>
     </div>
     <div id="places-maps-container" style="display:flex;flex-direction:column;gap:16px;"></div>
+  </div>
+<!-- GİDİLECEK YERLER -->
+  <div style="margin-top:28px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--rose-dark);">🌍 Gidilecekler Listesi</div>
+        <div style="font-size:0.75rem;color:var(--text-light);margin-top:2px;">Hayalinizde biriktirdiğiniz yerler</div>
+      </div>
+      <button onclick="openBucketAdd()" style="background:linear-gradient(135deg,#e8698a,#c0416a);color:white;border:none;border-radius:12px;padding:8px 16px;font-size:0.85rem;font-weight:700;cursor:pointer;box-shadow:0 3px 10px rgba(232,105,138,0.3);">+ Ekle</button>
+    </div>
+    <div id="bucket-list-container" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="text-align:center;color:var(--text-light);font-size:0.85rem;padding:20px;" id="bucket-empty-msg">Henüz gidilecek yer eklenmemiş 🌍<br>Hayallerinizi ekleyin!</div>
+    </div>
+  </div>
+</div>
+
+<!-- BUCKET ADD MODAL -->
+<div class="modal-backdrop" id="bucket-modal" style="display:none;">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-title">🌍 Gidilecek Yer Ekle</div>
+    <button class="modal-close" onclick="closeModal('bucket-modal')">✕</button>
+    <input type="text" id="bucket-name-input" placeholder="Yer adı (ör: Kapadokya, Paris...) 📍" style="width:100%;border:1.5px solid var(--rose-light);border-radius:12px;padding:10px 14px;font-family:Lato,sans-serif;font-size:0.9rem;margin-bottom:10px;outline:none;background:#fff;color:var(--text);box-sizing:border-box;">
+    <textarea id="bucket-note-input" placeholder="Not ekle (neden gitmek istiyorsunuz? 💕)" style="width:100%;border:1.5px solid var(--rose-light);border-radius:12px;padding:10px 14px;font-family:Lato,sans-serif;font-size:0.85rem;margin-bottom:10px;outline:none;background:#fff;color:var(--text);height:70px;resize:none;box-sizing:border-box;"></textarea>
+    <div style="font-size:0.82rem;color:var(--text-light);margin-bottom:8px;">📍 Haritada konumu ara (isteğe bağlı):</div>
+    <div style="display:flex;gap:8px;margin-bottom:8px;">
+      <input type="text" id="bucket-search-input" placeholder="Yer ara... (ör: Kapadokya)" style="flex:1;border:1.5px solid var(--rose-light);border-radius:12px;padding:10px 14px;font-family:Lato,sans-serif;font-size:0.85rem;outline:none;background:#fff;color:var(--text);" onkeydown="if(event.key==='Enter') searchBucketPlace()">
+      <button class="add-btn" onclick="searchBucketPlace()" style="white-space:nowrap;">🔍 Ara</button>
+    </div>
+    <div id="bucket-search-results" style="display:none;background:var(--card);border:1px solid var(--rose-light);border-radius:12px;margin-bottom:8px;max-height:140px;overflow-y:auto;"></div>
+    <div id="bucket-map-preview" style="display:none;margin-bottom:12px;border-radius:14px;overflow:hidden;border:2px solid var(--rose-light);">
+      <iframe id="bucket-map-iframe" width="100%" height="200" frameborder="0" style="display:block;" allowfullscreen loading="lazy"></iframe>
+    </div>
+    <input type="hidden" id="bucket-lat">
+    <input type="hidden" id="bucket-lng">
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text-light);cursor:pointer;">
+        <input type="radio" name="bucket-priority" value="yüksek" style="accent-color:var(--rose);"> 🔥 Çok istiyoruz
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text-light);cursor:pointer;">
+        <input type="radio" name="bucket-priority" value="orta" checked style="accent-color:var(--rose);"> 💕 Gitmek isteriz
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text-light);cursor:pointer;">
+        <input type="radio" name="bucket-priority" value="düşük" style="accent-color:var(--rose);"> 🌸 Belki bir gün
+      </label>
+    </div>
+    <button class="modal-save-btn" onclick="saveBucketItem()">💾 Listeye Ekle</button>
   </div>
 </div>
 
