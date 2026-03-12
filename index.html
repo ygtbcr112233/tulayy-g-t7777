@@ -584,6 +584,7 @@ canvas.drawing-canvas {
     <button class="tab-btn" onclick="showPage('places')">📍 Gidilen Yerler</button>
     <button class="tab-btn" onclick="showPage('gorevler')">✅ Görevler</button>
     <button class="tab-btn" onclick="showPage('enler')">🏆 Enler</button>
+    <button class="tab-btn" onclick="showPage('oyun')">🎮 Oyun</button>
   </div>
 </nav>
 
@@ -704,6 +705,41 @@ canvas.drawing-canvas {
           <button onclick="kissHistoryOffset=Math.max(kissHistoryOffset-7,-90);renderKissHistory()" style="background:var(--rose-light);border:none;border-radius:8px;padding:4px 12px;cursor:pointer;font-size:1rem;color:var(--rose-dark);">›</button>
         </div>
         <div id="kiss-history-chart" style="background:white;border-radius:16px;padding:14px;border:1px solid var(--rose-light);"></div>
+
+        <!-- ÖPÜCÜK UYUM YÜZDESİ -->
+        <div style="margin-top:16px;border-top:1px solid var(--rose-light);padding-top:16px;">
+          <div style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--rose-dark);text-align:center;margin-bottom:4px;">💋 Günlük Öpücüklere Göre Uyum Yüzdesi</div>
+          <div style="font-size:0.75rem;color:var(--text-light);text-align:center;margin-bottom:14px;">Günlük öpücük sayınıza göre hesaplanır, gün sonunda kaydolur</div>
+
+          <!-- Bugünkü uyum -->
+          <div style="background:linear-gradient(135deg,#fff0f5,#ffe8f2);border-radius:16px;padding:14px;margin-bottom:12px;border:1.5px solid var(--rose-light);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <span style="font-size:0.8rem;font-weight:700;color:var(--rose-dark);">✨ Bugün</span>
+              <span style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--rose-dark);" id="kiss-uyum-pct-today">—</span>
+            </div>
+            <div style="background:#fce8f0;border-radius:20px;height:20px;overflow:hidden;margin-bottom:8px;">
+              <div id="kiss-uyum-bar-today" style="height:100%;width:0%;background:linear-gradient(90deg,#e8698a,#d4a853);border-radius:20px;transition:width 1.2s ease;"></div>
+            </div>
+            <div id="kiss-uyum-comment-today" style="font-size:0.8rem;color:var(--text-light);text-align:center;"></div>
+          </div>
+
+          <!-- Geçmiş takvim -->
+          <div style="font-size:0.8rem;font-weight:700;color:var(--text-light);text-align:center;margin-bottom:8px;">📅 Geçmiş Günler — Bir güne bas!</div>
+          <div id="kiss-uyum-calendar" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:10px;"></div>
+          <!-- Seçilen gün detayı -->
+          <div id="kiss-uyum-day-detail" style="display:none;background:white;border-radius:14px;padding:12px;border:1px solid var(--rose-light);">
+            <div style="font-size:0.8rem;font-weight:700;color:var(--rose-dark);margin-bottom:6px;" id="kiss-uyum-detail-date"></div>
+            <div style="background:#fce8f0;border-radius:12px;height:16px;overflow:hidden;margin-bottom:6px;">
+              <div id="kiss-uyum-detail-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#e8698a,#d4a853);border-radius:12px;transition:width 0.8s;"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--text-light);">
+              <span>💕 Tülay: <strong id="kiss-uyum-detail-tulay">0</strong></span>
+              <span style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--rose-dark);" id="kiss-uyum-detail-pct"></span>
+              <span>💙 Yiğit: <strong id="kiss-uyum-detail-yigit">0</strong></span>
+            </div>
+            <div style="font-size:0.75rem;color:var(--text-light);text-align:center;margin-top:6px;" id="kiss-uyum-detail-comment"></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -773,24 +809,7 @@ canvas.drawing-canvas {
       <button class="horoscope-load-btn" id="horoscope-refresh-btn" onclick="refreshTodayHoroscope()">🔮 Yorumları Yenile</button>
     </div>
 
-    <!-- UYUM METRESİ -->
-    <div class="horoscope-section" style="margin-top:0;">
-      <div class="horoscope-title">💞 Yay & Koç Günlük Uyum</div>
-      <div id="compat-meter-wrap" style="text-align:center;">
-        <div style="position:relative;background:#fce8f0;border-radius:20px;height:28px;overflow:hidden;margin-bottom:10px;">
-          <div id="compat-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#e8698a,#d4a853);border-radius:20px;transition:width 1.2s ease;"></div>
-          <div id="compat-pct" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.95rem;color:var(--rose-dark);"></div>
-        </div>
-        <div id="compat-comment" style="font-size:0.83rem;color:var(--text-light);line-height:1.6;">⏳ Yükleniyor...</div>
-      </div>
-      <!-- UYUM GEÇMİŞİ TABLOSU -->
-      <div style="margin-top:16px;border-top:1px solid var(--rose-light);padding-top:14px;">
-        <div style="font-size:0.82rem;font-weight:700;color:var(--text-light);text-align:center;margin-bottom:10px;">📅 Son 7 Günün Uyumu</div>
-        <div id="compat-history-table" style="display:flex;flex-direction:column;gap:5px;">
-          <div style="text-align:center;color:var(--text-light);font-size:0.78rem;">Yükleniyor...</div>
-        </div>
-      </div>
-    </div>
+
 
     <!-- ÇİZİM VİTRİNİ -->
     <div id="drawing-showcase" style="background:linear-gradient(135deg,#fff0f5,#fff8f0);border-radius:20px;padding:20px;margin-bottom:20px;border:1px solid var(--rose-light);box-shadow:var(--shadow);">
@@ -1262,6 +1281,7 @@ async function loadState() {
     renderDrawingShowcase();
     renderKissHistory();
     renderCompatHistory();
+    if(typeof renderKissUyum === "function") renderKissUyum();
     if(typeof renderEnler === 'function') renderEnler();
     if(typeof renderGorevCalendar === 'function') renderGorevCalendar();
   });
@@ -2387,6 +2407,7 @@ updateMoodSongSuggestion();
 if(typeof initKissCounter === 'function') initKissCounter();
 // Grafiği hemen çiz
 renderKissHistory();
+if(typeof renderKissUyum === "function") renderKissUyum();
 
 // ===== DRAWING FIX: auto-save before switching =====
 const _origChangeDrawMonth = window.changeDrawMonth;
@@ -3886,6 +3907,348 @@ window.enlerSil = enlerSil;
 window.renderEnler = renderEnler;
 window.renderGorevCalendar = renderGorevCalendar;
 
+// ===== KİSS UYUM =====
+function kissUyumPct(tulay, yigit) {
+  const total = (tulay || 0) + (yigit || 0);
+  if(total === 0) return 0;
+  // Uyum: simetri + toplam hacim
+  const balance = 1 - Math.abs((tulay||0) - (yigit||0)) / Math.max(total, 1) * 0.3;
+  const volume = Math.min(total / 20, 1); // 20 öpücük = max
+  const raw = Math.round((volume * 0.6 + balance * 0.4) * 100);
+  return Math.min(99, Math.max(raw, total > 0 ? 30 : 0));
+}
+
+function kissUyumComment(pct) {
+  if(pct >= 90) return '🔥 Bugün muhteşem bir uyum! Aşk havada uçuşuyor 💋';
+  if(pct >= 75) return '💕 Harika bir gün, sevginiz her yerde hissediliyor!';
+  if(pct >= 60) return '😊 Güzel bir gün, uyumunuz çok iyi!';
+  if(pct >= 40) return '🌸 Biraz daha öpücük eksik, yaklaşın birbirinize!';
+  if(pct >= 20) return '😅 Bugün az öptünüz, telafi edin!';
+  return '💤 Henüz öpücük yok — başlayın! 💋';
+}
+
+function renderKissUyum() {
+  const today = toDateStr(new Date());
+  // Bugünkü
+  const todayKisses = state.kisses?.[today] || { tulay: 0, yigit: 0 };
+  const todayPct = kissUyumPct(todayKisses.tulay, todayKisses.yigit);
+  const pctEl = document.getElementById('kiss-uyum-pct-today');
+  const barEl = document.getElementById('kiss-uyum-bar-today');
+  const commentEl = document.getElementById('kiss-uyum-comment-today');
+  if(pctEl) pctEl.textContent = todayPct > 0 ? todayPct + '%' : '—';
+  if(barEl) setTimeout(() => { barEl.style.width = todayPct + '%'; }, 200);
+  if(commentEl) commentEl.textContent = kissUyumComment(todayPct);
+
+  // Takvim - son 30 gün
+  renderKissUyumCalendar();
+}
+
+function renderKissUyumCalendar() {
+  const cal = document.getElementById('kiss-uyum-calendar');
+  if(!cal) return;
+  const today = new Date();
+  const days = [];
+  for(let i = 29; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    days.push(toDateStr(d));
+  }
+  cal.innerHTML = days.map(ds => {
+    const isToday = ds === toDateStr(today);
+    const hist = state.kissHistory?.[ds];
+    const todayKisses = isToday ? (state.kisses?.[ds] || {tulay:0,yigit:0}) : null;
+    const data = isToday ? todayKisses : hist;
+    const pct = data ? kissUyumPct(data.tulay, data.yigit) : null;
+    const hasData = pct !== null && pct > 0;
+    const bg = hasData
+      ? (pct >= 75 ? '#e8698a' : pct >= 50 ? '#f0a0b8' : '#f5c8d8')
+      : (isToday ? 'var(--rose-light)' : '#f8f0f3');
+    const dayNum = new Date(ds+'T12:00:00').getDate();
+    return `<div onclick="openKissUyumDay('${ds}')" style="background:${bg};border-radius:8px;padding:5px 2px;text-align:center;cursor:pointer;border:1.5px solid ${isToday?'var(--rose-dark)':'transparent'};transition:transform 0.1s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+      <div style="font-size:0.65rem;color:${hasData?'white':'var(--text-light)'};">${dayNum}</div>
+      <div style="font-size:0.7rem;font-weight:700;color:${hasData?'white':'var(--text-light)'};">${hasData?pct+'%':''}</div>
+    </div>`;
+  }).join('');
+}
+
+function openKissUyumDay(ds) {
+  const today = toDateStr(new Date());
+  const isToday = ds === today;
+  const data = isToday
+    ? (state.kisses?.[ds] || {tulay:0, yigit:0})
+    : (state.kissHistory?.[ds]);
+  const detailEl = document.getElementById('kiss-uyum-day-detail');
+  if(!detailEl) return;
+  if(!data) { detailEl.style.display='none'; return; }
+  const pct = kissUyumPct(data.tulay, data.yigit);
+  const fmtDate = new Date(ds+'T12:00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('kiss-uyum-detail-date').textContent = fmtDate + (isToday?' ✨':'');
+  document.getElementById('kiss-uyum-detail-tulay').textContent = data.tulay || 0;
+  document.getElementById('kiss-uyum-detail-yigit').textContent = data.yigit || 0;
+  document.getElementById('kiss-uyum-detail-pct').textContent = pct + '%';
+  document.getElementById('kiss-uyum-detail-comment').textContent = kissUyumComment(pct);
+  setTimeout(() => { document.getElementById('kiss-uyum-detail-bar').style.width = pct + '%'; }, 100);
+  detailEl.style.display = 'block';
+}
+
+window.openKissUyumDay = openKissUyumDay;
+window.renderKissUyum = renderKissUyum;
+
+// ===== OYUN =====
+let oyunCurrentPlayer = null;
+let oyunScores = { tulay: 0, yigit: 0 };
+
+function oyunPlayerSec(who) {
+  oyunCurrentPlayer = who;
+  document.getElementById('oyun-player-select').style.display = 'none';
+  document.getElementById('oyun-area').style.display = 'block';
+  document.getElementById('oyun-current-player').textContent = who === 'tulay' ? '💕 Tülay' : '💙 Yiğit';
+  document.getElementById('oyun-current-score').textContent = '0';
+  // Load scores from Firebase
+  get(ref(db, 'state/oyunScores')).then(snap => {
+    if(snap.exists()) {
+      oyunScores = snap.val();
+    }
+    document.getElementById('oyun-rekor-tulay').textContent = oyunScores.tulay || 0;
+    document.getElementById('oyun-rekor-yigit').textContent = oyunScores.yigit || 0;
+  }).catch(()=>{});
+  flappyInit();
+}
+
+function oyunGeriDon() {
+  flappyStop();
+  document.getElementById('oyun-player-select').style.display = 'block';
+  document.getElementById('oyun-area').style.display = 'none';
+  oyunCurrentPlayer = null;
+}
+
+function oyunSaveScore(score) {
+  if(!oyunCurrentPlayer) return;
+  const current = oyunScores[oyunCurrentPlayer] || 0;
+  if(score > current) {
+    oyunScores[oyunCurrentPlayer] = score;
+    set(ref(db, 'state/oyunScores'), oyunScores).catch(e=>console.error(e));
+    document.getElementById('oyun-rekor-' + oyunCurrentPlayer).textContent = score;
+  }
+}
+
+window.oyunPlayerSec = oyunPlayerSec;
+window.oyunGeriDon = oyunGeriDon;
+
+// ===== FLAPPY BIRD =====
+let flappyRunning = false;
+let flappyRAF = null;
+let flappyScore = 0;
+let flappyBird = {};
+let flappyPipes = [];
+let flappyGravity = 0.35;
+let flappyFlapPower = -7;
+let flappyPipeSpeed = 2.2;
+let flappyPipeGap = 140;
+let flappyPipeInterval = 90;
+let flappyFrame = 0;
+let flappyCanvas, flappyCtx;
+let flappyStarted = false;
+
+function flappyInit() {
+  flappyCanvas = document.getElementById('flappy-canvas');
+  flappyCtx = flappyCanvas.getContext('2d');
+  flappyRunning = false;
+  flappyStarted = false;
+  flappyScore = 0;
+  flappyBird = { x: 80, y: 240, vy: 0, r: 18 };
+  flappyPipes = [];
+  flappyFrame = 0;
+  document.getElementById('oyun-overlay').style.display = 'flex';
+  document.getElementById('oyun-overlay-emoji').textContent = '🎮';
+  document.getElementById('oyun-overlay-title').textContent = 'Hazır mısın?';
+  document.getElementById('oyun-overlay-sub').textContent = 'Ekrana dokun veya Space/Enter tuşuna bas';
+  document.getElementById('oyun-overlay-score').style.display = 'none';
+  document.getElementById('oyun-start-btn').textContent = '▶ Başla';
+  flappyDraw();
+
+  // Event listeners
+  flappyCanvas.ontouchstart = (e) => { e.preventDefault(); flappyFlap(); };
+  flappyCanvas.onclick = () => flappyFlap();
+}
+
+function flappyStart() {
+  document.getElementById('oyun-overlay').style.display = 'none';
+  flappyRunning = true;
+  flappyStarted = true;
+  flappyScore = 0;
+  flappyBird = { x: 80, y: 200, vy: 0, r: 18 };
+  flappyPipes = [];
+  flappyFrame = 0;
+  document.getElementById('oyun-current-score').textContent = '0';
+  if(flappyRAF) cancelAnimationFrame(flappyRAF);
+  flappyLoop();
+}
+
+function flappyStop() {
+  flappyRunning = false;
+  if(flappyRAF) { cancelAnimationFrame(flappyRAF); flappyRAF = null; }
+  flappyCanvas && (flappyCanvas.ontouchstart = null) && (flappyCanvas.onclick = null);
+}
+
+function flappyFlap() {
+  if(!flappyStarted) { flappyStart(); return; }
+  if(!flappyRunning) return;
+  flappyBird.vy = flappyFlapPower;
+}
+
+function flappyLoop() {
+  if(!flappyRunning) return;
+  flappyUpdate();
+  flappyDraw();
+  flappyRAF = requestAnimationFrame(flappyLoop);
+}
+
+function flappyUpdate() {
+  const W = 360, H = 480;
+  flappyFrame++;
+  // Bird
+  flappyBird.vy += flappyGravity;
+  flappyBird.y += flappyBird.vy;
+  // Pipes
+  if(flappyFrame % flappyPipeInterval === 0) {
+    const gapY = 80 + Math.random() * (H - 160 - flappyPipeGap);
+    flappyPipes.push({ x: W, gapY, passed: false });
+  }
+  flappyPipes.forEach(p => { p.x -= flappyPipeSpeed; });
+  flappyPipes = flappyPipes.filter(p => p.x > -60);
+  // Score
+  flappyPipes.forEach(p => {
+    if(!p.passed && p.x + 40 < flappyBird.x) {
+      p.passed = true;
+      flappyScore++;
+      document.getElementById('oyun-current-score').textContent = flappyScore;
+      if(flappyScore % 5 === 0) flappyPipeSpeed = Math.min(flappyPipeSpeed + 0.15, 5);
+    }
+  });
+  // Collision
+  if(flappyBird.y + flappyBird.r >= H || flappyBird.y - flappyBird.r <= 0) { flappyGameOver(); return; }
+  for(const p of flappyPipes) {
+    const bx = flappyBird.x, by = flappyBird.y, br = flappyBird.r - 3;
+    const pw = 52;
+    if(bx + br > p.x && bx - br < p.x + pw) {
+      if(by - br < p.gapY || by + br > p.gapY + flappyPipeGap) { flappyGameOver(); return; }
+    }
+  }
+}
+
+function flappyDraw() {
+  const canvas = flappyCanvas;
+  const ctx = flappyCtx;
+  const W = canvas.width, H = canvas.height;
+  // Sky gradient
+  const sky = ctx.createLinearGradient(0,0,0,H);
+  sky.addColorStop(0,'#87CEEB');
+  sky.addColorStop(1,'#b0e0ff');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0,0,W,H);
+  // Ground
+  ctx.fillStyle = '#90EE90';
+  ctx.fillRect(0, H-40, W, 40);
+  ctx.fillStyle = '#8B7355';
+  ctx.fillRect(0, H-45, W, 8);
+  // Pipes
+  flappyPipes.forEach(p => {
+    const pw = 52;
+    const grad = ctx.createLinearGradient(p.x,0,p.x+pw,0);
+    grad.addColorStop(0,'#5bba5b');
+    grad.addColorStop(0.5,'#7ddb7d');
+    grad.addColorStop(1,'#4a9a4a');
+    ctx.fillStyle = grad;
+    // Top pipe
+    ctx.fillRect(p.x, 0, pw, p.gapY);
+    ctx.fillStyle = '#4a9a4a';
+    ctx.fillRect(p.x-4, p.gapY-16, pw+8, 16);
+    // Bottom pipe
+    ctx.fillStyle = grad;
+    ctx.fillRect(p.x, p.gapY+flappyPipeGap, pw, H);
+    ctx.fillStyle = '#4a9a4a';
+    ctx.fillRect(p.x-4, p.gapY+flappyPipeGap, pw+8, 16);
+  });
+  // Bird
+  const bx = flappyBird.x, by = flappyBird.y, br = flappyBird.r;
+  const rotation = Math.max(-0.5, Math.min(flappyBird.vy * 0.05, 0.8));
+  ctx.save();
+  ctx.translate(bx, by);
+  ctx.rotate(rotation);
+  // Body
+  ctx.fillStyle = oyunCurrentPlayer === 'tulay' ? '#ff8fab' : '#4a90d9';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, br, br*0.85, 0, 0, Math.PI*2);
+  ctx.fill();
+  // Wing
+  ctx.fillStyle = oyunCurrentPlayer === 'tulay' ? '#ff6b9d' : '#357abd';
+  ctx.beginPath();
+  ctx.ellipse(-4, 4, br*0.55, br*0.35, -0.4, 0, Math.PI*2);
+  ctx.fill();
+  // Eye
+  ctx.fillStyle = 'white';
+  ctx.beginPath();
+  ctx.arc(8, -5, 6, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = '#333';
+  ctx.beginPath();
+  ctx.arc(9, -5, 3, 0, Math.PI*2);
+  ctx.fill();
+  // Beak
+  ctx.fillStyle = '#FFA500';
+  ctx.beginPath();
+  ctx.moveTo(br-2, -2);
+  ctx.lineTo(br+8, 0);
+  ctx.lineTo(br-2, 4);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+  // Score on canvas
+  ctx.fillStyle = 'white';
+  ctx.font = 'bold 28px Arial';
+  ctx.textAlign = 'center';
+  ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+  ctx.lineWidth = 3;
+  ctx.strokeText(flappyScore, W/2, 50);
+  ctx.fillText(flappyScore, W/2, 50);
+}
+
+function flappyGameOver() {
+  flappyRunning = false;
+  if(flappyRAF) { cancelAnimationFrame(flappyRAF); flappyRAF = null; }
+  flappyDraw();
+  // Save score
+  oyunSaveScore(flappyScore);
+  // Show overlay
+  const overlay = document.getElementById('oyun-overlay');
+  const isRecord = flappyScore > 0 && flappyScore >= (oyunScores[oyunCurrentPlayer] || 0);
+  document.getElementById('oyun-overlay-emoji').textContent = isRecord ? '🏆' : '😢';
+  document.getElementById('oyun-overlay-title').textContent = isRecord ? 'YENİ REKOR!' : 'Oyun Bitti!';
+  document.getElementById('oyun-overlay-sub').textContent = (oyunCurrentPlayer === 'tulay' ? '💕 Tülay' : '💙 Yiğit') + ' — Puan: ' + flappyScore;
+  const scoreEl = document.getElementById('oyun-overlay-score');
+  scoreEl.textContent = flappyScore + ' 💋';
+  scoreEl.style.display = 'block';
+  document.getElementById('oyun-start-btn').textContent = '🔄 Tekrar Oyna';
+  overlay.style.display = 'flex';
+  flappyStarted = false;
+}
+
+window.flappyStart = window.flappyStart || flappyStart;
+window.flappyFlap = flappyFlap;
+
+// Keyboard for flappy
+document.addEventListener("keydown", (e) => {
+  if(e.code === "Space" || e.code === "Enter") {
+    const page = document.getElementById("page-oyun");
+    if(page && page.classList.contains("active")) {
+      e.preventDefault();
+      if(!flappyStarted) flappyStart();
+      else flappyFlap();
+    }
+  }
+});
+
 } // end bootApp
 
 // ===== BAŞLAT — bootApp dışında, tek çağrı =====
@@ -4051,6 +4414,59 @@ loadState();
     <input type="text" id="enler-baslik-input" placeholder="Başlık (örn: En sevdiğim yemek)" style="width:100%;border:1.5px solid var(--rose-light);border-radius:12px;padding:10px;font-size:0.88rem;margin-bottom:10px;font-family:Lato,sans-serif;outline:none;">
     <input type="text" id="enler-deger-input" placeholder="Cevap (örn: Lahmacun 🥙)" style="width:100%;border:1.5px solid var(--rose-light);border-radius:12px;padding:10px;font-size:0.88rem;margin-bottom:14px;font-family:Lato,sans-serif;outline:none;">
     <button class="modal-save-btn" onclick="enlerKaydet()">💾 Kaydet</button>
+  </div>
+</div>
+
+<!-- ======================== OYUN PAGE ======================== -->
+<div class="page" id="page-oyun">
+  <div class="page-title-bar">🎮 Oyun Köşesi</div>
+
+  <!-- Oyuncu seçimi -->
+  <div id="oyun-player-select" style="text-align:center;padding:20px 0;">
+    <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--rose-dark);margin-bottom:20px;">Sen kimsin? 💕</div>
+    <div style="display:flex;gap:16px;justify-content:center;margin-bottom:20px;">
+      <button onclick="oyunPlayerSec('tulay')" style="background:linear-gradient(135deg,#ff8fab,#e8698a);color:white;border:none;border-radius:20px;padding:20px 32px;font-size:1.3rem;font-weight:800;cursor:pointer;box-shadow:0 4px 15px rgba(232,105,138,0.4);">💕 T<br><span style="font-size:0.7rem;font-weight:400;">Tülay</span></button>
+      <button onclick="oyunPlayerSec('yigit')" style="background:linear-gradient(135deg,#4a90d9,#357abd);color:white;border:none;border-radius:20px;padding:20px 32px;font-size:1.3rem;font-weight:800;cursor:pointer;box-shadow:0 4px 15px rgba(74,144,217,0.4);">💙 Y<br><span style="font-size:0.7rem;font-weight:400;">Yiğit</span></button>
+    </div>
+  </div>
+
+  <!-- Oyun alanı -->
+  <div id="oyun-area" style="display:none;">
+    <!-- Skor tablosu -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+      <div style="background:linear-gradient(135deg,#ffe0ec,#ffd0e0);border-radius:14px;padding:10px;text-align:center;">
+        <div style="font-size:0.7rem;color:var(--text-light);">💕 Tülay Rekoru</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--rose-dark);" id="oyun-rekor-tulay">0</div>
+      </div>
+      <div style="background:linear-gradient(135deg,#d0e4ff,#bdd6ff);border-radius:14px;padding:10px;text-align:center;">
+        <div style="font-size:0.7rem;color:var(--text-light);">💙 Yiğit Rekoru</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.4rem;color:#4a7ac0;" id="oyun-rekor-yigit">0</div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-bottom:10px;">
+      <span style="font-size:0.85rem;color:var(--text-light);">Oynayan: </span>
+      <span style="font-weight:700;color:var(--rose-dark);" id="oyun-current-player">—</span>
+      <span style="margin-left:16px;font-size:0.85rem;color:var(--text-light);">Puan: </span>
+      <span style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--rose-dark);" id="oyun-current-score">0</span>
+    </div>
+
+    <!-- Canvas -->
+    <div style="position:relative;border-radius:16px;overflow:hidden;border:2px solid var(--rose-light);margin-bottom:12px;">
+      <canvas id="flappy-canvas" width="360" height="480" style="display:block;width:100%;background:#87CEEB;"></canvas>
+      <!-- Overlay -->
+      <div id="oyun-overlay" style="position:absolute;inset:0;background:rgba(255,240,245,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;">
+        <div style="font-size:2rem;" id="oyun-overlay-emoji">🎮</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--rose-dark);" id="oyun-overlay-title">Hazır mısın?</div>
+        <div style="font-size:0.85rem;color:var(--text-light);" id="oyun-overlay-sub">Ekrana dokun veya Space/Enter'a bas</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--rose-dark);display:none;" id="oyun-overlay-score"></div>
+        <button onclick="flappyStart()" style="background:var(--rose);color:white;border:none;border-radius:14px;padding:12px 28px;font-size:1rem;font-weight:700;cursor:pointer;margin-top:4px;" id="oyun-start-btn">▶ Başla</button>
+      </div>
+    </div>
+
+    <div style="text-align:center;">
+      <button onclick="oyunGeriDon()" style="background:var(--rose-light);color:var(--rose-dark);border:none;border-radius:12px;padding:8px 20px;font-size:0.85rem;cursor:pointer;">← Oyuncu Değiştir</button>
+    </div>
   </div>
 </div>
 
