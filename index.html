@@ -4970,8 +4970,9 @@ loadState();
     </div>
     <div id="places-maps-container" style="display:flex;flex-direction:column;gap:16px;"></div>
   </div>
-<!-- GİDİLECEK YERLER -->
-  <div style="margin-top:28px;">
+
+  <!-- GİDİLECEK YERLER -->
+  <div style="margin-top:28px;position:relative;z-index:5;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;position:relative;z-index:1;">
       <div>
         <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--rose-dark);">🌍 Gidilecekler Listesi</div>
@@ -4985,7 +4986,7 @@ loadState();
 </div>
 
 <!-- BUCKET ADD MODAL -->
-<div class="modal-backdrop" id="bucket-modal" style="display:none;">
+<div class="modal-backdrop" id="bucket-modal">
   <div class="modal" style="max-width:500px;">
     <div class="modal-title">🌍 Gidilecek Yer Ekle</div>
     <button class="modal-close" onclick="closeModal('bucket-modal')">✕</button>
