@@ -912,7 +912,7 @@ canvas.drawing-canvas {
     </div>
     <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent);margin-bottom:14px;"></div>
     <!-- Kelime Bul -->
-    <div>
+    <div style="margin-bottom:14px;">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
         <span style="font-size:1rem;">🔤</span>
         <span style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:2px;text-transform:uppercase;">Kelime Bul</span>
@@ -932,6 +932,27 @@ canvas.drawing-canvas {
         </div>
       </div>
       <div id="home-rek-kelime-taunt" style="text-align:center;font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:6px;font-style:italic;min-height:16px;"></div>
+    </div>
+    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent);margin-bottom:14px;"></div>
+    <!-- Milyoner -->
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="font-size:1rem;">🏆</span>
+        <span style="font-size:0.72rem;font-weight:700;color:rgba(245,200,66,0.6);letter-spacing:2px;text-transform:uppercase;">Kim Milyoner Olmak İster</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div id="home-rek-milyon-tulay-card" style="background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.3);border-radius:14px;padding:12px;text-align:center;position:relative;transition:all 0.3s;">
+          <div style="font-size:0.65rem;color:rgba(255,143,171,0.7);font-weight:700;margin-bottom:3px;">💕 TÜLAY</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:#f5c842;line-height:1.2;" id="home-rek-milyon-tulay">—</div>
+          <div id="home-rek-milyon-tulay-crown" style="display:none;position:absolute;top:-10px;right:-4px;font-size:1.1rem;">👑</div>
+        </div>
+        <div id="home-rek-milyon-yigit-card" style="background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.3);border-radius:14px;padding:12px;text-align:center;position:relative;transition:all 0.3s;">
+          <div style="font-size:0.65rem;color:rgba(91,168,232,0.7);font-weight:700;margin-bottom:3px;">💙 YİĞİT</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:#f5c842;line-height:1.2;" id="home-rek-milyon-yigit">—</div>
+          <div id="home-rek-milyon-yigit-crown" style="display:none;position:absolute;top:-10px;right:-4px;font-size:1.1rem;">👑</div>
+        </div>
+      </div>
+      <div id="home-rek-milyon-taunt" style="text-align:center;font-size:0.72rem;color:rgba(245,200,66,0.4);margin-top:6px;font-style:italic;min-height:16px;"></div>
     </div>
   </div>
 
@@ -4285,7 +4306,7 @@ window.renderKissUyum = renderKissUyum;
 // ===== OYUN =====
 let oyunCurrentPlayer = null;
 let oyunCurrentGame = null;
-let oyunScores = { tulay: { araba: 0, snake: 0, simon: 0, kelime: 0 }, yigit: { araba: 0, snake: 0, simon: 0, kelime: 0 } };
+let oyunScores = { tulay: { araba: 0, snake: 0, simon: 0, kelime: 0, milyon: -1 }, yigit: { araba: 0, snake: 0, simon: 0, kelime: 0, milyon: -1 } };
 
 function oyunLoadScores() {
   get(ref(db, 'oyunRekorlar')).then(snap => {
@@ -4295,20 +4316,31 @@ function oyunLoadScores() {
   }).catch(()=>{});
 }
 
+function milyonScoreText(val) {
+  if(val === undefined || val === null || val === -1) return '—';
+  if(val === 15) return '👑 Şamp!';
+  return val + '.soru';
+}
 function oyunRefreshRekorBoard() {
   const s = oyunScores;
   const el = (id) => document.getElementById(id);
   ['araba','snake','simon','kelime'].forEach(g => {
     ['tulay','yigit'].forEach(p => {
-      const el2 = el(`oyun-rekor-${p}-${g}`);
+      const el2 = el('oyun-rekor-'+p+'-'+g);
       if(el2) el2.textContent = s[p]?.[g] || 0;
     });
   });
+  ['tulay','yigit'].forEach(p => {
+    const el2 = el('oyun-rekor-'+p+'-milyon');
+    if(el2) el2.textContent = milyonScoreText(s[p]?.milyon);
+  });
   // personal rekor panel
   ['araba','snake','simon','kelime'].forEach(g => {
-    const el2 = el(`oyun-my-rekor-${g}`);
+    const el2 = el('oyun-my-rekor-'+g);
     if(el2 && oyunCurrentPlayer) el2.textContent = s[oyunCurrentPlayer]?.[g] || 0;
   });
+  const myMilyon = el('oyun-my-rekor-milyon');
+  if(myMilyon && oyunCurrentPlayer) myMilyon.textContent = milyonScoreText(s[oyunCurrentPlayer]?.milyon);
 }
 
 function oyunPlayerSec(who) {
@@ -4333,7 +4365,7 @@ function oyunSec(game) {
   document.getElementById('oyun-current-score').textContent = '0';
   const rec = (oyunScores[oyunCurrentPlayer] || {})[game] || 0;
   document.getElementById('oyun-area-rekor').textContent = rec;
-  ['araba','snake','simon','kelime'].forEach(g => {
+  ['araba','snake','simon','kelime','milyon'].forEach(g => {
     const w = document.getElementById('game-'+g+'-wrap');
     if(w) w.style.display = game === g ? 'block' : 'none';
   });
@@ -4341,6 +4373,7 @@ function oyunSec(game) {
   if(game === 'snake') snakeInit();
   if(game === 'simon') simonInit();
   if(game === 'kelime') kelimeInit();
+  if(game === 'milyon') milyonInit();
 }
 
 function oyunGeriDon() {
@@ -4798,6 +4831,24 @@ function applyGameRekor(key, tVal, yVal, taunts) {
   }
 }
 
+const MILYON_HOME_TAUNTS = {
+  tulay_leads: [
+    "Tülay milyoner adayı, Yiğit hâlâ ilk soruda 😂",
+    "Tülay sorulara hakim, Yiğit şıkları karıştırıyor 🤔",
+    "Tülay ileride! Yiğit 'seyirciye sorayım' dedi 👥",
+    "Tülay bilgi yarışması şampiyonu, Yiğit izliyor 📺",
+    "Tülay rekor kırdı, Yiğit jokerini bitirdi 😅"
+  ],
+  yigit_leads: [
+    "Yiğit milyoner yolunda, Tülay takıldı 🤷",
+    "Yiğit sorulara hazırlıklıydı, Tülay şoke oldu 😲",
+    "Yiğit ileride! Tülay 'pas kullanayım' dedi ⏭️",
+    "Yiğit bilgi yarışması ustası, Tülay buna inanmıyor 😤",
+    "Yiğit rekoru kaptı, Tülay tekrar oynamak istiyor 🔄"
+  ],
+  equal: ["İkisi de aynı noktada! Kim daha ileri gider? 🏆","Berabere! Bilgi yarışması ikisini de zorluyor 🤔","Eşit! Kim şampiyon olacak? 👑"]
+};
+
 function renderHomeRekorlar() {
   const s = oyunScores;
   if(!document.getElementById('home-rek-araba-tulay')) return;
@@ -4805,6 +4856,38 @@ function renderHomeRekorlar() {
   applyGameRekor('snake', s.tulay?.snake||0, s.yigit?.snake||0, SNAKE_TAUNTS);
   applyGameRekor('simon', s.tulay?.simon||0, s.yigit?.simon||0, SIMON_TAUNTS);
   applyGameRekor('kelime', s.tulay?.kelime||0, s.yigit?.kelime||0, KELIME_TAUNTS);
+  // Milyon - special display
+  const tM = s.tulay?.milyon ?? -1;
+  const yM = s.yigit?.milyon ?? -1;
+  const elTM = document.getElementById('home-rek-milyon-tulay');
+  const elYM = document.getElementById('home-rek-milyon-yigit');
+  if(elTM) elTM.textContent = tM === 15 ? '👑 Şampiyon!' : tM >= 0 ? tM+'. soru' : '—';
+  if(elYM) elYM.textContent = yM === 15 ? '👑 Şampiyon!' : yM >= 0 ? yM+'. soru' : '—';
+  const tCard = document.getElementById('home-rek-milyon-tulay-card');
+  const yCard = document.getElementById('home-rek-milyon-yigit-card');
+  const tCrown = document.getElementById('home-rek-milyon-tulay-crown');
+  const yCrown = document.getElementById('home-rek-milyon-yigit-crown');
+  if(tCrown) tCrown.style.display = tM > yM ? 'block' : 'none';
+  if(yCrown) yCrown.style.display = yM > tM ? 'block' : 'none';
+  if(tCard && yCard) {
+    if(tM > yM) {
+      tCard.style.borderColor='rgba(245,200,66,0.7)'; tCard.style.boxShadow='0 0 16px rgba(245,200,66,0.2)';
+      yCard.style.borderColor='rgba(124,58,237,0.2)'; yCard.style.boxShadow='none';
+    } else if(yM > tM) {
+      yCard.style.borderColor='rgba(245,200,66,0.7)'; yCard.style.boxShadow='0 0 16px rgba(245,200,66,0.2)';
+      tCard.style.borderColor='rgba(124,58,237,0.2)'; tCard.style.boxShadow='none';
+    } else {
+      tCard.style.borderColor='rgba(124,58,237,0.3)'; tCard.style.boxShadow='none';
+      yCard.style.borderColor='rgba(124,58,237,0.3)'; yCard.style.boxShadow='none';
+    }
+  }
+  const taunt = document.getElementById('home-rek-milyon-taunt');
+  if(taunt) {
+    if(tM > yM && tM >= 0) { const p=MILYON_HOME_TAUNTS.tulay_leads; taunt.textContent=p[Math.floor(Math.random()*p.length)]; }
+    else if(yM > tM && yM >= 0) { const p=MILYON_HOME_TAUNTS.yigit_leads; taunt.textContent=p[Math.floor(Math.random()*p.length)]; }
+    else if(tM >= 0) { const p=MILYON_HOME_TAUNTS.equal; taunt.textContent=p[Math.floor(Math.random()*p.length)]; }
+    else taunt.textContent = '';
+  }
 }
 window.renderHomeRekorlar = renderHomeRekorlar;
 
@@ -5098,19 +5181,24 @@ let kelimeInterval2 = null;
 let kelimeLetters = [];
 let kelimeFound = [];
 let kelimeStarted = false;
+let _kelimeSet = null;
 
-// Türkçe kelime seti — harf gruplarına göre
 const KELIME_SETLERI = [
-  { harfler: ['A','R','A','B','A','T','U','L'], kelimeler: ['ARA','ARABA','ART','BAL','BAR','BUL','LAR','RUH','TUR','TULA','ALTU','BURA','LARA'] },
-  { harfler: ['S','E','V','G','İ','L','E','R'], kelimeler: ['SEV','SEVGİ','GEL','GELİR','GİL','RES','RESM','SERGİ','VERGİ','ELİ','SİL'] },
-  { harfler: ['Ç','İ','Ç','E','K','G','Ü','L'], kelimeler: ['ÇEK','ÇİÇEK','GEL','GÜL','GÜLCE','EKİ','KELİ','ÇEKİ','GÜLECİ'] },
-  { harfler: ['Y','I','L','D','I','Z','A','Y'], kelimeler: ['YAL','YALDIZ','YAY','AYI','ALI','DAL','DALI','YALI','ALDIZ'] },
-  { harfler: ['M','U','T','L','U','L','U','K'], kelimeler: ['MUT','MUTLU','KUL','TUL','LUK','TUM','KUT','KUTLU'] },
-  { harfler: ['A','Ş','K','R','O','M','A','N'], kelimeler: ['AŞK','ROMAN','KAR','RAN','MAN','OKA','NOM','KARMA','MAKRO'] },
-  { harfler: ['H','A','Y','A','L','R','Ü','Y'], kelimeler: ['HAL','HAYAL','RÜYA','YAL','HAR','AYL','LAYR','HAYA'] },
-  { harfler: ['T','A','T','L','I','C','A','N'], kelimeler: ['TAT','TATLI','CAN','LAN','ALT','TAN','TATIN','TALC','ANTI'] },
-  { harfler: ['K','A','L','P','S','E','S','İ'], kelimeler: ['KAL','KALP','SES','ALİ','PES','LAK','SEKİ','KALPS'] },
-  { harfler: ['B','A','H','Ç','E','G','Ü','N'], kelimeler: ['BAĞ','BAHÇE','GÜN','NEG','HAC','BEĞ','GÜNE','BAHÇEG'] },
+  { harfler: ['A','R','A','B','A','T','U','L'], kelimeler: ['ARA','ARABA','ART','BAL','BAR','BUL','TUR','BURA','LARA','ALT','RAL','TURA','BALT','TURAL'] },
+  { harfler: ['S','E','V','G','İ','L','E','R'], kelimeler: ['SEV','SEVGİ','GEL','GELİR','GİL','SER','SERGİ','VERGİ','ELİ','SİL','GEL','EVLİ','SEVGİLER'] },
+  { harfler: ['Ç','İ','Ç','E','K','G','Ü','L'], kelimeler: ['ÇEK','ÇİÇEK','GEL','GÜL','GÜLEÇİ','ÇEKİ','ÇELİK','GEÇ','GÜLEK','KİLÇ'] },
+  { harfler: ['Y','I','L','D','I','Z','A','Y'], kelimeler: ['YAY','YAL','AYI','ALI','DAL','DALI','YALI','YALDIZ','YILDIZY','ZAL','ZAY','ALDIZ'] },
+  { harfler: ['M','U','T','L','U','L','U','K'], kelimeler: ['MUT','MUTLU','KUL','LUK','KUT','KUTLU','MUTLUK','TUM','MULUM','ULKU'] },
+  { harfler: ['A','Ş','K','R','O','M','A','N'], kelimeler: ['AŞK','ROMAN','KAR','RAN','MAN','KARMA','OKA','KANAR','MORAN','KOR','NAR','MAK','ANKAR'] },
+  { harfler: ['H','A','Y','A','L','R','Ü','Y'], kelimeler: ['HAL','HAYAL','RÜYA','HAYA','YAL','RÜYAH','URAL','YALHA','RÜYAL','HAYLAR'] },
+  { harfler: ['T','A','T','L','I','C','A','N'], kelimeler: ['TAT','TATLI','CAN','LAN','ALT','TAN','CANLI','TATIN','ANTI','TALC','CANAL','LAKIN'] },
+  { harfler: ['K','A','L','P','S','E','S','İ'], kelimeler: ['KAL','KALP','SES','ALİ','PES','LAK','SEKİ','ALPS','KİLSE','KESİ','ALPES','KESPAL'] },
+  { harfler: ['B','A','H','Ç','E','G','Ü','N'], kelimeler: ['BAHÇE','GÜN','BAĞ','GÜNEŞ','GÜNEÇ','GÜNE','AHÇE','BAHÇEG','NEÇBA','GÜNBA'] },
+  { harfler: ['D','E','N','İ','Z','K','U','M'], kelimeler: ['DENİZ','KUM','MÜK','ZİN','KİMDE','DEN','NİZ','KUMDE','ZİMKU','KUNDUZ'] },
+  { harfler: ['G','Ü','N','E','Ş','İ','K','A'], kelimeler: ['GÜNEŞ','NAKİ','EŞİK','GÜNEŞİ','KANİ','ŞAKİN','NEKİ','ŞENKA','ANKARA'] },
+  { harfler: ['R','Ü','Z','G','A','R','E','L'], kelimeler: ['RÜZGAR','GEL','LAR','ZAL','GAL','RÜZGARE','GALE','ARZE','GARZE'] },
+  { harfler: ['Y','A','P','R','A','K','T','U'], kelimeler: ['YAPRAK','YAP','KAR','TAR','TURA','TAPAK','YAKUT','TAPRAK','KURK'] },
+  { harfler: ['B','A','L','K','O','N','S','U'], kelimeler: ['BALKON','BUL','KOL','SUN','BALK','KUBAN','SONLA','BALSU','KUBLON'] },
 ];
 
 function kelimeInit() {
@@ -5119,41 +5207,67 @@ function kelimeInit() {
   kelimeFound = [];
   kelimeStarted = false;
   if(kelimeInterval2) { clearInterval(kelimeInterval2); kelimeInterval2 = null; }
+  document.getElementById('kelime-game-area').style.display = 'block';
   document.getElementById('kelime-overlay').style.display = 'none';
+  document.getElementById('kelime-hint-area').style.display = 'none';
   document.getElementById('kelime-score-display').textContent = '0';
   document.getElementById('kelime-timer').textContent = '60';
   document.getElementById('kelime-found').innerHTML = '';
   document.getElementById('kelime-feedback').textContent = '';
   document.getElementById('kelime-input').value = '';
   kelimePickSet();
-  kelimeStart();
+  kelimeStartTimer();
 }
 
 function kelimePickSet() {
-  const set = KELIME_SETLERI[Math.floor(Math.random() * KELIME_SETLERI.length)];
-  kelimeLetters = [...set.harfler];
-  window._kelimeSet = set;
+  _kelimeSet = KELIME_SETLERI[Math.floor(Math.random() * KELIME_SETLERI.length)];
+  kelimeLetters = [..._kelimeSet.harfler];
+  updateKelimeLetters();
+  updateKelimeCounter();
+}
+
+function updateKelimeLetters() {
   const lettersEl = document.getElementById('kelime-letters');
   lettersEl.innerHTML = kelimeLetters.map(l =>
-    `<div style="background:white;border:2px solid #f0d080;border-radius:10px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;color:#8a6000;">${l}</div>`
+    '<div style="background:#2a1e00;border:2px solid #c8920a;border-radius:10px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;color:#f5c842;">'+l+'</div>'
   ).join('');
 }
 
-function kelimeStart() {
-  kelimeScore = 0;
-  kelimeTimer = 60;
-  kelimeFound = [];
+function updateKelimeCounter() {
+  const total = _kelimeSet ? _kelimeSet.kelimeler.length : 0;
+  const found = kelimeFound.length;
+  const el = document.getElementById('kelime-counter');
+  if(el) el.textContent = found + '/' + total;
+  // If all found, next set!
+  if(_kelimeSet && found >= total) {
+    clearInterval(kelimeInterval2);
+    setTimeout(() => {
+      const fb = document.getElementById('kelime-feedback');
+      fb.textContent = '🎉 Tüm kelimeleri buldun! Yeni set geliyor...';
+      fb.style.color = '#f5c842';
+      setTimeout(() => {
+        kelimeFound = [];
+        document.getElementById('kelime-found').innerHTML = '';
+        kelimePickSet();
+        kelimeStartTimer();
+      }, 1500);
+    }, 300);
+  }
+}
+
+function kelimeStartTimer() {
   kelimeStarted = true;
-  document.getElementById('kelime-overlay').style.display = 'none';
-  document.getElementById('kelime-score-display').textContent = '0';
-  document.getElementById('kelime-found').innerHTML = '';
-  document.getElementById('kelime-feedback').textContent = '';
-  document.getElementById('kelime-input').value = '';
-  kelimePickSet();
+  kelimeTimer = 60;
+  document.getElementById('kelime-timer').textContent = '60';
   if(kelimeInterval2) clearInterval(kelimeInterval2);
   kelimeInterval2 = setInterval(() => {
     kelimeTimer--;
-    document.getElementById('kelime-timer').textContent = kelimeTimer;
+    const timerEl = document.getElementById('kelime-timer');
+    if(timerEl) timerEl.textContent = kelimeTimer;
+    if(kelimeTimer <= 10) {
+      const box = document.getElementById('kelime-timer-box');
+      if(box) box.style.borderColor = '#e84040';
+    }
     if(kelimeTimer <= 0) {
       clearInterval(kelimeInterval2);
       kelimeBitis();
@@ -5162,6 +5276,8 @@ function kelimeStart() {
   document.getElementById('kelime-input').focus();
 }
 
+function kelimeStart() { kelimeInit(); }
+
 function kelimeKontrol() {
   if(!kelimeStarted) return;
   const input = document.getElementById('kelime-input');
@@ -5169,8 +5285,7 @@ function kelimeKontrol() {
   input.value = '';
   if(!word || word.length < 2) return;
   const fb = document.getElementById('kelime-feedback');
-  if(kelimeFound.includes(word)) { fb.textContent = '⚠️ Bu kelimeyi zaten buldun!'; fb.style.color = '#e8a000'; return; }
-  // Check if word can be formed from letters
+  if(kelimeFound.includes(word)) { fb.textContent = '⚠️ Bu kelimeyi zaten buldun!'; fb.style.color = '#f5c842'; return; }
   const avail = [...kelimeLetters];
   let ok = true;
   for(const ch of word) {
@@ -5178,23 +5293,32 @@ function kelimeKontrol() {
     if(idx === -1) { ok = false; break; }
     avail.splice(idx, 1);
   }
-  if(!ok) { fb.textContent = '❌ Bu harfler mevcut değil!'; fb.style.color = '#e84040'; return; }
-  // Check if valid word
-  const validWords = window._kelimeSet?.kelimeler || [];
+  if(!ok) { fb.textContent = '❌ Eldeki harfler yetmiyor!'; fb.style.color = '#e84040'; return; }
+  const validWords = _kelimeSet ? _kelimeSet.kelimeler : [];
   if(!validWords.includes(word)) { fb.textContent = '❌ Geçerli kelime değil!'; fb.style.color = '#e84040'; return; }
-  // Found!
   kelimeFound.push(word);
   kelimeScore += word.length;
-  fb.textContent = '✅ Harika! +' + word.length + ' puan';
-  fb.style.color = '#2a8a2a';
+  fb.textContent = '✅ +' + word.length + ' puan! Harika!';
+  fb.style.color = '#4ade80';
   document.getElementById('kelime-score-display').textContent = kelimeScore;
   document.getElementById('kelime-found').innerHTML = kelimeFound.map(w =>
-    `<span style="background:#f0d040;color:#8a6000;border-radius:8px;padding:3px 8px;font-size:0.8rem;font-weight:700;">${w}</span>`
+    '<span style="background:#c8920a;color:#1a1200;border-radius:8px;padding:3px 8px;font-size:0.78rem;font-weight:700;">'+w+'</span>'
   ).join('');
+  updateKelimeCounter();
 }
 
 function kelimeBitis() {
   kelimeStarted = false;
+  document.getElementById('kelime-game-area').style.display = 'block';
+  const hintArea = document.getElementById('kelime-hint-area');
+  const allWordsEl = document.getElementById('kelime-all-words');
+  if(hintArea && allWordsEl && _kelimeSet) {
+    allWordsEl.innerHTML = _kelimeSet.kelimeler.map(w => {
+      const found = kelimeFound.includes(w);
+      return '<span style="background:'+(found?'#4ade80':'rgba(255,255,255,0.1)')+';color:'+(found?'#1a1200':'rgba(255,255,255,0.4)')+';border-radius:8px;padding:3px 8px;font-size:0.75rem;font-weight:700;">'+w+'</span>';
+    }).join('');
+    hintArea.style.display = 'block';
+  }
   const isRecord = oyunSaveScore('kelime', kelimeScore);
   document.getElementById('kelime-overlay-emoji').textContent = isRecord ? '🏆' : '⏰';
   document.getElementById('kelime-overlay-title').textContent = isRecord ? 'YENİ REKOR!' : 'Süre Doldu!';
@@ -5204,7 +5328,392 @@ function kelimeBitis() {
 
 window.kelimeInit = kelimeInit;
 window.kelimeStart = kelimeStart;
+function kelimePas() {
+  if(!kelimeStarted) return;
+  const fb = document.getElementById('kelime-feedback');
+  fb.textContent = '⏭ Pas! Yeni harfler geliyor...';
+  fb.style.color = 'rgba(245,200,66,0.6)';
+  kelimeFound = [];
+  document.getElementById('kelime-found').innerHTML = '';
+  kelimePickSet();
+  setTimeout(() => { if(fb.textContent.startsWith('⏭')) fb.textContent = ''; }, 1200);
+}
 window.kelimeKontrol = kelimeKontrol;
+window.kelimePas = kelimePas;
+
+
+// ===== KİM MİLYONER OLMAK İSTER =====
+const MILYON_SORULAR = {
+  spor: [
+    // KOLAY (index 0-9)
+    {s:"Bir futbol maçı kaç dakika sürer?",o:["75","80","90","100"],c:2},
+    {s:"Olimpiyatlarda altın madalya hangi metalden yapılır?",o:["Saf altın","Gümüş üzeri altın kaplama","Bronz","Platin"],c:1},
+    {s:"Basketbolda bir sayı kaç puan eder?",o:["1","2","3","1 veya 2"],c:1},
+    {s:"Dünya kupası kaç yılda bir düzenlenir?",o:["2","3","4","5"],c:2},
+    {s:"Tenis'te 40-40 beraberliğe ne denir?",o:["Set","Smash","Deuce","Ace"],c:2},
+    {s:"Voleybolda bir takım kaç oyuncudan oluşur?",o:["5","6","7","8"],c:1},
+    {s:"Formula 1'de en çok şampiyonluk kazanan pilot kimdir?",o:["Ayrton Senna","Michael Schumacher","Lewis Hamilton","Sebastian Vettel"],c:2},
+    {s:"100 metre dünya rekorunu kim elinde bulunduruyor?",o:["Justin Gatlin","Tyson Gay","Usain Bolt","Asafa Powell"],c:2},
+    {s:"NBA'de bir maç kaç periyottan oluşur?",o:["2","3","4","5"],c:2},
+    {s:"Türkiye'nin milli futbol takımı hangi renkleri taşır?",o:["Sarı-kırmızı","Kırmızı-beyaz","Mavi-beyaz","Yeşil-kırmızı"],c:1},
+    // ZOR (index 10-24)
+    {s:"2002 Dünya Kupası'nda Türkiye kaçıncı oldu?",o:["İkinci","Üçüncü","Dördüncü","Gruptan çıkamadı"],c:1},
+    {s:"Olimpiyatlarda 'triple axel' hangi spor dalına ait harekettir?",o:["Artistik jimnastik","Trampolin","Buz pateni","Dalış"],c:2},
+    {s:"NBA'de tek maçta atılan en yüksek sayı rekoru kaçtır?",o:["81","92","100","73"],c:2},
+    {s:"1996 Atlanta'da Türkiye adına altın madalya kazanan sporcu kimdir?",o:["Naim Süleymanoğlu","Hüseyin Akbaş","Halil Mutlu","Taner Sağır"],c:2},
+    {s:"Roger Federer kaç Grand Slam tenis şampiyonluğu kazanmıştır?",o:["17","18","20","22"],c:2},
+    {s:"Dünya'nın en büyük stadyumu hangisidir?",o:["Camp Nou","Maracanã","Rungrado 1st of May Stadium","Wembley"],c:2},
+    {s:"İlk modern Olimpiyat oyunları hangi ülkede düzenlendi?",o:["Fransa","İtalya","Yunanistan","İngiltere"],c:2},
+    {s:"Hangi ülke en fazla FIFA Dünya Kupası şampiyonluğuna sahiptir?",o:["Almanya","Arjantin","Brezilya","İtalya"],c:2},
+    {s:"Basketbolda 'buzzer beater' ne anlama gelir?",o:["Faul atışı","Süre dolunca atılan sayı","Üç sayılık atış","Serbest atış"],c:1},
+    {s:"Naim Süleymanoğlu kaç Olimpiyat altın madalyası kazanmıştır?",o:["1","2","3","4"],c:2},
+    {s:"İlk Dünya Kupası hangi ülkede ve yılda düzenlendi?",o:["Brezilya 1950","İtalya 1934","Uruguay 1930","Fransa 1938"],c:2},
+    {s:"Tenis'te 'Grand Slam' kazanmak ne anlama gelir?",o:["Yıl içinde en fazla maç kazanmak","4 büyük turnuvayı da kazanmak","3 set kazanmak","Dünya 1 numarası olmak"],c:1},
+    {s:"Hangi spor dalında 'hole in one' terimi kullanılır?",o:["Beyzbol","Golf","Kriket","Polo"],c:1},
+    {s:"Türk milli takımı EURO 2008'de hangi turda elendi?",o:["Çeyrek final","Yarı final","Final","Gruptan çıkamadı"],c:1},
+    {s:"Hangi futbol kulübü en fazla UEFA Şampiyonlar Ligi kupası kazanmıştır?",o:["Barcelona","Bayern Münih","Real Madrid","Liverpool"],c:2},
+    // ÇOKAZOR (index 25-29)
+    {s:"Ağırlık kaldırmada Türkiye'nin ilk Olimpiyat altın madalyasını kim kazandı?",o:["Naim Süleymanoğlu","Yaşar Erkan","Ahmet Kireçci","Halil Mutlu"],c:1},
+    {s:"Usain Bolt'un 100m dünya rekoru kaç saniyedir?",o:["9.69","9.72","9.58","9.63"],c:2},
+    {s:"Tour de France hangi ülkenin bisiklet yarışıdır?",o:["İspanya","İtalya","Fransa","Belçika"],c:2},
+    {s:"Hangi ülke en fazla kez Olimpiyat ev sahipliği yapmıştır?",o:["ABD","İngiltere","Fransa","Japonya"],c:0},
+    {s:"Cricket'te 'duck out' ne anlama gelir?",o:["Sıfır sayıyla çıkmak","Topu yakalamak","Kale devirmek","İki kez çıkmak"],c:0},
+  ],
+  gkul: [
+    // KOLAY
+    {s:"Güneş sisteminde kaç gezegen vardır?",o:["6","7","8","9"],c:2},
+    {s:"Su hangi elementlerin bileşimidir?",o:["H2O2","HO","H2O","H3O"],c:2},
+    {s:"Dünyanın en büyük kıtası hangisidir?",o:["Afrika","Avrupa","Asya","Amerika"],c:2},
+    {s:"İnsanın beden ısısı normal kaç derecedir?",o:["35","36","37","38"],c:2},
+    {s:"Bir yılda kaç ay vardır?",o:["10","11","12","13"],c:2},
+    {s:"Hangi gezegen Güneş'e en yakındır?",o:["Venüs","Mars","Merkür","Dünya"],c:2},
+    {s:"DNA açılımı nedir?",o:["Dijital Nükleer Ajan","Deoksiribo Nükleik Asit","Dimetil Nitelik Asit","Dizayn Nükleer Araç"],c:1},
+    {s:"Işığın boşluktaki hızı yaklaşık kaç km/s'dir?",o:["200.000","300.000","400.000","500.000"],c:1},
+    {s:"Hangi element periyodik tabloda Au sembolüyle gösterilir?",o:["Gümüş","Demir","Altın","Bakır"],c:2},
+    {s:"Dünya'nın uydusu Ay ile Dünya arasındaki uzaklık yaklaşık kaçtır?",o:["184.000 km","284.000 km","384.000 km","484.000 km"],c:2},
+    // ZOR
+    {s:"Periyodik tabloda 'W' sembolü hangi elementi temsil eder?",o:["Vanadyum","Wolfram/Tungsten","Bizmut","Baryum"],c:1},
+    {s:"Işığın 1 yılda aldığı yol yaklaşık kaç kilometredir?",o:["9,46 milyar km","9,46 milyon km","9,46 trilyon km","9,46 katrilyon km"],c:2},
+    {s:"Kuantum mekaniğinin kurucusu kabul edilen fizikçi kimdir?",o:["Einstein","Bohr","Planck","Heisenberg"],c:2},
+    {s:"İnsan vücudunda kaç çift otozomal kromozom vardır?",o:["22","23","44","46"],c:0},
+    {s:"Hangi element oda sıcaklığında sıvı halde bulunur?",o:["Cıva","Brom","İkisi de","Hiçbiri"],c:2},
+    {s:"Big Bang teorisine göre evrenin yaşı yaklaşık kaçtır?",o:["6 milyar yıl","10 milyar yıl","13,8 milyar yıl","20 milyar yıl"],c:2},
+    {s:"Pi sayısının ilk 5 hanesi nedir?",o:["3,14159","3,14169","3,14152","3,14199"],c:0},
+    {s:"Fotosintez sırasında bitkiler hangi gazı açığa çıkarır?",o:["CO2","N2","O2","H2"],c:2},
+    {s:"İnsan beyninin ağırlığı yaklaşık kaçtır?",o:["800 gram","1,4 kg","2 kg","500 gram"],c:1},
+    {s:"Relativite teorisi kimin eseridir?",o:["Newton","Hawking","Einstein","Bohr"],c:2},
+    {s:"Hangi vitamin güneş ışığıyla üretilir?",o:["A vitamini","B12 vitamini","C vitamini","D vitamini"],c:3},
+    {s:"Evrenin genişlediğini ilk keşfeden bilim insanı kimdir?",o:["Einstein","Hubble","Hawking","Galileo"],c:1},
+    {s:"İnsanın en uzun kemiği hangisidir?",o:["Humerus","Tibia","Femur","Fibula"],c:2},
+    {s:"Hangi kimyasal element sembolü Fe olan elementtir?",o:["Flor","Demir","Fosfor","Fenilalanin"],c:1},
+    {s:"Hangi bilim dalı ışığın doğasını ve özelliklerini inceler?",o:["Mekanik","Optik","Termodinamik","Akustik"],c:1},
+    // ÇOKAZOR
+    {s:"Schrödinger'in kedi deneyi hangi konuyu açıklamaya çalışır?",o:["Termodinamik","Görelilik","Kuantum süperpozisyonu","Kaos teorisi"],c:2},
+    {s:"Higgs bozonu neden önemlidir?",o:["Işık hızını açıklar","Parçacıklara kütle kazandırır","Karanlık maddeyi oluşturur","Anti-maddeyi açıklar"],c:1},
+    {s:"Fibonacci dizisinde 13'ten sonra gelen sayı nedir?",o:["20","21","22","24"],c:1},
+    {s:"Hangi bilim insanı 'Principia Mathematica' kitabını yazdı?",o:["Leibniz","Newton","Euler","Gauss"],c:1},
+    {s:"DNA'nın çift sarmal yapısını kim keşfetti?",o:["Pasteur ve Koch","Watson ve Crick","Mendel ve Darwin","Curie ve Rutherford"],c:1},
+    {s:"Işık yılı bir zaman birimi midir?",o:["Evet","Hayır, uzaklık birimidir","Hem zaman hem uzaklık","Enerji birimidir"],c:1},
+    {s:"Hangi element en hafif elementtir?",o:["Helyum","Lityum","Hidrojen","Berilyum"],c:2},
+    {s:"Euler sayısı 'e' yaklaşık olarak kaçtır?",o:["2,718","3,141","1,618","2,502"],c:0},
+    {s:"İnsan vücudunda kaç adet kemik vardır (yetişkin)?",o:["196","206","216","226"],c:1},
+    {s:"Termodinamiğin kaçıncı yasası enerjinin korunumunu ifade eder?",o:["Sıfırıncı","Birinci","İkinci","Üçüncü"],c:1},
+  ],
+  tarih: [
+    // KOLAY
+    {s:"Türkiye Cumhuriyeti hangi yılda kuruldu?",o:["1919","1920","1922","1923"],c:3},
+    {s:"Osmanlı İstanbul'u hangi yılda fethetti?",o:["1389","1402","1453","1517"],c:2},
+    {s:"Atatürk hangi yılda vefat etti?",o:["1934","1936","1938","1940"],c:2},
+    {s:"İkinci Dünya Savaşı hangi yılda sona erdi?",o:["1943","1944","1945","1946"],c:2},
+    {s:"Fransız Devrimi hangi yılda başladı?",o:["1776","1783","1789","1798"],c:2},
+    {s:"Büyük İskender hangi ülkenin hükümdarıydı?",o:["Roma","Pers","Makedonya","Yunanistan"],c:2},
+    {s:"Birinci Dünya Savaşı hangi yılda başladı?",o:["1912","1913","1914","1915"],c:2},
+    {s:"Hz. Muhammed hangi yılda doğdu?",o:["550","570","590","610"],c:1},
+    {s:"Osmanlı İmparatorluğu yaklaşık kaç yıl sürdü?",o:["400","500","600","700"],c:2},
+    {s:"Türkiye hangi yılda çok partili sisteme geçti?",o:["1943","1945","1946","1950"],c:2},
+    // ZOR
+    {s:"Büyük Taarruz hangi tarihte başladı?",o:["10 Temmuz 1922","26 Ağustos 1922","9 Eylül 1922","30 Ağustos 1921"],c:1},
+    {s:"Osmanlı'da ilk matbaa hangi padişah döneminde kuruldu?",o:["I. Mahmud","III. Ahmed","II. Mustafa","I. Abdülhamid"],c:1},
+    {s:"Lozan Antlaşması hangi yılda imzalandı?",o:["1920","1921","1922","1923"],c:3},
+    {s:"Sanayi Devrimi hangi ülkede başladı?",o:["Fransa","Almanya","İngiltere","ABD"],c:2},
+    {s:"Çanakkale Savaşı kaç yılında yaşandı?",o:["1913","1914","1915","1916"],c:2},
+    {s:"Roma İmparatorluğu hangi yılda ikiye bölündü?",o:["285","330","395","476"],c:2},
+    {s:"Magna Carta hangi yılda imzalandı?",o:["1066","1215","1295","1348"],c:1},
+    {s:"Türkiye'de kadınlara oy hakkı hangi yılda verildi?",o:["1930","1932","1934","1936"],c:2},
+    {s:"Osmanlı hanedanının kurucusu kimdir?",o:["Ertuğrul Gazi","Osman Gazi","Orhan Gazi","Murad I"],c:1},
+    {s:"İstiklal Marşı hangi yılda kabul edildi?",o:["1919","1920","1921","1922"],c:2},
+    {s:"Birinci Dünya Savaşı'nı sona erdiren antlaşma hangisidir?",o:["Paris Antlaşması","Versay Antlaşması","Lozan Antlaşması","Londra Antlaşması"],c:1},
+    {s:"Hangi Osmanlı padişahı Yavuz lakabıyla bilinir?",o:["II. Mehmet","I. Selim","I. Süleyman","II. Bayezid"],c:1},
+    {s:"Atatürk'ün soyadı Kanunu hangi yılda çıktı?",o:["1932","1933","1934","1935"],c:2},
+    {s:"Osmanlı'da Tanzimat Fermanı hangi yılda ilan edildi?",o:["1836","1839","1842","1856"],c:1},
+    {s:"Milli Mücadele'de TBMM hangi yılda açıldı?",o:["1919","1920","1921","1922"],c:1},
+    // ÇOKAZOR
+    {s:"Pontus Eukseinos antik dönemde hangi denizin adıdır?",o:["Ege","Marmara","Karadeniz","Akdeniz"],c:2},
+    {s:"Bizans İmparatorluğu'nun başkenti Konstantinopolis bugün hangi şehirdir?",o:["Atina","İznik","İstanbul","Selanik"],c:2},
+    {s:"Anadolu Selçuklu Devleti'nin başkenti neresidir?",o:["Bursa","Konya","Sivas","Erzurum"],c:1},
+    {s:"Türk tarihinde 'Deli' lakabıyla anılan padişah kimdir?",o:["I. İbrahim","IV. Murad","II. Selim","III. Mehmed"],c:0},
+    {s:"1071 Malazgirt Savaşı'nda Bizans'ı yenen Selçuklu Sultanı kimdir?",o:["Alparslan","Tuğrul Bey","Melikşah","Kılıçarslan"],c:0},
+  ],
+  cografya: [
+    // KOLAY
+    {s:"Dünyanın en büyük okyanusu hangisidir?",o:["Atlantik","Pasifik","Hint","Arktik"],c:1},
+    {s:"Türkiye'nin başkenti neresidir?",o:["İstanbul","Ankara","İzmir","Bursa"],c:1},
+    {s:"Dünyanın en yüksek dağı hangisidir?",o:["K2","Kangchenjunga","Everest","Lhotse"],c:2},
+    {s:"Nil Nehri hangi ülkede denize dökülür?",o:["Sudan","Etiyopya","Mısır","Libya"],c:2},
+    {s:"Hangi kıta en az nüfusa sahiptir?",o:["Afrika","Avustralya","Avrupa","Antarktika"],c:3},
+    {s:"Türkiye hangi kıtalar arasında köprü görevi görür?",o:["Avrupa-Afrika","Asya-Afrika","Asya-Avrupa","Amerika-Avrupa"],c:2},
+    {s:"Dünya'nın en uzun nehri hangisidir?",o:["Amazon","Nil","Mississippi","Yangtze"],c:1},
+    {s:"Japonya'nın başkenti neresidir?",o:["Osaka","Kyoto","Tokyo","Hiroshima"],c:2},
+    {s:"Hangi ülke yüzölçümü bakımından dünyanın en büyüğüdür?",o:["Kanada","Çin","ABD","Rusya"],c:3},
+    {s:"İstanbul hangi boğazları birbirine bağlar?",o:["Boğaziçi ile Çanakkale","Karadeniz ile Marmara","Marmara ile Ege","Karadeniz ile Ege"],c:1},
+    // ZOR
+    {s:"Nil Nehri'nin kaynağı hangi göldür?",o:["Çad","Tanganyika","Victoria","Albert"],c:2},
+    {s:"Türkiye'nin en büyük gölü hangisidir?",o:["Tuz Gölü","Eğirdir","Beyşehir","Van Gölü"],c:3},
+    {s:"Dünya'nın en derin gölü hangisidir?",o:["Hazar","Süperior","Baykal","Titicaca"],c:2},
+    {s:"Avrupa'nın en uzun nehri hangisidir?",o:["Ren","Tuna","Volga","Elbe"],c:2},
+    {s:"Türkiye'nin en doğu noktası hangi ilimizin sınırlarında yer alır?",o:["Ağrı","Kars","Iğdır","Van"],c:2},
+    {s:"Hangi ülke hem Asya hem Afrika kıtasında yer alır?",o:["Suudi Arabistan","Türkiye","Mısır","İsrail"],c:2},
+    {s:"Dünyanın en büyük çölü hangisidir?",o:["Gobi","Arabistan","Atacama","Antarktika"],c:3},
+    {s:"Amazon Nehri hangi okyanus'a dökülür?",o:["Pasifik","Hint","Atlantik","Arktik"],c:2},
+    {s:"Türkiye kaç komşu ülkeyle sınır paylaşır?",o:["6","7","8","9"],c:2},
+    {s:"Hangi ülke 'Boğazlar ülkesi' olarak bilinir?",o:["Türkiye","Yunanistan","Danimarka","Norveç"],c:0},
+    {s:"Karadeniz'e kıyısı olmayan ülke hangisidir?",o:["Türkiye","Moldova","Ukrayna","Suriye"],c:3},
+    {s:"Güney Amerika'nın en yüksek dağı hangisidir?",o:["Chimborazo","Huascarán","Aconcagua","Cotopaxi"],c:2},
+    {s:"Boğaziçi Köprüsü hangi iki kıyı arasında yer alır?",o:["Asya-Avrupa","Anadolu-Rumeli","İkisi aynı","Avrupa-Balkanlar"],c:1},
+    {s:"Türkiye'nin kıyısı bulunmayan iç denizi hangisidir?",o:["Marmara","Ege","İç denizi yok","Karadeniz"],c:2},
+    {s:"İskandinav yarımadasında yer almayan ülke hangisidir?",o:["Norveç","İsveç","Danimarka","Finlandiya"],c:3},
+    // ÇOKAZOR
+    {s:"Türkiye ile Yunanistan arasındaki deniz sınırı sorunu hangi bölgede yoğunlaşır?",o:["Karadeniz","İyon Denizi","Ege","Marmara"],c:2},
+    {s:"Dünyanın en yüksek şelalesi hangisidir?",o:["Niagara","Victoria","Angel Şelalesi","İguazu"],c:2},
+    {s:"Hangi ülkede dünyanın en büyük tuz çölü bulunur?",o:["Bolivya","Şili","Peru","Arjantin"],c:0},
+    {s:"Türkiye'nin en küçük ili hangisidir?",o:["Bayburt","Kilis","Ardahan","Bartın"],c:0},
+    {s:"Avustralya kıtasındaki en büyük çöl hangisidir?",o:["Gibson","Simpson","Great Victoria","Büyük Kum"],c:2},
+  ]
+};
+
+// Oyun sırası: Soru 1-4 kolay (her kategoriden 1), 5-15 zor/çok zor karışık
+// Kategori sırası: S, GK, T, C, GK, S, GK, T, C, GK, S, GK, T, C, GK (karışık, ardarda aynı yok)
+const MILYON_SIRA = [
+  {kat:'spor',   diff:'easy'},  // 1
+  {kat:'gkul',   diff:'easy'},  // 2
+  {kat:'tarih',  diff:'easy'},  // 3
+  {kat:'cografya',diff:'easy'}, // 4
+  {kat:'gkul',   diff:'hard'},  // 5
+  {kat:'spor',   diff:'hard'},  // 6
+  {kat:'tarih',  diff:'hard'},  // 7
+  {kat:'cografya',diff:'hard'}, // 8
+  {kat:'gkul',   diff:'hard'},  // 9
+  {kat:'tarih',  diff:'hard'},  // 10
+  {kat:'cografya',diff:'vhard'},// 11
+  {kat:'gkul',   diff:'vhard'}, // 12
+  {kat:'spor',   diff:'vhard'}, // 13
+  {kat:'tarih',  diff:'vhard'}, // 14
+  {kat:'gkul',   diff:'vhard'}, // 15
+];
+
+const KAT_NAMES = {spor:'Spor',gkul:'Genel Kültür',tarih:'Tarih',cografya:'Coğrafya'};
+
+let milyonQIndex = 0;
+let milyonUsedQ = {spor:[],gkul:[],tarih:[],cografya:[]};
+let milyonJokers = {cift:true,seyirci:true,pas:true};
+let milyonEliminatedOpts = [];
+let milyonCurrentQ = null;
+let milyonCiftActive = false;
+let milyonAnswered = false;
+let milyonGameOver = false;
+
+const MILYON_ODULLAR = ['500₺','1.000₺','2.000₺','4.000₺','8.000₺','16.000₺','32.000₺','64.000₺','125.000₺','250.000₺','500.000₺','1.000.000₺','2.000.000₺','4.000.000₺','8.000.000₺'];
+
+function milyonInit() {
+  document.getElementById('milyon-start').style.display = 'block';
+  document.getElementById('milyon-game').style.display = 'none';
+  document.getElementById('milyon-result').style.display = 'none';
+}
+
+function milyonStart() {
+  milyonQIndex = 0;
+  milyonUsedQ = {spor:[],gkul:[],tarih:[],cografya:[]};
+  milyonJokers = {cift:true,seyirci:true,pas:true};
+  milyonGameOver = false;
+  document.getElementById('milyon-start').style.display = 'none';
+  document.getElementById('milyon-result').style.display = 'none';
+  document.getElementById('milyon-game').style.display = 'block';
+  milyonUpdateJokers();
+  milyonLoadQuestion();
+}
+
+function milyonPickQ(kat, diff) {
+  const all = MILYON_SORULAR[kat];
+  let easyEnd = 10; // indices 0-9 easy, 10-24 hard, 25+ vhard
+  let range;
+  if(diff === 'easy') range = [0, Math.min(9, all.length-1)];
+  else if(diff === 'hard') range = [10, Math.min(24, all.length-1)];
+  else range = [25, all.length-1];
+  
+  const used = milyonUsedQ[kat] || [];
+  const available = [];
+  for(let i = range[0]; i <= range[1]; i++) {
+    if(!used.includes(i) && all[i]) available.push(i);
+  }
+  if(!available.length) {
+    // fallback to any unused
+    for(let i = 0; i < all.length; i++) {
+      if(!used.includes(i)) available.push(i);
+    }
+  }
+  if(!available.length) return all[Math.floor(Math.random()*all.length)];
+  const idx = available[Math.floor(Math.random()*available.length)];
+  milyonUsedQ[kat].push(idx);
+  return all[idx];
+}
+
+function milyonLoadQuestion() {
+  if(milyonQIndex >= 15) { milyonWin(); return; }
+  const step = MILYON_SIRA[milyonQIndex];
+  milyonCurrentQ = milyonPickQ(step.kat, step.diff);
+  milyonEliminatedOpts = [];
+  milyonCiftActive = false;
+  milyonAnswered = false;
+
+  document.getElementById('milyon-qnum').textContent = milyonQIndex + 1;
+  document.getElementById('milyon-kategori').textContent = KAT_NAMES[step.kat];
+  document.getElementById('milyon-soru').textContent = milyonCurrentQ.s;
+  document.getElementById('milyon-seyirci-box').style.display = 'none';
+
+  milyonRenderOpts();
+  milyonRenderLadder();
+}
+
+function milyonRenderOpts(highlightCorrect) {
+  const q = milyonCurrentQ;
+  const opts = document.getElementById('milyon-opts');
+  const labels = ['A','B','C','D'];
+  opts.innerHTML = q.o.map((opt,i) => {
+    if(milyonEliminatedOpts.includes(i)) {
+      return '<div style="border-radius:14px;padding:12px 10px;border:1.5px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.3);opacity:0.3;text-align:left;"></div>';
+    }
+    let bg = 'rgba(255,255,255,0.05)';
+    let border = 'rgba(124,58,237,0.4)';
+    let col = 'white';
+    if(highlightCorrect !== undefined) {
+      if(i === q.c) { bg='rgba(74,222,128,0.2)'; border='#4ade80'; col='#4ade80'; }
+      else if(i === highlightCorrect && i !== q.c) { bg='rgba(239,68,68,0.2)'; border='#ef4444'; col='#ef4444'; }
+    }
+    const disabled = highlightCorrect !== undefined ? 'pointer-events:none;' : '';
+    return '<button onclick="milyonAnswer('+i+')" style="background:'+bg+';border:1.5px solid '+border+';border-radius:14px;padding:12px 10px;color:'+col+';font-size:0.85rem;text-align:left;cursor:pointer;transition:all 0.2s;'+disabled+'"><span style="background:rgba(124,58,237,0.3);border-radius:6px;padding:1px 7px;font-weight:700;margin-right:8px;font-size:0.75rem;">'+labels[i]+'</span>'+opt+'</button>';
+  }).join('');
+}
+
+function milyonAnswer(idx) {
+  if(milyonAnswered || milyonGameOver) return;
+  if(milyonCiftActive && milyonEliminatedOpts.includes(idx)) return;
+  milyonAnswered = true;
+  const q = milyonCurrentQ;
+  milyonRenderOpts(idx);
+  if(idx === q.c) {
+    milyonQIndex++;
+    setTimeout(() => {
+      if(milyonQIndex >= 15) milyonWin();
+      else milyonLoadQuestion();
+    }, 1200);
+  } else {
+    setTimeout(() => milyonLose(), 1200);
+  }
+}
+
+function milyonJoker(type) {
+  if(!milyonJokers[type] || milyonAnswered) return;
+  milyonJokers[type] = false;
+  milyonUpdateJokers();
+  const q = milyonCurrentQ;
+
+  if(type === 'cift') {
+    // Eliminate 2 wrong answers
+    const wrongs = q.o.map((_,i) => i).filter(i => i !== q.c && !milyonEliminatedOpts.includes(i));
+    const toElim = wrongs.sort(() => Math.random()-0.5).slice(0,2);
+    milyonEliminatedOpts.push(...toElim);
+    milyonCiftActive = true;
+    milyonRenderOpts();
+  } else if(type === 'seyirci') {
+    // Always shows correct
+    const labels = ['A','B','C','D'];
+    document.getElementById('milyon-seyirci-text').textContent = '👥 Seyirci %' + (72+Math.floor(Math.random()*20)) + ' oranında ' + labels[q.c] + ' şıkkını seçti!';
+    document.getElementById('milyon-seyirci-box').style.display = 'block';
+  } else if(type === 'pas') {
+    // Skip to next question, not counted as correct or wrong
+    milyonQIndex++;
+    if(milyonQIndex >= 15) milyonWin();
+    else milyonLoadQuestion();
+  }
+}
+
+function milyonUpdateJokers() {
+  const j = milyonJokers;
+  const btn = (id, active) => {
+    const el = document.getElementById('joker-'+id);
+    if(el) { el.style.opacity = active ? '1' : '0.3'; el.style.pointerEvents = active ? 'auto' : 'none'; }
+  };
+  btn('cift', j.cift);
+  btn('seyirci', j.seyirci);
+  btn('pas', j.pas);
+}
+
+function milyonRenderLadder() {
+  const el = document.getElementById('milyon-ladder');
+  el.innerHTML = MILYON_ODULLAR.map((o,i) => {
+    let bg = 'rgba(255,255,255,0.05)';
+    let col = 'rgba(255,255,255,0.4)';
+    let border = 'transparent';
+    if(i < milyonQIndex) { bg='rgba(74,222,128,0.15)'; col='#4ade80'; }
+    else if(i === milyonQIndex) { bg='rgba(245,200,66,0.2)'; col='#f5c842'; border='1px solid #f5c842'; }
+    return '<div style="background:'+bg+';border:'+border+';border-radius:8px;padding:3px 6px;font-size:0.6rem;color:'+col+';font-weight:'+(i===milyonQIndex?'700':'400')+';">'+o+'</div>';
+  }).join('');
+}
+
+function milyonWin() {
+  milyonGameOver = true;
+  document.getElementById('milyon-game').style.display = 'none';
+  document.getElementById('milyon-result').style.display = 'block';
+  document.getElementById('milyon-result-emoji').textContent = '🏆';
+  document.getElementById('milyon-result-title').textContent = 'ŞAMPİYON!';
+  document.getElementById('milyon-result-sub').textContent = (oyunCurrentPlayer==='tulay'?'💕 Tülay':'💙 Yiğit') + ' tüm 15 soruyu doğru cevapladı!';
+  // Save score: 15 = champion
+  milyonSaveScore(15);
+}
+
+function milyonLose() {
+  milyonGameOver = true;
+  document.getElementById('milyon-game').style.display = 'none';
+  document.getElementById('milyon-result').style.display = 'block';
+  document.getElementById('milyon-result-emoji').textContent = '😢';
+  document.getElementById('milyon-result-title').textContent = milyonQIndex + '. soruda elendi!';
+  document.getElementById('milyon-result-sub').textContent = (oyunCurrentPlayer==='tulay'?'💕 Tülay':'💙 Yiğit') + ' ' + milyonQIndex + '. soruda elendi. Ödül: ' + (milyonQIndex > 0 ? MILYON_ODULLAR[milyonQIndex-1] : '0₺');
+  milyonSaveScore(milyonQIndex);
+}
+
+function milyonSaveScore(reached) {
+  // Higher is better. 15 = champion. Compare: 15 always wins, else higher question number wins
+  if(!oyunScores[oyunCurrentPlayer]) oyunScores[oyunCurrentPlayer] = {};
+  const current = oyunScores[oyunCurrentPlayer].milyon;
+  const isBetter = current === undefined || current === null || current === -1 || reached > current;
+  if(isBetter) {
+    oyunScores[oyunCurrentPlayer].milyon = reached;
+    set(ref(db, 'oyunRekorlar'), oyunScores).catch(e=>console.error(e));
+    oyunRefreshRekorBoard();
+    renderHomeRekorlar();
+  }
+}
+
+function milyonYenidenBasla() {
+  milyonStart();
+}
+
+window.milyonInit = milyonInit;
+window.milyonStart = milyonStart;
+window.milyonAnswer = milyonAnswer;
+window.milyonJoker = milyonJoker;
+window.milyonYenidenBasla = milyonYenidenBasla;
+
 
 } // end bootApp
 
@@ -5472,6 +5981,11 @@ loadState();
           <div style="background:linear-gradient(135deg,#fff0f5,#ffe0ee);border-radius:10px;padding:8px;text-align:center;font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--rose-dark);" id="oyun-rekor-tulay-kelime">0</div>
           <div style="background:linear-gradient(135deg,#eef4ff,#dceeff);border-radius:10px;padding:8px;text-align:center;font-family:'Playfair Display',serif;font-size:1.1rem;color:#4a7ac0;" id="oyun-rekor-yigit-kelime">0</div>
         </div>
+        <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:6px;align-items:center;">
+          <div style="font-size:0.68rem;font-weight:700;color:var(--text-light);">🏆 Milyon</div>
+          <div style="background:linear-gradient(135deg,#f5f0ff,#e8d8ff);border-radius:10px;padding:8px;text-align:center;font-size:0.75rem;color:#7c3aed;font-weight:700;" id="oyun-rekor-tulay-milyon">—</div>
+          <div style="background:linear-gradient(135deg,#f5f0ff,#e8d8ff);border-radius:10px;padding:8px;text-align:center;font-size:0.75rem;color:#7c3aed;font-weight:700;" id="oyun-rekor-yigit-milyon">—</div>
+        </div>
       </div>
     </div>
   </div>
@@ -5504,15 +6018,21 @@ loadState();
         <div style="font-family:'Playfair Display',serif;font-size:0.95rem;font-weight:700;color:#8a6000;">Kelime Bul</div>
         <div style="font-size:0.65rem;color:var(--text-light);margin-top:3px;">Harfleri birleştir, kelime yap!</div>
       </button>
+      <button onclick="oyunSec('milyon')" style="background:linear-gradient(135deg,#1a0040,#2d0060);border:2px solid #7c3aed;border-radius:18px;padding:16px 8px;cursor:pointer;transition:transform 0.15s;text-align:center;grid-column:1/-1;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+        <div style="font-size:2rem;margin-bottom:4px;">🏆</div>
+        <div style="font-family:'Playfair Display',serif;font-size:0.95rem;font-weight:700;color:#f5c842;">Kim Milyoner Olmak İster?</div>
+        <div style="font-size:0.65rem;color:rgba(245,200,66,0.6);margin-top:3px;">15 soru · 3 joker · Şampiyon olabilecek misin?</div>
+      </button>
     </div>
     <!-- Kişisel rekorlar -->
     <div style="background:white;border-radius:16px;padding:12px;border:1px solid var(--rose-light);text-align:center;">
       <div style="font-size:0.75rem;color:var(--text-light);margin-bottom:8px;">Senin Rekorların</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:6px;">
         <div><div style="font-size:0.6rem;color:var(--rose);font-weight:700;">🚗</div><div style="font-family:'Playfair Display',serif;font-size:1rem;" id="oyun-my-rekor-araba">0</div></div>
         <div><div style="font-size:0.6rem;color:#4a7ac0;font-weight:700;">🐍</div><div style="font-family:'Playfair Display',serif;font-size:1rem;" id="oyun-my-rekor-snake">0</div></div>
         <div><div style="font-size:0.6rem;color:#2a7a2a;font-weight:700;">🧩</div><div style="font-family:'Playfair Display',serif;font-size:1rem;" id="oyun-my-rekor-simon">0</div></div>
         <div><div style="font-size:0.6rem;color:#8a6000;font-weight:700;">🔤</div><div style="font-family:'Playfair Display',serif;font-size:1rem;" id="oyun-my-rekor-kelime">0</div></div>
+        <div><div style="font-size:0.6rem;color:#7c3aed;font-weight:700;">🏆</div><div style="font-family:'Playfair Display',serif;font-size:0.75rem;" id="oyun-my-rekor-milyon" style="color:#7c3aed;">—</div></div>
       </div>
     </div>
   </div>
@@ -5586,32 +6106,110 @@ loadState();
 
     <!-- Kelime Bul -->
     <div id="game-kelime-wrap" style="display:none;">
-      <div style="background:linear-gradient(135deg,#fffbf0,#fff3d0);border-radius:20px;padding:16px;margin-bottom:12px;border:2px solid #f0d080;">
+      <div id="kelime-game-area" style="background:#1a1200;border-radius:20px;padding:16px;margin-bottom:12px;border:2px solid #c8920a;">
+        <!-- Header -->
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-          <div style="font-family:'Playfair Display',serif;font-size:1rem;color:#8a6000;">🔤 Kelime Bul</div>
-          <div style="font-size:0.85rem;color:#8a6000;">⏱ <span id="kelime-timer">60</span>s | ✅ <span id="kelime-score-display">0</span></div>
+          <div style="font-family:'Playfair Display',serif;font-size:1rem;color:#f5c842;font-weight:700;">🔤 Kelime Bul</div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <div style="background:#2a1e00;border:1px solid #c8920a;border-radius:10px;padding:4px 10px;font-size:0.8rem;color:#f5c842;font-weight:700;" id="kelime-counter">0/0</div>
+            <div style="background:#2a1e00;border:1px solid #c8920a;border-radius:10px;padding:4px 10px;font-size:0.8rem;color:#f5c842;" id="kelime-timer-box">⏱ <span id="kelime-timer">60</span>s</div>
+          </div>
         </div>
-        <!-- Verilen harfler -->
-        <div style="text-align:center;margin-bottom:14px;">
-          <div style="font-size:0.75rem;color:#8a6000;margin-bottom:8px;font-weight:700;">Bu harfleri kullanarak Türkçe kelime yaz:</div>
-          <div id="kelime-letters" style="display:flex;justify-content:center;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>
+        <!-- Puan -->
+        <div style="text-align:center;margin-bottom:12px;">
+          <div style="font-size:0.65rem;color:rgba(245,200,66,0.6);letter-spacing:2px;text-transform:uppercase;">PUAN</div>
+          <div style="font-family:'Playfair Display',serif;font-size:2.2rem;color:#f5c842;font-weight:700;line-height:1;" id="kelime-score-display">0</div>
+        </div>
+        <!-- Harfler -->
+        <div style="margin-bottom:14px;">
+          <div style="font-size:0.65rem;color:rgba(245,200,66,0.6);letter-spacing:2px;text-transform:uppercase;text-align:center;margin-bottom:8px;">ELDEKİ HARFLER</div>
+          <div id="kelime-letters" style="display:flex;justify-content:center;flex-wrap:wrap;gap:6px;"></div>
         </div>
         <!-- Input -->
-        <div style="display:flex;gap:8px;margin-bottom:10px;">
-          <input type="text" id="kelime-input" placeholder="Kelime yaz..." style="flex:1;border:2px solid #f0d080;border-radius:12px;padding:10px 14px;font-size:1rem;outline:none;background:white;color:#333;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter') kelimeKontrol()">
-          <button onclick="kelimeKontrol()" style="background:linear-gradient(135deg,#f0d040,#d4a800);color:white;border:none;border-radius:12px;padding:10px 16px;font-weight:700;cursor:pointer;font-size:0.9rem;">✓ Gönder</button>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <input type="text" id="kelime-input" placeholder="Kelime yaz..." style="flex:1;border:2px solid #c8920a;border-radius:12px;padding:9px 14px;font-size:1rem;outline:none;background:#2a1e00;color:#f5c842;text-transform:uppercase;font-weight:700;" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter') kelimeKontrol()">
+          <button onclick="kelimeKontrol()" style="background:#c8920a;color:#1a1200;border:none;border-radius:12px;padding:9px 16px;font-weight:700;cursor:pointer;font-size:0.9rem;">✓</button>
+          <button onclick="kelimePas()" id="kelime-pas-btn" style="background:rgba(255,255,255,0.08);color:rgba(245,200,66,0.7);border:1.5px solid rgba(200,146,10,0.4);border-radius:12px;padding:9px 12px;font-weight:700;cursor:pointer;font-size:0.8rem;" title="Pas — yeni kelime seti">⏭ Pas</button>
         </div>
-        <div id="kelime-feedback" style="text-align:center;font-size:0.85rem;min-height:22px;margin-bottom:8px;"></div>
-        <!-- Bulunan kelimeler -->
-        <div style="font-size:0.75rem;color:#8a6000;font-weight:700;margin-bottom:6px;">Bulunan kelimeler:</div>
-        <div id="kelime-found" style="display:flex;flex-wrap:wrap;gap:6px;min-height:30px;"></div>
-        <!-- Overlay -->
-        <div id="kelime-overlay" style="display:none;text-align:center;padding:20px;">
-          <div style="font-size:2rem;margin-bottom:8px;" id="kelime-overlay-emoji">⏰</div>
-          <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:#8a6000;margin-bottom:6px;" id="kelime-overlay-title">Süre Doldu!</div>
-          <div style="font-size:0.85rem;color:#8a6000;margin-bottom:14px;" id="kelime-overlay-sub"></div>
-          <button onclick="kelimeStart()" style="background:linear-gradient(135deg,#f0d040,#d4a800);color:white;border:none;border-radius:14px;padding:10px 24px;font-weight:700;cursor:pointer;">🔄 Tekrar</button>
+        <div id="kelime-feedback" style="text-align:center;font-size:0.8rem;min-height:20px;margin-bottom:10px;"></div>
+        <!-- Bulunan -->
+        <div style="font-size:0.65rem;color:rgba(245,200,66,0.6);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">BULUNANLAR</div>
+        <div id="kelime-found" style="display:flex;flex-wrap:wrap;gap:5px;min-height:28px;"></div>
+        <!-- Tüm kelimeler kılavuzu (gizli, sadece bitis sonrası) -->
+        <div id="kelime-hint-area" style="display:none;margin-top:10px;">
+          <div style="font-size:0.65rem;color:rgba(245,200,66,0.4);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;">TÜM KELİMELER</div>
+          <div id="kelime-all-words" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
         </div>
+      </div>
+      <!-- Overlay (bitis) - outside dark box -->
+      <div id="kelime-overlay" style="display:none;background:white;border-radius:20px;padding:24px;text-align:center;border:2px solid #f0d080;margin-bottom:12px;">
+        <div style="font-size:2.5rem;margin-bottom:8px;" id="kelime-overlay-emoji">⏰</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.3rem;color:#8a6000;margin-bottom:4px;" id="kelime-overlay-title">Süre Doldu!</div>
+        <div style="font-size:0.85rem;color:#a07020;margin-bottom:16px;" id="kelime-overlay-sub"></div>
+        <button onclick="kelimeStart()" style="background:#c8920a;color:white;border:none;border-radius:14px;padding:11px 28px;font-weight:700;cursor:pointer;font-size:0.95rem;">🔄 Tekrar</button>
+      </div>
+    </div>
+
+    <!-- MİLYONER OYUNU -->
+    <div id="game-milyon-wrap" style="display:none;">
+      <!-- Başlangıç ekranı -->
+      <div id="milyon-start" style="background:linear-gradient(180deg,#0a0020,#1a0040);border-radius:20px;padding:24px;text-align:center;border:2px solid #7c3aed;">
+        <div style="font-size:3rem;margin-bottom:8px;">🏆</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.4rem;color:#f5c842;font-weight:700;margin-bottom:4px;">Kim Milyoner Olmak İster?</div>
+        <div style="font-size:0.8rem;color:rgba(245,200,66,0.6);margin-bottom:20px;">15 soru · 3 joker · Spor, Tarih, Coğrafya, Genel Kültür</div>
+        <div style="display:flex;justify-content:center;gap:16px;margin-bottom:24px;flex-wrap:wrap;">
+          <div style="background:rgba(124,58,237,0.2);border:1px solid #7c3aed;border-radius:12px;padding:10px 14px;text-align:center;">
+            <div style="font-size:1.3rem;">2️⃣</div>
+            <div style="font-size:0.7rem;color:rgba(255,255,255,0.6);margin-top:3px;">Çift Cevap</div>
+          </div>
+          <div style="background:rgba(124,58,237,0.2);border:1px solid #7c3aed;border-radius:12px;padding:10px 14px;text-align:center;">
+            <div style="font-size:1.3rem;">👥</div>
+            <div style="font-size:0.7rem;color:rgba(255,255,255,0.6);margin-top:3px;">Seyirciye Sor</div>
+          </div>
+          <div style="background:rgba(124,58,237,0.2);border:1px solid #7c3aed;border-radius:12px;padding:10px 14px;text-align:center;">
+            <div style="font-size:1.3rem;">⏭️</div>
+            <div style="font-size:0.7rem;color:rgba(255,255,255,0.6);margin-top:3px;">Pas</div>
+          </div>
+        </div>
+        <button onclick="milyonStart()" style="background:linear-gradient(135deg,#f5c842,#d4a800);color:#1a0040;border:none;border-radius:16px;padding:14px 36px;font-size:1.1rem;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(245,200,66,0.3);">▶ OYUNU BAŞLAT</button>
+      </div>
+      <!-- Oyun alanı -->
+      <div id="milyon-game" style="display:none;">
+        <div style="background:linear-gradient(180deg,#0a0020,#160035);border-radius:20px;padding:16px;border:2px solid #7c3aed;">
+          <!-- Üst bar: soru no + jokerler -->
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <div style="font-size:0.75rem;color:rgba(245,200,66,0.7);">Soru <span id="milyon-qnum" style="color:#f5c842;font-weight:700;">1</span>/15</div>
+            <div style="display:flex;gap:8px;">
+              <button id="joker-cift" onclick="milyonJoker('cift')" style="background:rgba(124,58,237,0.3);border:1.5px solid #7c3aed;border-radius:10px;padding:5px 10px;color:white;font-size:0.75rem;cursor:pointer;">2️⃣ Çift</button>
+              <button id="joker-seyirci" onclick="milyonJoker('seyirci')" style="background:rgba(124,58,237,0.3);border:1.5px solid #7c3aed;border-radius:10px;padding:5px 10px;color:white;font-size:0.75rem;cursor:pointer;">👥 Seyirci</button>
+              <button id="joker-pas" onclick="milyonJoker('pas')" style="background:rgba(124,58,237,0.3);border:1.5px solid #7c3aed;border-radius:10px;padding:5px 10px;color:white;font-size:0.75rem;cursor:pointer;">⏭️ Pas</button>
+            </div>
+          </div>
+          <!-- Kategori + soru -->
+          <div style="text-align:center;margin-bottom:16px;">
+            <div id="milyon-kategori" style="display:inline-block;font-size:0.7rem;font-weight:700;padding:3px 12px;border-radius:20px;background:rgba(124,58,237,0.3);color:#c4b5fd;border:1px solid #7c3aed;margin-bottom:10px;"></div>
+            <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:white;font-weight:600;line-height:1.4;padding:0 4px;" id="milyon-soru"></div>
+          </div>
+          <!-- Seyirci cevabı (gizli) -->
+          <div id="milyon-seyirci-box" style="display:none;background:rgba(124,58,237,0.15);border:1px solid #7c3aed;border-radius:12px;padding:10px 14px;margin-bottom:12px;text-align:center;">
+            <div style="font-size:0.7rem;color:#c4b5fd;margin-bottom:4px;">👥 Seyirci oyu:</div>
+            <div id="milyon-seyirci-text" style="font-size:0.85rem;color:white;font-weight:700;"></div>
+          </div>
+          <!-- Şıklar -->
+          <div id="milyon-opts" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
+          <!-- Ödül basamağı -->
+          <div style="margin-top:14px;background:rgba(0,0,0,0.3);border-radius:12px;padding:10px 14px;">
+            <div style="font-size:0.65rem;color:rgba(245,200,66,0.5);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">ÖDÜL BASAMAĞI</div>
+            <div id="milyon-ladder" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
+          </div>
+        </div>
+      </div>
+      <!-- Sonuç ekranı -->
+      <div id="milyon-result" style="display:none;background:linear-gradient(180deg,#0a0020,#1a0040);border-radius:20px;padding:28px;text-align:center;border:2px solid #f5c842;">
+        <div style="font-size:3rem;margin-bottom:10px;" id="milyon-result-emoji">🏆</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.5rem;color:#f5c842;font-weight:700;margin-bottom:6px;" id="milyon-result-title"></div>
+        <div style="font-size:0.9rem;color:rgba(245,200,66,0.7);margin-bottom:24px;" id="milyon-result-sub"></div>
+        <button onclick="milyonYenidenBasla()" style="background:linear-gradient(135deg,#f5c842,#d4a800);color:#1a0040;border:none;border-radius:16px;padding:12px 30px;font-size:1rem;font-weight:700;cursor:pointer;">🔄 Tekrar Oyna</button>
       </div>
     </div>
   </div>
