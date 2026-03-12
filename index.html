@@ -3996,258 +3996,392 @@ window.renderKissUyum = renderKissUyum;
 
 // ===== OYUN =====
 let oyunCurrentPlayer = null;
-let oyunScores = { tulay: 0, yigit: 0 };
+let oyunCurrentGame = null;
+let oyunScores = { tulay: { '2048': 0, snake: 0 }, yigit: { '2048': 0, snake: 0 } };
+
+function oyunLoadScores() {
+  get(ref(db, 'state/oyunScores2')).then(snap => {
+    if(snap.exists()) oyunScores = snap.val();
+    oyunRefreshRekorBoard();
+  }).catch(()=>{});
+}
+
+function oyunRefreshRekorBoard() {
+  const s = oyunScores;
+  const el = (id) => document.getElementById(id);
+  if(el('oyun-rekor-tulay-2048')) el('oyun-rekor-tulay-2048').textContent = s.tulay?.['2048'] || 0;
+  if(el('oyun-rekor-yigit-2048')) el('oyun-rekor-yigit-2048').textContent = s.yigit?.['2048'] || 0;
+  if(el('oyun-rekor-tulay-snake')) el('oyun-rekor-tulay-snake').textContent = s.tulay?.snake || 0;
+  if(el('oyun-rekor-yigit-snake')) el('oyun-rekor-yigit-snake').textContent = s.yigit?.snake || 0;
+}
 
 function oyunPlayerSec(who) {
   oyunCurrentPlayer = who;
-  document.getElementById('oyun-player-select').style.display = 'none';
+  oyunLoadScores();
+  document.getElementById('oyun-step-player').style.display = 'none';
+  document.getElementById('oyun-step-game').style.display = 'block';
+  document.getElementById('oyun-current-player-label').textContent = who === 'tulay' ? '💕 Tülay' : '💙 Yiğit';
+  // Personal records
+  const s = oyunScores[who] || {};
+  document.getElementById('oyun-my-rekor-2048').textContent = s['2048'] || 0;
+  document.getElementById('oyun-my-rekor-snake').textContent = s.snake || 0;
+}
+
+function oyunSec(game) {
+  oyunCurrentGame = game;
+  document.getElementById('oyun-step-game').style.display = 'none';
   document.getElementById('oyun-area').style.display = 'block';
-  document.getElementById('oyun-current-player').textContent = who === 'tulay' ? '💕 Tülay' : '💙 Yiğit';
+  document.getElementById('oyun-area-player-label').textContent = oyunCurrentPlayer === 'tulay' ? '💕 Tülay' : '💙 Yiğit';
   document.getElementById('oyun-current-score').textContent = '0';
-  // Load scores from Firebase
-  get(ref(db, 'state/oyunScores')).then(snap => {
-    if(snap.exists()) {
-      oyunScores = snap.val();
-    }
-    document.getElementById('oyun-rekor-tulay').textContent = oyunScores.tulay || 0;
-    document.getElementById('oyun-rekor-yigit').textContent = oyunScores.yigit || 0;
-  }).catch(()=>{});
-  flappyInit();
+  const rec = (oyunScores[oyunCurrentPlayer] || {})[game] || 0;
+  document.getElementById('oyun-area-rekor').textContent = rec;
+  document.getElementById('game-2048-wrap').style.display = game === '2048' ? 'block' : 'none';
+  document.getElementById('game-snake-wrap').style.display = game === 'snake' ? 'block' : 'none';
+  if(game === '2048') game2048Init();
+  if(game === 'snake') snakeInit();
 }
 
 function oyunGeriDon() {
-  flappyStop();
-  document.getElementById('oyun-player-select').style.display = 'block';
+  snakeStop();
+  document.getElementById('oyun-step-player').style.display = 'block';
+  document.getElementById('oyun-step-game').style.display = 'none';
   document.getElementById('oyun-area').style.display = 'none';
   oyunCurrentPlayer = null;
+  oyunCurrentGame = null;
+  oyunLoadScores();
 }
 
-function oyunSaveScore(score) {
-  if(!oyunCurrentPlayer) return;
-  const current = oyunScores[oyunCurrentPlayer] || 0;
+function oyunGameGeri() {
+  snakeStop();
+  document.getElementById('oyun-step-game').style.display = 'block';
+  document.getElementById('oyun-area').style.display = 'none';
+  oyunCurrentGame = null;
+  // Refresh personal records
+  const s = oyunScores[oyunCurrentPlayer] || {};
+  document.getElementById('oyun-my-rekor-2048').textContent = s['2048'] || 0;
+  document.getElementById('oyun-my-rekor-snake').textContent = s.snake || 0;
+}
+
+function oyunSaveScore(game, score) {
+  if(!oyunCurrentPlayer || !game) return;
+  if(!oyunScores[oyunCurrentPlayer]) oyunScores[oyunCurrentPlayer] = {};
+  const current = oyunScores[oyunCurrentPlayer][game] || 0;
   if(score > current) {
-    oyunScores[oyunCurrentPlayer] = score;
-    set(ref(db, 'state/oyunScores'), oyunScores).catch(e=>console.error(e));
-    document.getElementById('oyun-rekor-' + oyunCurrentPlayer).textContent = score;
+    oyunScores[oyunCurrentPlayer][game] = score;
+    set(ref(db, 'state/oyunScores2'), oyunScores).catch(e=>console.error(e));
+    document.getElementById('oyun-area-rekor').textContent = score;
+    oyunRefreshRekorBoard();
+    return true; // new record
   }
+  return false;
 }
 
 window.oyunPlayerSec = oyunPlayerSec;
+window.oyunSec = oyunSec;
 window.oyunGeriDon = oyunGeriDon;
+window.oyunGameGeri = oyunGameGeri;
 
-// ===== FLAPPY BIRD =====
-let flappyRunning = false;
-let flappyRAF = null;
-let flappyScore = 0;
-let flappyBird = {};
-let flappyPipes = [];
-let flappyGravity = 0.35;
-let flappyFlapPower = -7;
-let flappyPipeSpeed = 2.2;
-let flappyPipeGap = 140;
-let flappyPipeInterval = 90;
-let flappyFrame = 0;
-let flappyCanvas, flappyCtx;
-let flappyStarted = false;
+// ===== 2048 =====
+let board2048 = [];
+let score2048 = 0;
+let best2048 = 0;
+let game2048Over = false;
+let touch2048Start = null;
 
-function flappyInit() {
-  flappyCanvas = document.getElementById('flappy-canvas');
-  flappyCtx = flappyCanvas.getContext('2d');
-  flappyRunning = false;
-  flappyStarted = false;
-  flappyScore = 0;
-  flappyBird = { x: 80, y: 240, vy: 0, r: 18 };
-  flappyPipes = [];
-  flappyFrame = 0;
-  document.getElementById('oyun-overlay').style.display = 'flex';
-  document.getElementById('oyun-overlay-emoji').textContent = '🎮';
-  document.getElementById('oyun-overlay-title').textContent = 'Hazır mısın?';
-  document.getElementById('oyun-overlay-sub').textContent = 'Ekrana dokun veya Space/Enter tuşuna bas';
-  document.getElementById('oyun-overlay-score').style.display = 'none';
-  document.getElementById('oyun-start-btn').textContent = '▶ Başla';
-  flappyDraw();
+const TILE_COLORS = {
+  0:'#f0e0e8', 2:'#ffe8f0', 4:'#ffd6e8', 8:'#ffb3cc', 16:'#ff8fab',
+  32:'#ff6b91', 64:'#e8698a', 128:'#d4a853', 256:'#c49040',
+  512:'#b07d2e', 1024:'#9a6a1a', 2048:'#e8698a'
+};
 
-  // Event listeners
-  flappyCanvas.ontouchstart = (e) => { e.preventDefault(); flappyFlap(); };
-  flappyCanvas.onclick = () => flappyFlap();
-}
-
-function flappyStart() {
-  document.getElementById('oyun-overlay').style.display = 'none';
-  flappyRunning = true;
-  flappyStarted = true;
-  flappyScore = 0;
-  flappyBird = { x: 80, y: 200, vy: 0, r: 18 };
-  flappyPipes = [];
-  flappyFrame = 0;
+function game2048Init() {
+  score2048 = 0;
+  game2048Over = false;
+  board2048 = Array(4).fill(null).map(() => Array(4).fill(0));
+  game2048AddTile();
+  game2048AddTile();
+  game2048Render();
   document.getElementById('oyun-current-score').textContent = '0';
-  if(flappyRAF) cancelAnimationFrame(flappyRAF);
-  flappyLoop();
+  // Swipe
+  const wrap = document.getElementById('board-2048');
+  wrap.ontouchstart = (e) => { touch2048Start = {x:e.touches[0].clientX, y:e.touches[0].clientY}; };
+  wrap.ontouchend = (e) => {
+    if(!touch2048Start) return;
+    const dx = e.changedTouches[0].clientX - touch2048Start.x;
+    const dy = e.changedTouches[0].clientY - touch2048Start.y;
+    if(Math.abs(dx) > Math.abs(dy)) { if(dx > 20) game2048Move('right'); else if(dx < -20) game2048Move('left'); }
+    else { if(dy > 20) game2048Move('down'); else if(dy < -20) game2048Move('up'); }
+    touch2048Start = null;
+  };
 }
 
-function flappyStop() {
-  flappyRunning = false;
-  if(flappyRAF) { cancelAnimationFrame(flappyRAF); flappyRAF = null; }
-  flappyCanvas && (flappyCanvas.ontouchstart = null) && (flappyCanvas.onclick = null);
+function game2048AddTile() {
+  const empty = [];
+  for(let r=0;r<4;r++) for(let c=0;c<4;c++) if(board2048[r][c]===0) empty.push([r,c]);
+  if(!empty.length) return;
+  const [r,c] = empty[Math.floor(Math.random()*empty.length)];
+  board2048[r][c] = Math.random() < 0.85 ? 2 : 4;
 }
 
-function flappyFlap() {
-  if(!flappyStarted) { flappyStart(); return; }
-  if(!flappyRunning) return;
-  flappyBird.vy = flappyFlapPower;
+function game2048Render() {
+  const el = document.getElementById('board-2048');
+  if(!el) return;
+  el.innerHTML = board2048.flat().map(v => {
+    const bg = TILE_COLORS[Math.min(v, 2048)] || '#e8698a';
+    const fs = v >= 1000 ? '1rem' : v >= 100 ? '1.2rem' : '1.5rem';
+    const color = v <= 4 ? 'var(--rose-dark)' : 'white';
+    return `<div style="background:${bg};border-radius:10px;display:flex;align-items:center;justify-content:center;height:72px;font-family:'Playfair Display',serif;font-size:${fs};font-weight:700;color:${color};transition:all 0.1s;">${v || ''}</div>`;
+  }).join('');
 }
 
-function flappyLoop() {
-  if(!flappyRunning) return;
-  flappyUpdate();
-  flappyDraw();
-  flappyRAF = requestAnimationFrame(flappyLoop);
-}
-
-function flappyUpdate() {
-  const W = 360, H = 480;
-  flappyFrame++;
-  // Bird
-  flappyBird.vy += flappyGravity;
-  flappyBird.y += flappyBird.vy;
-  // Pipes
-  if(flappyFrame % flappyPipeInterval === 0) {
-    const gapY = 80 + Math.random() * (H - 160 - flappyPipeGap);
-    flappyPipes.push({ x: W, gapY, passed: false });
-  }
-  flappyPipes.forEach(p => { p.x -= flappyPipeSpeed; });
-  flappyPipes = flappyPipes.filter(p => p.x > -60);
-  // Score
-  flappyPipes.forEach(p => {
-    if(!p.passed && p.x + 40 < flappyBird.x) {
-      p.passed = true;
-      flappyScore++;
-      document.getElementById('oyun-current-score').textContent = flappyScore;
-      if(flappyScore % 5 === 0) flappyPipeSpeed = Math.min(flappyPipeSpeed + 0.15, 5);
+function game2048Move(dir) {
+  if(game2048Over) return;
+  let moved = false;
+  const b = board2048.map(r=>[...r]);
+  const merge = (row) => {
+    let arr = row.filter(x=>x!==0);
+    for(let i=0;i<arr.length-1;i++) {
+      if(arr[i]===arr[i+1]) { arr[i]*=2; score2048+=arr[i]; arr.splice(i+1,1); }
     }
-  });
-  // Collision
-  if(flappyBird.y + flappyBird.r >= H || flappyBird.y - flappyBird.r <= 0) { flappyGameOver(); return; }
-  for(const p of flappyPipes) {
-    const bx = flappyBird.x, by = flappyBird.y, br = flappyBird.r - 3;
-    const pw = 52;
-    if(bx + br > p.x && bx - br < p.x + pw) {
-      if(by - br < p.gapY || by + br > p.gapY + flappyPipeGap) { flappyGameOver(); return; }
-    }
-  }
-}
-
-function flappyDraw() {
-  const canvas = flappyCanvas;
-  const ctx = flappyCtx;
-  const W = canvas.width, H = canvas.height;
-  // Sky gradient
-  const sky = ctx.createLinearGradient(0,0,0,H);
-  sky.addColorStop(0,'#87CEEB');
-  sky.addColorStop(1,'#b0e0ff');
-  ctx.fillStyle = sky;
-  ctx.fillRect(0,0,W,H);
-  // Ground
-  ctx.fillStyle = '#90EE90';
-  ctx.fillRect(0, H-40, W, 40);
-  ctx.fillStyle = '#8B7355';
-  ctx.fillRect(0, H-45, W, 8);
-  // Pipes
-  flappyPipes.forEach(p => {
-    const pw = 52;
-    const grad = ctx.createLinearGradient(p.x,0,p.x+pw,0);
-    grad.addColorStop(0,'#5bba5b');
-    grad.addColorStop(0.5,'#7ddb7d');
-    grad.addColorStop(1,'#4a9a4a');
-    ctx.fillStyle = grad;
-    // Top pipe
-    ctx.fillRect(p.x, 0, pw, p.gapY);
-    ctx.fillStyle = '#4a9a4a';
-    ctx.fillRect(p.x-4, p.gapY-16, pw+8, 16);
-    // Bottom pipe
-    ctx.fillStyle = grad;
-    ctx.fillRect(p.x, p.gapY+flappyPipeGap, pw, H);
-    ctx.fillStyle = '#4a9a4a';
-    ctx.fillRect(p.x-4, p.gapY+flappyPipeGap, pw+8, 16);
-  });
-  // Bird
-  const bx = flappyBird.x, by = flappyBird.y, br = flappyBird.r;
-  const rotation = Math.max(-0.5, Math.min(flappyBird.vy * 0.05, 0.8));
-  ctx.save();
-  ctx.translate(bx, by);
-  ctx.rotate(rotation);
-  // Body
-  ctx.fillStyle = oyunCurrentPlayer === 'tulay' ? '#ff8fab' : '#4a90d9';
-  ctx.beginPath();
-  ctx.ellipse(0, 0, br, br*0.85, 0, 0, Math.PI*2);
-  ctx.fill();
-  // Wing
-  ctx.fillStyle = oyunCurrentPlayer === 'tulay' ? '#ff6b9d' : '#357abd';
-  ctx.beginPath();
-  ctx.ellipse(-4, 4, br*0.55, br*0.35, -0.4, 0, Math.PI*2);
-  ctx.fill();
-  // Eye
-  ctx.fillStyle = 'white';
-  ctx.beginPath();
-  ctx.arc(8, -5, 6, 0, Math.PI*2);
-  ctx.fill();
-  ctx.fillStyle = '#333';
-  ctx.beginPath();
-  ctx.arc(9, -5, 3, 0, Math.PI*2);
-  ctx.fill();
-  // Beak
-  ctx.fillStyle = '#FFA500';
-  ctx.beginPath();
-  ctx.moveTo(br-2, -2);
-  ctx.lineTo(br+8, 0);
-  ctx.lineTo(br-2, 4);
-  ctx.closePath();
-  ctx.fill();
-  ctx.restore();
-  // Score on canvas
-  ctx.fillStyle = 'white';
-  ctx.font = 'bold 28px Arial';
-  ctx.textAlign = 'center';
-  ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-  ctx.lineWidth = 3;
-  ctx.strokeText(flappyScore, W/2, 50);
-  ctx.fillText(flappyScore, W/2, 50);
-}
-
-function flappyGameOver() {
-  flappyRunning = false;
-  if(flappyRAF) { cancelAnimationFrame(flappyRAF); flappyRAF = null; }
-  flappyDraw();
-  // Save score
-  oyunSaveScore(flappyScore);
-  // Show overlay
-  const overlay = document.getElementById('oyun-overlay');
-  const isRecord = flappyScore > 0 && flappyScore >= (oyunScores[oyunCurrentPlayer] || 0);
-  document.getElementById('oyun-overlay-emoji').textContent = isRecord ? '🏆' : '😢';
-  document.getElementById('oyun-overlay-title').textContent = isRecord ? 'YENİ REKOR!' : 'Oyun Bitti!';
-  document.getElementById('oyun-overlay-sub').textContent = (oyunCurrentPlayer === 'tulay' ? '💕 Tülay' : '💙 Yiğit') + ' — Puan: ' + flappyScore;
-  const scoreEl = document.getElementById('oyun-overlay-score');
-  scoreEl.textContent = flappyScore + ' 💋';
-  scoreEl.style.display = 'block';
-  document.getElementById('oyun-start-btn').textContent = '🔄 Tekrar Oyna';
-  overlay.style.display = 'flex';
-  flappyStarted = false;
-}
-
-window.flappyStart = window.flappyStart || flappyStart;
-window.flappyFlap = flappyFlap;
-
-// Keyboard for flappy
-document.addEventListener("keydown", (e) => {
-  if(e.code === "Space" || e.code === "Enter") {
-    const page = document.getElementById("page-oyun");
-    if(page && page.classList.contains("active")) {
-      e.preventDefault();
-      if(!flappyStarted) flappyStart();
-      else flappyFlap();
+    while(arr.length<4) arr.push(0);
+    return arr;
+  };
+  if(dir==='left') { board2048 = board2048.map(row => { const n=merge(row); if(n.join()!==row.join()) moved=true; return n; }); }
+  else if(dir==='right') { board2048 = board2048.map(row => { const n=merge([...row].reverse()).reverse(); if(n.join()!==row.join()) moved=true; return n; }); }
+  else if(dir==='up') {
+    for(let c=0;c<4;c++) {
+      const col = [0,1,2,3].map(r=>board2048[r][c]);
+      const n = merge(col);
+      for(let r=0;r<4;r++) { if(board2048[r][c]!==n[r]) moved=true; board2048[r][c]=n[r]; }
     }
   }
+  else if(dir==='down') {
+    for(let c=0;c<4;c++) {
+      const col = [0,1,2,3].map(r=>board2048[r][c]).reverse();
+      const n = merge(col).reverse();
+      for(let r=0;r<4;r++) { if(board2048[r][c]!==n[r]) moved=true; board2048[r][c]=n[r]; }
+    }
+  }
+  if(moved) {
+    game2048AddTile();
+    game2048Render();
+    document.getElementById('oyun-current-score').textContent = score2048;
+    // Check game over
+    const hasEmpty = board2048.flat().some(x=>x===0);
+    if(!hasEmpty) {
+      let canMove = false;
+      for(let r=0;r<4;r++) for(let c=0;c<4;c++) {
+        if(c<3 && board2048[r][c]===board2048[r][c+1]) canMove=true;
+        if(r<3 && board2048[r][c]===board2048[r+1][c]) canMove=true;
+      }
+      if(!canMove) { game2048Over=true; game2048End(); }
+    }
+  }
+}
+
+function game2048End() {
+  const isRecord = oyunSaveScore('2048', score2048);
+  setTimeout(() => {
+    const msg = isRecord ? `🏆 YENİ REKOR!\n${score2048} puan!` : `Oyun Bitti!\nPuanın: ${score2048}`;
+    if(confirm(msg + '\n\nTekrar oyna?')) game2048Init();
+    else oyunGameGeri();
+  }, 300);
+}
+
+// Keyboard for 2048
+document.addEventListener('keydown', (e) => {
+  const page = document.getElementById('page-oyun');
+  if(!page || !page.classList.contains('active') || oyunCurrentGame !== '2048') return;
+  const map = {'ArrowLeft':'left','ArrowRight':'right','ArrowUp':'up','ArrowDown':'down'};
+  if(map[e.key]) { e.preventDefault(); game2048Move(map[e.key]); }
 });
+
+window.game2048Move = game2048Move;
+
+// ===== SNAKE =====
+let snakeRunning = false;
+let snakeRAF = null;
+let snakeScore = 0;
+let snakeCells = 18;
+let snakeCellSize = 20;
+let snakeBody = [];
+let snakeDir2 = {x:1, y:0};
+let snakeNextDir = {x:1, y:0};
+let snakeFood = null;
+let snakeInterval = null;
+let snakeStarted = false;
+let snakeTouchStart = null;
+let snakeCanvas2, snakeCtx2;
+let snakePlayerColor = '#ff8fab';
+
+function snakeInit() {
+  snakeCanvas2 = document.getElementById('snake-canvas');
+  snakeCtx2 = snakeCanvas2.getContext('2d');
+  snakeRunning = false;
+  snakeStarted = false;
+  snakeScore = 0;
+  document.getElementById('snake-overlay').style.display = 'flex';
+  document.getElementById('snake-overlay-emoji').textContent = '🐍';
+  document.getElementById('snake-overlay-title').textContent = 'Snake';
+  document.getElementById('snake-overlay-sub').textContent = 'Yılanı yönlendirerek yem ye!\nKaydırarak veya butonlarla oyna';
+  document.getElementById('snake-overlay-score').style.display = 'none';
+  document.getElementById('snake-start-btn').textContent = '▶ Başla';
+  snakePlayerColor = oyunCurrentPlayer === 'tulay' ? '#e8698a' : '#4a7ac0';
+  snakeDraw();
+  // Touch swipe
+  snakeCanvas2.ontouchstart = (e) => { e.preventDefault(); snakeTouchStart = {x:e.touches[0].clientX, y:e.touches[0].clientY}; };
+  snakeCanvas2.ontouchend = (e) => {
+    if(!snakeTouchStart) return;
+    const dx = e.changedTouches[0].clientX - snakeTouchStart.x;
+    const dy = e.changedTouches[0].clientY - snakeTouchStart.y;
+    if(Math.abs(dx) > Math.abs(dy)) { if(dx > 15) snakeDir(1,0); else if(dx < -15) snakeDir(-1,0); }
+    else { if(dy > 15) snakeDir(0,1); else if(dy < -15) snakeDir(0,-1); }
+    snakeTouchStart = null;
+    if(!snakeStarted) snakeStart();
+  };
+  snakeCanvas2.onclick = () => { if(!snakeStarted) snakeStart(); };
+}
+
+function snakeStart() {
+  document.getElementById('snake-overlay').style.display = 'none';
+  snakeStarted = true;
+  snakeRunning = true;
+  snakeScore = 0;
+  snakeCells = 18;
+  snakeCellSize = Math.floor(360 / snakeCells);
+  snakeBody = [{x:8,y:9},{x:7,y:9},{x:6,y:9}];
+  snakeDir2 = {x:1,y:0};
+  snakeNextDir = {x:1,y:0};
+  snakePlaceFood();
+  document.getElementById('oyun-current-score').textContent = '0';
+  if(snakeInterval) clearInterval(snakeInterval);
+  snakeInterval = setInterval(snakeStep, 160);
+}
+
+function snakeStop() {
+  snakeRunning = false;
+  snakeStarted = false;
+  if(snakeInterval) { clearInterval(snakeInterval); snakeInterval = null; }
+  if(snakeCanvas2) { snakeCanvas2.ontouchstart = null; snakeCanvas2.ontouchend = null; snakeCanvas2.onclick = null; }
+}
+
+function snakeDir(dx, dy) {
+  if(dx === -snakeDir2.x && dy === -snakeDir2.y) return; // no reverse
+  snakeNextDir = {x:dx, y:dy};
+  if(!snakeStarted) snakeStart();
+}
+
+function snakePlaceFood() {
+  const occupied = new Set(snakeBody.map(s => s.x+','+s.y));
+  let fx, fy;
+  do { fx = Math.floor(Math.random()*snakeCells); fy = Math.floor(Math.random()*snakeCells); }
+  while(occupied.has(fx+','+fy));
+  snakeFood = {x:fx, y:fy};
+}
+
+function snakeStep() {
+  if(!snakeRunning) return;
+  snakeDir2 = {...snakeNextDir};
+  const head = {x: snakeBody[0].x + snakeDir2.x, y: snakeBody[0].y + snakeDir2.y};
+  // Wall collision
+  if(head.x < 0 || head.x >= snakeCells || head.y < 0 || head.y >= snakeCells) { snakeGameOver(); return; }
+  // Self collision
+  if(snakeBody.some(s => s.x===head.x && s.y===head.y)) { snakeGameOver(); return; }
+  snakeBody.unshift(head);
+  if(head.x === snakeFood.x && head.y === snakeFood.y) {
+    snakeScore++;
+    document.getElementById('oyun-current-score').textContent = snakeScore;
+    snakePlaceFood();
+    // Speed up every 5 food
+    if(snakeScore % 5 === 0) {
+      clearInterval(snakeInterval);
+      const newSpeed = Math.max(70, 160 - snakeScore * 6);
+      snakeInterval = setInterval(snakeStep, newSpeed);
+    }
+  } else {
+    snakeBody.pop();
+  }
+  snakeDraw();
+}
+
+function snakeDraw() {
+  if(!snakeCtx2) return;
+  const ctx = snakeCtx2;
+  const cs = snakeCellSize || 20;
+  const W = snakeCells * cs;
+  // Background
+  ctx.fillStyle = '#1a2a1a';
+  ctx.fillRect(0,0,360,360);
+  // Grid dots
+  ctx.fillStyle = 'rgba(255,255,255,0.05)';
+  for(let x=0;x<snakeCells;x++) for(let y=0;y<snakeCells;y++) {
+    ctx.fillRect(x*cs+cs/2-1, y*cs+cs/2-1, 2, 2);
+  }
+  // Food
+  if(snakeFood) {
+    ctx.fillStyle = '#FFD700';
+    ctx.shadowColor = '#FFD700';
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(snakeFood.x*cs+cs/2, snakeFood.y*cs+cs/2, cs/2-2, 0, Math.PI*2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#FF6B35';
+    ctx.font = `${cs-4}px serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('💋', snakeFood.x*cs+cs/2, snakeFood.y*cs+cs/2);
+  }
+  // Snake
+  snakeBody.forEach((seg, i) => {
+    const alpha = Math.max(0.4, 1 - i * 0.03);
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = i === 0 ? (oyunCurrentPlayer==='tulay'?'#ff8fab':'#5ba8e8') : snakePlayerColor;
+    ctx.shadowColor = i === 0 ? snakePlayerColor : 'transparent';
+    ctx.shadowBlur = i === 0 ? 8 : 0;
+    const pad = i === 0 ? 1 : 2;
+    ctx.beginPath();
+    ctx.roundRect(seg.x*cs+pad, seg.y*cs+pad, cs-pad*2, cs-pad*2, 4);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  });
+  ctx.globalAlpha = 1;
+  // Score
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.font = 'bold 14px Arial';
+  ctx.textAlign = 'right';
+  ctx.fillText('💋 ' + snakeScore, W-8, 18);
+}
+
+function snakeGameOver() {
+  snakeRunning = false;
+  snakeStarted = false;
+  clearInterval(snakeInterval);
+  snakeInterval = null;
+  const isRecord = oyunSaveScore('snake', snakeScore);
+  document.getElementById('snake-overlay-emoji').textContent = isRecord ? '🏆' : '😢';
+  document.getElementById('snake-overlay-title').textContent = isRecord ? 'YENİ REKOR!' : 'Oyun Bitti!';
+  document.getElementById('snake-overlay-sub').textContent = (oyunCurrentPlayer==='tulay'?'💕 Tülay':'💙 Yiğit') + ' — Puan: ' + snakeScore;
+  const sc = document.getElementById('snake-overlay-score');
+  sc.textContent = snakeScore + ' 💋';
+  sc.style.display = 'block';
+  document.getElementById('snake-start-btn').textContent = '🔄 Tekrar Oyna';
+  document.getElementById('snake-overlay').style.display = 'flex';
+}
+
+window.snakeStart = snakeStart;
+window.snakeDir = snakeDir;
+
+// Keyboard for snake
+document.addEventListener('keydown', (e) => {
+  const page = document.getElementById('page-oyun');
+  if(!page || !page.classList.contains('active') || oyunCurrentGame !== 'snake') return;
+  const map = {'ArrowLeft':[-1,0],'ArrowRight':[1,0],'ArrowUp':[0,-1],'ArrowDown':[0,1]};
+  if(map[e.key]) { e.preventDefault(); snakeDir(...map[e.key]); }
+});
+
+// Load scores on page load
+oyunLoadScores();
 
 } // end bootApp
 
@@ -4421,51 +4555,124 @@ loadState();
 <div class="page" id="page-oyun">
   <div class="page-title-bar">🎮 Oyun Köşesi</div>
 
-  <!-- Oyuncu seçimi -->
-  <div id="oyun-player-select" style="text-align:center;padding:20px 0;">
-    <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--rose-dark);margin-bottom:20px;">Sen kimsin? 💕</div>
-    <div style="display:flex;gap:16px;justify-content:center;margin-bottom:20px;">
-      <button onclick="oyunPlayerSec('tulay')" style="background:linear-gradient(135deg,#ff8fab,#e8698a);color:white;border:none;border-radius:20px;padding:20px 32px;font-size:1.3rem;font-weight:800;cursor:pointer;box-shadow:0 4px 15px rgba(232,105,138,0.4);">💕 T<br><span style="font-size:0.7rem;font-weight:400;">Tülay</span></button>
-      <button onclick="oyunPlayerSec('yigit')" style="background:linear-gradient(135deg,#4a90d9,#357abd);color:white;border:none;border-radius:20px;padding:20px 32px;font-size:1.3rem;font-weight:800;cursor:pointer;box-shadow:0 4px 15px rgba(74,144,217,0.4);">💙 Y<br><span style="font-size:0.7rem;font-weight:400;">Yiğit</span></button>
+  <!-- ADIM 1: Kim oynayacak -->
+  <div id="oyun-step-player" style="display:block;">
+    <div style="background:linear-gradient(135deg,#fff0f5,#ffe0ee);border-radius:24px;padding:28px 20px;margin-bottom:16px;border:1.5px solid var(--rose-light);text-align:center;">
+      <div style="font-size:2.5rem;margin-bottom:8px;">🎮</div>
+      <div style="font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--rose-dark);margin-bottom:6px;">Oyun Köşesi</div>
+      <div style="font-size:0.85rem;color:var(--text-light);margin-bottom:24px;">Kim oynayacak?</div>
+      <div style="display:flex;gap:14px;justify-content:center;">
+        <button onclick="oyunPlayerSec('tulay')" style="background:linear-gradient(135deg,#ff8fab,#e8698a);color:white;border:none;border-radius:20px;padding:18px 28px;cursor:pointer;box-shadow:0 6px 20px rgba(232,105,138,0.35);transition:transform 0.15s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+          <div style="font-size:2rem;">💕</div>
+          <div style="font-size:1.1rem;font-weight:800;margin-top:4px;">T</div>
+          <div style="font-size:0.75rem;font-weight:400;opacity:0.9;">Tülay</div>
+        </button>
+        <button onclick="oyunPlayerSec('yigit')" style="background:linear-gradient(135deg,#5ba8e8,#357abd);color:white;border:none;border-radius:20px;padding:18px 28px;cursor:pointer;box-shadow:0 6px 20px rgba(74,144,217,0.35);transition:transform 0.15s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+          <div style="font-size:2rem;">💙</div>
+          <div style="font-size:1.1rem;font-weight:800;margin-top:4px;">Y</div>
+          <div style="font-size:0.75rem;font-weight:400;opacity:0.9;">Yiğit</div>
+        </button>
+      </div>
+    </div>
+    <!-- Rekorlar -->
+    <div style="background:white;border-radius:18px;padding:16px;border:1.5px solid var(--rose-light);">
+      <div style="font-size:0.8rem;font-weight:700;color:var(--text-light);text-align:center;margin-bottom:12px;">🏆 Tüm Zamanların Rekorları</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div style="background:linear-gradient(135deg,#fff0f5,#ffe0ee);border-radius:14px;padding:12px;text-align:center;">
+          <div style="font-size:0.7rem;color:var(--text-light);margin-bottom:2px;">💕 Tülay</div>
+          <div style="font-size:0.65rem;color:var(--rose);font-weight:700;margin-bottom:4px;">2048</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--rose-dark);" id="oyun-rekor-tulay-2048">0</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#eef4ff,#dceeff);border-radius:14px;padding:12px;text-align:center;">
+          <div style="font-size:0.7rem;color:var(--text-light);margin-bottom:2px;">💙 Yiğit</div>
+          <div style="font-size:0.65rem;color:#4a7ac0;font-weight:700;margin-bottom:4px;">2048</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.2rem;color:#4a7ac0;" id="oyun-rekor-yigit-2048">0</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div style="background:linear-gradient(135deg,#fff0f5,#ffe0ee);border-radius:14px;padding:12px;text-align:center;">
+          <div style="font-size:0.7rem;color:var(--text-light);margin-bottom:2px;">💕 Tülay</div>
+          <div style="font-size:0.65rem;color:var(--rose);font-weight:700;margin-bottom:4px;">Snake</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--rose-dark);" id="oyun-rekor-tulay-snake">0</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#eef4ff,#dceeff);border-radius:14px;padding:12px;text-align:center;">
+          <div style="font-size:0.7rem;color:var(--text-light);margin-bottom:2px;">💙 Yiğit</div>
+          <div style="font-size:0.65rem;color:#4a7ac0;font-weight:700;margin-bottom:4px;">Snake</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.2rem;color:#4a7ac0;" id="oyun-rekor-yigit-snake">0</div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Oyun alanı -->
+  <!-- ADIM 2: Oyun seç -->
+  <div id="oyun-step-game" style="display:none;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <button onclick="oyunGeriDon()" style="background:var(--rose-light);color:var(--rose-dark);border:none;border-radius:10px;padding:6px 14px;cursor:pointer;font-size:0.85rem;">← Geri</button>
+      <span style="font-size:0.9rem;color:var(--text-light);">Oynayan: <strong id="oyun-current-player-label">—</strong></span>
+    </div>
+    <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--rose-dark);text-align:center;margin-bottom:16px;">Hangi oyunu oynayalım?</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
+      <button onclick="oyunSec('2048')" style="background:linear-gradient(135deg,#fff0f5,#ffd6e7);border:2px solid var(--rose-light);border-radius:20px;padding:20px 10px;cursor:pointer;transition:transform 0.15s;text-align:center;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+        <div style="font-size:2.2rem;margin-bottom:6px;">🔢</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--rose-dark);">2048</div>
+        <div style="font-size:0.72rem;color:var(--text-light);margin-top:4px;">Kaydırarak sayıları birleştir</div>
+      </button>
+      <button onclick="oyunSec('snake')" style="background:linear-gradient(135deg,#eef4ff,#d8ecff);border:2px solid #c0d8f0;border-radius:20px;padding:20px 10px;cursor:pointer;transition:transform 0.15s;text-align:center;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+        <div style="font-size:2.2rem;margin-bottom:6px;">🐍</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:#4a7ac0;">Snake</div>
+        <div style="font-size:0.72rem;color:var(--text-light);margin-top:4px;">Yılanı yönlendir, yem ye!</div>
+      </button>
+    </div>
+    <!-- Kişisel rekorlar -->
+    <div style="background:white;border-radius:16px;padding:14px;border:1px solid var(--rose-light);text-align:center;">
+      <div style="font-size:0.75rem;color:var(--text-light);margin-bottom:8px;">Senin Rekorların</div>
+      <div style="display:flex;justify-content:center;gap:24px;">
+        <div><div style="font-size:0.7rem;color:var(--rose);font-weight:700;">2048</div><div style="font-family:'Playfair Display',serif;font-size:1.2rem;" id="oyun-my-rekor-2048">0</div></div>
+        <div><div style="font-size:0.7rem;color:#4a7ac0;font-weight:700;">Snake</div><div style="font-family:'Playfair Display',serif;font-size:1.2rem;" id="oyun-my-rekor-snake">0</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADIM 3: Oyun alanı -->
   <div id="oyun-area" style="display:none;">
-    <!-- Skor tablosu -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-      <div style="background:linear-gradient(135deg,#ffe0ec,#ffd0e0);border-radius:14px;padding:10px;text-align:center;">
-        <div style="font-size:0.7rem;color:var(--text-light);">💕 Tülay Rekoru</div>
-        <div style="font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--rose-dark);" id="oyun-rekor-tulay">0</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <button onclick="oyunGameGeri()" style="background:var(--rose-light);color:var(--rose-dark);border:none;border-radius:10px;padding:6px 14px;cursor:pointer;font-size:0.85rem;">← Oyun Seç</button>
+      <div style="text-align:center;">
+        <span style="font-size:0.8rem;color:var(--text-light);" id="oyun-area-player-label">—</span>
+        <span style="margin-left:10px;font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--rose-dark);" id="oyun-current-score">0</span>
       </div>
-      <div style="background:linear-gradient(135deg,#d0e4ff,#bdd6ff);border-radius:14px;padding:10px;text-align:center;">
-        <div style="font-size:0.7rem;color:var(--text-light);">💙 Yiğit Rekoru</div>
-        <div style="font-family:'Playfair Display',serif;font-size:1.4rem;color:#4a7ac0;" id="oyun-rekor-yigit">0</div>
-      </div>
+      <div style="font-size:0.75rem;color:var(--text-light);">🏆 <span id="oyun-area-rekor">0</span></div>
     </div>
 
-    <div style="text-align:center;margin-bottom:10px;">
-      <span style="font-size:0.85rem;color:var(--text-light);">Oynayan: </span>
-      <span style="font-weight:700;color:var(--rose-dark);" id="oyun-current-player">—</span>
-      <span style="margin-left:16px;font-size:0.85rem;color:var(--text-light);">Puan: </span>
-      <span style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--rose-dark);" id="oyun-current-score">0</span>
-    </div>
-
-    <!-- Canvas -->
-    <div style="position:relative;border-radius:16px;overflow:hidden;border:2px solid var(--rose-light);margin-bottom:12px;">
-      <canvas id="flappy-canvas" width="360" height="480" style="display:block;width:100%;background:#87CEEB;"></canvas>
-      <!-- Overlay -->
-      <div id="oyun-overlay" style="position:absolute;inset:0;background:rgba(255,240,245,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;">
-        <div style="font-size:2rem;" id="oyun-overlay-emoji">🎮</div>
-        <div style="font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--rose-dark);" id="oyun-overlay-title">Hazır mısın?</div>
-        <div style="font-size:0.85rem;color:var(--text-light);" id="oyun-overlay-sub">Ekrana dokun veya Space/Enter'a bas</div>
-        <div style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--rose-dark);display:none;" id="oyun-overlay-score"></div>
-        <button onclick="flappyStart()" style="background:var(--rose);color:white;border:none;border-radius:14px;padding:12px 28px;font-size:1rem;font-weight:700;cursor:pointer;margin-top:4px;" id="oyun-start-btn">▶ Başla</button>
+    <!-- 2048 -->
+    <div id="game-2048-wrap" style="display:none;">
+      <div style="background:linear-gradient(135deg,#ffd6e7,#ffb3cc);border-radius:20px;padding:14px;margin-bottom:12px;">
+        <div id="board-2048" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;"></div>
       </div>
+      <div style="text-align:center;font-size:0.8rem;color:var(--text-light);">👆 Kaydırarak oyna</div>
     </div>
 
-    <div style="text-align:center;">
-      <button onclick="oyunGeriDon()" style="background:var(--rose-light);color:var(--rose-dark);border:none;border-radius:12px;padding:8px 20px;font-size:0.85rem;cursor:pointer;">← Oyuncu Değiştir</button>
+    <!-- Snake -->
+    <div id="game-snake-wrap" style="display:none;">
+      <div style="position:relative;border-radius:16px;overflow:hidden;border:2px solid var(--rose-light);margin-bottom:10px;">
+        <canvas id="snake-canvas" width="360" height="360" style="display:block;width:100%;background:#1a2a1a;"></canvas>
+        <div id="snake-overlay" style="position:absolute;inset:0;background:rgba(255,240,245,0.93);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;">
+          <div style="font-size:2.5rem;" id="snake-overlay-emoji">🐍</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--rose-dark);" id="snake-overlay-title">Snake</div>
+          <div style="font-size:0.82rem;color:var(--text-light);text-align:center;padding:0 20px;" id="snake-overlay-sub">Yılanı yönlendirerek yem ye!<br>Kaydırarak veya butonlarla oyna</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--rose-dark);display:none;" id="snake-overlay-score"></div>
+          <button onclick="snakeStart()" style="background:linear-gradient(135deg,#e8698a,#c0416a);color:white;border:none;border-radius:14px;padding:12px 32px;font-size:1rem;font-weight:700;cursor:pointer;box-shadow:0 4px 15px rgba(232,105,138,0.4);" id="snake-start-btn">▶ Başla</button>
+        </div>
+      </div>
+      <!-- Yön butonları -->
+      <div style="display:grid;grid-template-columns:repeat(3,48px);gap:6px;justify-content:center;margin-bottom:8px;">
+        <div></div>
+        <button onclick="snakeDir(0,-1)" style="background:var(--rose-light);border:none;border-radius:10px;padding:10px;font-size:1.2rem;cursor:pointer;">↑</button>
+        <div></div>
+        <button onclick="snakeDir(-1,0)" style="background:var(--rose-light);border:none;border-radius:10px;padding:10px;font-size:1.2rem;cursor:pointer;">←</button>
+        <button onclick="snakeDir(0,1)" style="background:var(--rose-light);border:none;border-radius:10px;padding:10px;font-size:1.2rem;cursor:pointer;">↓</button>
+        <button onclick="snakeDir(1,0)" style="background:var(--rose-light);border:none;border-radius:10px;padding:10px;font-size:1.2rem;cursor:pointer;">→</button>
+      </div>
     </div>
   </div>
 </div>
