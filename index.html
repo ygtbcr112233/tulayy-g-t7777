@@ -4164,7 +4164,8 @@ function arabaStep() {
   arabaRoadOffset = (arabaRoadOffset + arabaSpeed) % 40;
 
   // Spawn obstacles
-  const spawnInterval = Math.max(40, 90 - Math.floor(arabaFrame2 / 150));
+  const spawnRate = arabaScore < 20 ? Math.max(70, 90 - arabaScore * 0.5) : Math.max(22, 80 - (arabaScore - 20) * 2);
+  const spawnInterval = Math.round(spawnRate);
   if(arabaFrame2 % spawnInterval === 0) {
     const lane = Math.floor(Math.random() * LANE_COUNT);
     arabaObstacles.push({ lane, y: -60, emoji: OBS_EMOJIS[Math.floor(Math.random()*OBS_EMOJIS.length)] });
@@ -4179,8 +4180,9 @@ function arabaStep() {
   if(secs !== arabaScore) {
     arabaScore = secs;
     document.getElementById('oyun-current-score').textContent = arabaScore;
-    // Speed up over time
-    arabaSpeed = 4 + Math.floor(arabaScore / 5) * 0.5;
+    // Speed up over time: gentle until 20s, aggressive after
+    if(arabaScore < 20) arabaSpeed = 4 + arabaScore * 0.05;
+    else arabaSpeed = 4 + 20 * 0.05 + (arabaScore - 20) * 0.4;
   }
 
   // Collision detect (player car at bottom)
