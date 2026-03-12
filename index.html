@@ -3997,7 +3997,7 @@ window.renderKissUyum = renderKissUyum;
 // ===== OYUN =====
 let oyunCurrentPlayer = null;
 let oyunCurrentGame = null;
-let oyunScores = { tulay: { '2048': 0, snake: 0 }, yigit: { '2048': 0, snake: 0 } };
+let oyunScores = { tulay: { araba: 0, snake: 0 }, yigit: { araba: 0, snake: 0 } };
 
 function oyunLoadScores() {
   get(ref(db, 'state/oyunScores2')).then(snap => {
@@ -4009,8 +4009,8 @@ function oyunLoadScores() {
 function oyunRefreshRekorBoard() {
   const s = oyunScores;
   const el = (id) => document.getElementById(id);
-  if(el('oyun-rekor-tulay-2048')) el('oyun-rekor-tulay-2048').textContent = s.tulay?.['2048'] || 0;
-  if(el('oyun-rekor-yigit-2048')) el('oyun-rekor-yigit-2048').textContent = s.yigit?.['2048'] || 0;
+  if(el('oyun-rekor-tulay-araba')) el('oyun-rekor-tulay-araba').textContent = s.tulay?.araba || 0;
+  if(el('oyun-rekor-yigit-araba')) el('oyun-rekor-yigit-araba').textContent = s.yigit?.araba || 0;
   if(el('oyun-rekor-tulay-snake')) el('oyun-rekor-tulay-snake').textContent = s.tulay?.snake || 0;
   if(el('oyun-rekor-yigit-snake')) el('oyun-rekor-yigit-snake').textContent = s.yigit?.snake || 0;
 }
@@ -4023,7 +4023,7 @@ function oyunPlayerSec(who) {
   document.getElementById('oyun-current-player-label').textContent = who === 'tulay' ? '💕 Tülay' : '💙 Yiğit';
   // Personal records
   const s = oyunScores[who] || {};
-  document.getElementById('oyun-my-rekor-2048').textContent = s['2048'] || 0;
+  document.getElementById('oyun-my-rekor-araba').textContent = s.araba || 0;
   document.getElementById('oyun-my-rekor-snake').textContent = s.snake || 0;
 }
 
@@ -4035,9 +4035,9 @@ function oyunSec(game) {
   document.getElementById('oyun-current-score').textContent = '0';
   const rec = (oyunScores[oyunCurrentPlayer] || {})[game] || 0;
   document.getElementById('oyun-area-rekor').textContent = rec;
-  document.getElementById('game-2048-wrap').style.display = game === '2048' ? 'block' : 'none';
+  document.getElementById('game-araba-wrap').style.display = game === 'araba' ? 'block' : 'none';
   document.getElementById('game-snake-wrap').style.display = game === 'snake' ? 'block' : 'none';
-  if(game === '2048') game2048Init();
+  if(game === 'araba') arabaInit();
   if(game === 'snake') snakeInit();
 }
 
@@ -4058,7 +4058,7 @@ function oyunGameGeri() {
   oyunCurrentGame = null;
   // Refresh personal records
   const s = oyunScores[oyunCurrentPlayer] || {};
-  document.getElementById('oyun-my-rekor-2048').textContent = s['2048'] || 0;
+  document.getElementById('oyun-my-rekor-araba').textContent = s.araba || 0;
   document.getElementById('oyun-my-rekor-snake').textContent = s.snake || 0;
 }
 
@@ -4081,122 +4081,234 @@ window.oyunSec = oyunSec;
 window.oyunGeriDon = oyunGeriDon;
 window.oyunGameGeri = oyunGameGeri;
 
-// ===== 2048 =====
-let board2048 = [];
-let score2048 = 0;
-let best2048 = 0;
-let game2048Over = false;
-let touch2048Start = null;
+// ===== ENGELLİ YOL (ARABA) =====
+let arabaRunning = false;
+let arabaInterval = null;
+let arabaScore = 0;
+let arabaTime = 0;
+let arabaLaneIdx = 1; // 0-3
+let arabaObstacles = [];
+let arabaFrame2 = 0;
+let arabaSpeed = 4;
+let arabaCanvas2, arabaCtx2;
+let arabaStarted = false;
+let arabaTouchStartX = null;
+let arabaRoadOffset = 0;
 
-const TILE_COLORS = {
-  0:'#f0e0e8', 2:'#ffe8f0', 4:'#ffd6e8', 8:'#ffb3cc', 16:'#ff8fab',
-  32:'#ff6b91', 64:'#e8698a', 128:'#d4a853', 256:'#c49040',
-  512:'#b07d2e', 1024:'#9a6a1a', 2048:'#e8698a'
-};
+const LANE_COUNT = 4;
+const LANE_EMOJIS = ['🚙','🚛','🚌','🏎️'];
+const OBS_EMOJIS = ['🚧','🚕','🛻','🚐','⛽','🪨'];
 
-function game2048Init() {
-  score2048 = 0;
-  game2048Over = false;
-  board2048 = Array(4).fill(null).map(() => Array(4).fill(0));
-  game2048AddTile();
-  game2048AddTile();
-  game2048Render();
+function arabaInit() {
+  arabaCanvas2 = document.getElementById('araba-canvas');
+  arabaCtx2 = arabaCanvas2.getContext('2d');
+  arabaRunning = false;
+  arabaStarted = false;
+  arabaScore = 0;
+  arabaTime = 0;
+  arabaLaneIdx = 1;
+  arabaObstacles = [];
+  arabaFrame2 = 0;
+  arabaSpeed = 4;
+  arabaRoadOffset = 0;
+  document.getElementById('araba-overlay').style.display = 'flex';
+  document.getElementById('araba-overlay-score').style.display = 'none';
+  document.getElementById('araba-start-btn').textContent = '▶ Başla';
+  document.getElementById('araba-overlay-sub').textContent = '4 şeritli yolda engellerden kac! Sola/saga kaydirarak serit degistir';
+  arabaDraw();
+
+  // Touch swipe
+  arabaCanvas2.ontouchstart = (e) => { arabaTouchStartX = e.touches[0].clientX; };
+  arabaCanvas2.ontouchend = (e) => {
+    if(arabaTouchStartX === null) return;
+    const dx = e.changedTouches[0].clientX - arabaTouchStartX;
+    if(dx > 30) arabaLane(1);
+    else if(dx < -30) arabaLane(-1);
+    arabaTouchStartX = null;
+    if(!arabaStarted) arabaStart();
+  };
+  arabaCanvas2.onclick = () => { if(!arabaStarted) arabaStart(); };
+}
+
+function arabaStart() {
+  document.getElementById('araba-overlay').style.display = 'none';
+  arabaStarted = true;
+  arabaRunning = true;
+  arabaScore = 0;
+  arabaTime = 0;
+  arabaLaneIdx = 1;
+  arabaObstacles = [];
+  arabaFrame2 = 0;
+  arabaSpeed = 4;
   document.getElementById('oyun-current-score').textContent = '0';
-  // Swipe
-  const wrap = document.getElementById('board-2048');
-  wrap.ontouchstart = (e) => { touch2048Start = {x:e.touches[0].clientX, y:e.touches[0].clientY}; };
-  wrap.ontouchend = (e) => {
-    if(!touch2048Start) return;
-    const dx = e.changedTouches[0].clientX - touch2048Start.x;
-    const dy = e.changedTouches[0].clientY - touch2048Start.y;
-    if(Math.abs(dx) > Math.abs(dy)) { if(dx > 20) game2048Move('right'); else if(dx < -20) game2048Move('left'); }
-    else { if(dy > 20) game2048Move('down'); else if(dy < -20) game2048Move('up'); }
-    touch2048Start = null;
-  };
+  if(arabaInterval) clearInterval(arabaInterval);
+  arabaInterval = setInterval(arabaStep, 16);
 }
 
-function game2048AddTile() {
-  const empty = [];
-  for(let r=0;r<4;r++) for(let c=0;c<4;c++) if(board2048[r][c]===0) empty.push([r,c]);
-  if(!empty.length) return;
-  const [r,c] = empty[Math.floor(Math.random()*empty.length)];
-  board2048[r][c] = Math.random() < 0.85 ? 2 : 4;
+function arabaStop() {
+  arabaRunning = false;
+  arabaStarted = false;
+  if(arabaInterval) { clearInterval(arabaInterval); arabaInterval = null; }
+  if(arabaCanvas2) { arabaCanvas2.ontouchstart = null; arabaCanvas2.ontouchend = null; arabaCanvas2.onclick = null; }
 }
 
-function game2048Render() {
-  const el = document.getElementById('board-2048');
-  if(!el) return;
-  el.innerHTML = board2048.flat().map(v => {
-    const bg = TILE_COLORS[Math.min(v, 2048)] || '#e8698a';
-    const fs = v >= 1000 ? '1rem' : v >= 100 ? '1.2rem' : '1.5rem';
-    const color = v <= 4 ? 'var(--rose-dark)' : 'white';
-    return `<div style="background:${bg};border-radius:10px;display:flex;align-items:center;justify-content:center;height:72px;font-family:'Playfair Display',serif;font-size:${fs};font-weight:700;color:${color};transition:all 0.1s;">${v || ''}</div>`;
-  }).join('');
+function arabaLane(dir) {
+  arabaLaneIdx = Math.max(0, Math.min(LANE_COUNT-1, arabaLaneIdx + dir));
+  if(!arabaStarted) arabaStart();
 }
 
-function game2048Move(dir) {
-  if(game2048Over) return;
-  let moved = false;
-  const b = board2048.map(r=>[...r]);
-  const merge = (row) => {
-    let arr = row.filter(x=>x!==0);
-    for(let i=0;i<arr.length-1;i++) {
-      if(arr[i]===arr[i+1]) { arr[i]*=2; score2048+=arr[i]; arr.splice(i+1,1); }
-    }
-    while(arr.length<4) arr.push(0);
-    return arr;
-  };
-  if(dir==='left') { board2048 = board2048.map(row => { const n=merge(row); if(n.join()!==row.join()) moved=true; return n; }); }
-  else if(dir==='right') { board2048 = board2048.map(row => { const n=merge([...row].reverse()).reverse(); if(n.join()!==row.join()) moved=true; return n; }); }
-  else if(dir==='up') {
-    for(let c=0;c<4;c++) {
-      const col = [0,1,2,3].map(r=>board2048[r][c]);
-      const n = merge(col);
-      for(let r=0;r<4;r++) { if(board2048[r][c]!==n[r]) moved=true; board2048[r][c]=n[r]; }
+function arabaStep() {
+  if(!arabaRunning) return;
+  arabaFrame2++;
+  arabaTime += 16;
+  arabaRoadOffset = (arabaRoadOffset + arabaSpeed) % 40;
+
+  // Spawn obstacles
+  const spawnInterval = Math.max(40, 90 - Math.floor(arabaFrame2 / 150));
+  if(arabaFrame2 % spawnInterval === 0) {
+    const lane = Math.floor(Math.random() * LANE_COUNT);
+    arabaObstacles.push({ lane, y: -60, emoji: OBS_EMOJIS[Math.floor(Math.random()*OBS_EMOJIS.length)] });
+  }
+
+  // Move obstacles
+  arabaObstacles.forEach(o => { o.y += arabaSpeed; });
+  arabaObstacles = arabaObstacles.filter(o => o.y < 560);
+
+  // Score = seconds survived
+  const secs = Math.floor(arabaTime / 1000);
+  if(secs !== arabaScore) {
+    arabaScore = secs;
+    document.getElementById('oyun-current-score').textContent = arabaScore;
+    // Speed up over time
+    arabaSpeed = 4 + Math.floor(arabaScore / 5) * 0.5;
+  }
+
+  // Collision detect (player car at bottom)
+  const W = 360, H = 500;
+  const laneW = W / LANE_COUNT;
+  const carX = arabaLaneIdx * laneW + laneW/2;
+  const carY = H - 80;
+  for(const o of arabaObstacles) {
+    const obsX = o.lane * laneW + laneW/2;
+    const obsY = o.y;
+    if(Math.abs(obsX - carX) < laneW * 0.45 && Math.abs(obsY - carY) < 50) {
+      arabaGameOver(); return;
     }
   }
-  else if(dir==='down') {
-    for(let c=0;c<4;c++) {
-      const col = [0,1,2,3].map(r=>board2048[r][c]).reverse();
-      const n = merge(col).reverse();
-      for(let r=0;r<4;r++) { if(board2048[r][c]!==n[r]) moved=true; board2048[r][c]=n[r]; }
-    }
-  }
-  if(moved) {
-    game2048AddTile();
-    game2048Render();
-    document.getElementById('oyun-current-score').textContent = score2048;
-    // Check game over
-    const hasEmpty = board2048.flat().some(x=>x===0);
-    if(!hasEmpty) {
-      let canMove = false;
-      for(let r=0;r<4;r++) for(let c=0;c<4;c++) {
-        if(c<3 && board2048[r][c]===board2048[r][c+1]) canMove=true;
-        if(r<3 && board2048[r][c]===board2048[r+1][c]) canMove=true;
-      }
-      if(!canMove) { game2048Over=true; game2048End(); }
-    }
-  }
+
+  arabaDraw();
 }
 
-function game2048End() {
-  const isRecord = oyunSaveScore('2048', score2048);
-  setTimeout(() => {
-    const msg = isRecord ? `🏆 YENİ REKOR!\n${score2048} puan!` : `Oyun Bitti!\nPuanın: ${score2048}`;
-    if(confirm(msg + '\n\nTekrar oyna?')) game2048Init();
-    else oyunGameGeri();
-  }, 300);
+function arabaDraw() {
+  const ctx = arabaCtx2;
+  if(!ctx) return;
+  const W = 360, H = 500;
+  const laneW = W / LANE_COUNT;
+
+  // Road background
+  ctx.fillStyle = '#2a2a2a';
+  ctx.fillRect(0, 0, W, H);
+
+  // Road surface
+  ctx.fillStyle = '#3a3a3a';
+  ctx.fillRect(20, 0, W-40, H);
+
+  // Moving lane lines
+  ctx.strokeStyle = '#FFD700';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([30, 20]);
+  ctx.lineDashOffset = -arabaRoadOffset;
+  for(let i=1; i<LANE_COUNT; i++) {
+    ctx.beginPath();
+    ctx.moveTo(i * laneW, 0);
+    ctx.lineTo(i * laneW, H);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  // Side barriers (duvarlı görünüm)
+  // Left wall
+  const wallGrad = ctx.createLinearGradient(0,0,20,0);
+  wallGrad.addColorStop(0, '#888');
+  wallGrad.addColorStop(1, '#555');
+  ctx.fillStyle = wallGrad;
+  ctx.fillRect(0, 0, 20, H);
+  // Left wall stripe
+  ctx.fillStyle = '#FFD700';
+  for(let y = -(arabaRoadOffset*2)%40; y < H; y+=40) {
+    ctx.fillRect(18, y, 2, 20);
+  }
+  // Right wall
+  const wallGrad2 = ctx.createLinearGradient(W-20,0,W,0);
+  wallGrad2.addColorStop(0, '#555');
+  wallGrad2.addColorStop(1, '#888');
+  ctx.fillStyle = wallGrad2;
+  ctx.fillRect(W-20, 0, 20, H);
+  ctx.fillStyle = '#FFD700';
+  for(let y = -(arabaRoadOffset*2)%40; y < H; y+=40) {
+    ctx.fillRect(W-20, y, 2, 20);
+  }
+
+  // Obstacles
+  ctx.font = '32px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  arabaObstacles.forEach(o => {
+    const ox = o.lane * laneW + laneW/2;
+    ctx.fillText(o.emoji, ox, o.y);
+  });
+
+  // Player car
+  const carX = arabaLaneIdx * laneW + laneW/2;
+  const carY = H - 80;
+  const playerEmoji = oyunCurrentPlayer === 'tulay' ? '💕' : '💙';
+  ctx.font = '36px serif';
+  ctx.fillText('🚗', carX, carY);
+  // Player indicator
+  ctx.font = 'bold 12px Arial';
+  ctx.fillStyle = oyunCurrentPlayer === 'tulay' ? '#ff8fab' : '#5ba8e8';
+  ctx.fillText(playerEmoji, carX, carY - 28);
+
+  // Score display on canvas
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(0, 0, W, 36);
+  ctx.fillStyle = 'white';
+  ctx.font = 'bold 16px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('⏱ ' + arabaScore + ' sn', W/2, 22);
 }
 
-// Keyboard for 2048
+function arabaGameOver() {
+  arabaRunning = false;
+  arabaStarted = false;
+  clearInterval(arabaInterval);
+  arabaInterval = null;
+  arabaDraw();
+  const isRecord = oyunSaveScore('araba', arabaScore);
+  document.getElementById('araba-overlay-emoji') ? null : null;
+  const overlay = document.getElementById('araba-overlay');
+  overlay.querySelector('div[style*="3rem"]').textContent = isRecord ? '🏆' : '💥';
+  overlay.querySelector('[id="araba-overlay-sub"]').textContent = (oyunCurrentPlayer==='tulay'?'💕 Tülay':'💙 Yiğit') + ' — ' + arabaScore + ' saniye!';
+  const sc = document.getElementById('araba-overlay-score');
+  sc.textContent = isRecord ? '🏆 YENİ REKOR! ' + arabaScore + 'sn' : arabaScore + ' saniye hayatta kaldın!';
+  sc.style.display = 'block';
+  document.getElementById('araba-start-btn').textContent = '🔄 Tekrar Oyna';
+  overlay.style.display = 'flex';
+}
+
+window.arabaInit = arabaInit;
+window.arabaStart = arabaStart;
+window.arabaLane = arabaLane;
+
+// Keyboard for araba
 document.addEventListener('keydown', (e) => {
   const page = document.getElementById('page-oyun');
-  if(!page || !page.classList.contains('active') || oyunCurrentGame !== '2048') return;
-  const map = {'ArrowLeft':'left','ArrowRight':'right','ArrowUp':'up','ArrowDown':'down'};
-  if(map[e.key]) { e.preventDefault(); game2048Move(map[e.key]); }
+  if(!page || !page.classList.contains('active') || oyunCurrentGame !== 'araba') return;
+  if(e.key === 'ArrowLeft') { e.preventDefault(); arabaLane(-1); }
+  if(e.key === 'ArrowRight') { e.preventDefault(); arabaLane(1); }
 });
 
-window.game2048Move = game2048Move;
+
 
 // ===== SNAKE =====
 let snakeRunning = false;
@@ -4580,13 +4692,13 @@ loadState();
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
         <div style="background:linear-gradient(135deg,#fff0f5,#ffe0ee);border-radius:14px;padding:12px;text-align:center;">
           <div style="font-size:0.7rem;color:var(--text-light);margin-bottom:2px;">💕 Tülay</div>
-          <div style="font-size:0.65rem;color:var(--rose);font-weight:700;margin-bottom:4px;">2048</div>
-          <div style="font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--rose-dark);" id="oyun-rekor-tulay-2048">0</div>
+          <div style="font-size:0.65rem;color:var(--rose);font-weight:700;margin-bottom:4px;">Engelli Yol</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--rose-dark);" id="oyun-rekor-tulay-araba">0</div>
         </div>
         <div style="background:linear-gradient(135deg,#eef4ff,#dceeff);border-radius:14px;padding:12px;text-align:center;">
           <div style="font-size:0.7rem;color:var(--text-light);margin-bottom:2px;">💙 Yiğit</div>
-          <div style="font-size:0.65rem;color:#4a7ac0;font-weight:700;margin-bottom:4px;">2048</div>
-          <div style="font-family:'Playfair Display',serif;font-size:1.2rem;color:#4a7ac0;" id="oyun-rekor-yigit-2048">0</div>
+          <div style="font-size:0.65rem;color:#4a7ac0;font-weight:700;margin-bottom:4px;">Engelli Yol</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.2rem;color:#4a7ac0;" id="oyun-rekor-yigit-araba">0</div>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
@@ -4612,10 +4724,10 @@ loadState();
     </div>
     <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--rose-dark);text-align:center;margin-bottom:16px;">Hangi oyunu oynayalım?</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
-      <button onclick="oyunSec('2048')" style="background:linear-gradient(135deg,#fff0f5,#ffd6e7);border:2px solid var(--rose-light);border-radius:20px;padding:20px 10px;cursor:pointer;transition:transform 0.15s;text-align:center;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-        <div style="font-size:2.2rem;margin-bottom:6px;">🔢</div>
-        <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--rose-dark);">2048</div>
-        <div style="font-size:0.72rem;color:var(--text-light);margin-top:4px;">Kaydırarak sayıları birleştir</div>
+      <button onclick="oyunSec('araba')" style="background:linear-gradient(135deg,#fff0f5,#ffd6e7);border:2px solid var(--rose-light);border-radius:20px;padding:20px 10px;cursor:pointer;transition:transform 0.15s;text-align:center;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+        <div style="font-size:2.2rem;margin-bottom:6px;">🚗</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--rose-dark);">Engelli Yol</div>
+        <div style="font-size:0.72rem;color:var(--text-light);margin-top:4px;">Engellerden kaçarak yol al!</div>
       </button>
       <button onclick="oyunSec('snake')" style="background:linear-gradient(135deg,#eef4ff,#d8ecff);border:2px solid #c0d8f0;border-radius:20px;padding:20px 10px;cursor:pointer;transition:transform 0.15s;text-align:center;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
         <div style="font-size:2.2rem;margin-bottom:6px;">🐍</div>
@@ -4627,7 +4739,7 @@ loadState();
     <div style="background:white;border-radius:16px;padding:14px;border:1px solid var(--rose-light);text-align:center;">
       <div style="font-size:0.75rem;color:var(--text-light);margin-bottom:8px;">Senin Rekorların</div>
       <div style="display:flex;justify-content:center;gap:24px;">
-        <div><div style="font-size:0.7rem;color:var(--rose);font-weight:700;">2048</div><div style="font-family:'Playfair Display',serif;font-size:1.2rem;" id="oyun-my-rekor-2048">0</div></div>
+        <div><div style="font-size:0.7rem;color:var(--rose);font-weight:700;">Engelli Yol</div><div style="font-family:'Playfair Display',serif;font-size:1.2rem;" id="oyun-my-rekor-araba">0</div></div>
         <div><div style="font-size:0.7rem;color:#4a7ac0;font-weight:700;">Snake</div><div style="font-family:'Playfair Display',serif;font-size:1.2rem;" id="oyun-my-rekor-snake">0</div></div>
       </div>
     </div>
@@ -4644,17 +4756,27 @@ loadState();
       <div style="font-size:0.75rem;color:var(--text-light);">🏆 <span id="oyun-area-rekor">0</span></div>
     </div>
 
-    <!-- 2048 -->
-    <div id="game-2048-wrap" style="display:none;">
-      <div style="background:linear-gradient(135deg,#ffd6e7,#ffb3cc);border-radius:20px;padding:14px;margin-bottom:12px;">
-        <div id="board-2048" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;"></div>
+    <!-- Engelli Yol -->
+    <div id="game-araba-wrap" style="display:none;">
+      <div style="position:relative;border-radius:16px;overflow:hidden;border:3px solid #555;margin-bottom:10px;">
+        <canvas id="araba-canvas" width="360" height="500" style="display:block;width:100%;"></canvas>
+        <div id="araba-overlay" style="position:absolute;inset:0;background:rgba(10,10,20,0.88);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;">
+          <div style="font-size:3rem;">🚗</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.3rem;color:white;font-weight:700;">Engelli Yol</div>
+          <div style="font-size:0.82rem;color:rgba(255,255,255,0.7);text-align:center;padding:0 20px;" id="araba-overlay-sub">4 şeritli yolda engellerden kaç!<br>Sola/sağa kaydırarak şerit değiştir</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.6rem;color:#FFD700;display:none;" id="araba-overlay-score"></div>
+          <button onclick="arabaStart()" style="background:linear-gradient(135deg,#e8698a,#c0416a);color:white;border:none;border-radius:14px;padding:12px 32px;font-size:1rem;font-weight:700;cursor:pointer;box-shadow:0 4px 15px rgba(232,105,138,0.4);" id="araba-start-btn">▶ Başla</button>
+        </div>
       </div>
-      <div style="text-align:center;font-size:0.8rem;color:var(--text-light);">👆 Kaydırarak oyna</div>
+      <div style="display:flex;justify-content:center;gap:20px;">
+        <button onclick="arabaLane(-1)" style="background:var(--rose-light);color:var(--rose-dark);border:none;border-radius:14px;padding:14px 32px;font-size:1.5rem;cursor:pointer;font-weight:700;">◀</button>
+        <button onclick="arabaLane(1)" style="background:var(--rose-light);color:var(--rose-dark);border:none;border-radius:14px;padding:14px 32px;font-size:1.5rem;cursor:pointer;font-weight:700;">▶</button>
+      </div>
     </div>
 
     <!-- Snake -->
     <div id="game-snake-wrap" style="display:none;">
-      <div style="position:relative;border-radius:16px;overflow:hidden;border:2px solid var(--rose-light);margin-bottom:10px;">
+      <div style="position:relative;border-radius:0;overflow:hidden;border:4px solid #2a4a2a;box-shadow:0 0 0 2px #1a2a1a, 0 0 20px rgba(0,0,0,0.5);margin-bottom:10px;">
         <canvas id="snake-canvas" width="360" height="360" style="display:block;width:100%;background:#1a2a1a;"></canvas>
         <div id="snake-overlay" style="position:absolute;inset:0;background:rgba(255,240,245,0.93);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;">
           <div style="font-size:2.5rem;" id="snake-overlay-emoji">🐍</div>
@@ -4665,13 +4787,13 @@ loadState();
         </div>
       </div>
       <!-- Yön butonları -->
-      <div style="display:grid;grid-template-columns:repeat(3,48px);gap:6px;justify-content:center;margin-bottom:8px;">
+      <div style="display:grid;grid-template-columns:repeat(3,52px);gap:6px;justify-content:center;margin-bottom:8px;">
         <div></div>
-        <button onclick="snakeDir(0,-1)" style="background:var(--rose-light);border:none;border-radius:10px;padding:10px;font-size:1.2rem;cursor:pointer;">↑</button>
+        <button onclick="snakeDir(0,-1)" style="background:var(--rose-light);border:none;border-radius:10px;padding:12px;font-size:1.3rem;cursor:pointer;">↑</button>
         <div></div>
-        <button onclick="snakeDir(-1,0)" style="background:var(--rose-light);border:none;border-radius:10px;padding:10px;font-size:1.2rem;cursor:pointer;">←</button>
-        <button onclick="snakeDir(0,1)" style="background:var(--rose-light);border:none;border-radius:10px;padding:10px;font-size:1.2rem;cursor:pointer;">↓</button>
-        <button onclick="snakeDir(1,0)" style="background:var(--rose-light);border:none;border-radius:10px;padding:10px;font-size:1.2rem;cursor:pointer;">→</button>
+        <button onclick="snakeDir(-1,0)" style="background:var(--rose-light);border:none;border-radius:10px;padding:12px;font-size:1.3rem;cursor:pointer;">←</button>
+        <button onclick="snakeDir(0,1)" style="background:var(--rose-light);border:none;border-radius:10px;padding:12px;font-size:1.3rem;cursor:pointer;">↓</button>
+        <button onclick="snakeDir(1,0)" style="background:var(--rose-light);border:none;border-radius:10px;padding:12px;font-size:1.3rem;cursor:pointer;">→</button>
       </div>
     </div>
   </div>
