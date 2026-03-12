@@ -1159,8 +1159,8 @@ function showSaving() {
 }
 
 function saveState() {
-  // Büyük binary verileri state'den çıkar — ayrı path'e kaydediliyorlar
-  const stateToSave = { ...state, profilePhotos: { tulay: null, yigit: null }, drawings: {}, album: [] };
+  // drawings ve profilePhotos hariç her şeyi kaydet
+  const stateToSave = { ...state, profilePhotos: { tulay: null, yigit: null }, drawings: {} };
   set(ref(db, 'state'), stateToSave)
     .then(() => showSaving())
     .catch(err => console.error('Kayıt hatası:', err));
@@ -1168,113 +1168,89 @@ function saveState() {
 }
 
 async function loadState() {
-  // Önce localStorage'dan hızlıca yükle
+  // 1) localStorage'dan anında yükle
   try {
     const local = JSON.parse(localStorage.getItem('ty-state') || 'null');
     if(local) {
-      state.memories = local.memories || {};
-      state.mood = local.mood || {};
-      state.dreams = local.dreams || [];
-      state.letters = local.letters || { tulay: null, yigit: null };
-      state.places = local.places || {};
-      state.kisses = local.kisses || {};
-      state.kissHistory = local.kissHistory || {};
+      state.album         = local.album         || [];
+      state.memories      = local.memories      || {};
+      state.mood          = local.mood          || {};
+      state.dreams        = local.dreams        || [];
+      state.letters       = local.letters       || { tulay: null, yigit: null };
+      state.places        = local.places        || {};
+      state.kisses        = local.kisses        || {};
+      state.kissHistory   = local.kissHistory   || {};
       state.compatHistory = local.compatHistory || {};
-      state.enler = local.enler || { tulay: [], yigit: [] };
-      state.gorevler = local.gorevler || {};
+      state.enler         = local.enler         || { tulay: [], yigit: [] };
+      state.gorevler      = local.gorevler      || {};
     }
-    // Çizimleri ayrı cache'ten yükle
     const localDrawings = JSON.parse(localStorage.getItem('ty-drawings') || '{}');
     if(Object.keys(localDrawings).length) state.drawings = localDrawings;
-    // Album cache'ten yükle
-    const localAlbum = JSON.parse(localStorage.getItem('ty-album') || '[]');
-    if(localAlbum.length) state.album = localAlbum;
+    // CompatHistory ayrı cache
+    const localCompat = JSON.parse(localStorage.getItem('ty-compat') || '{}');
+    if(Object.keys(localCompat).length) state.compatHistory = localCompat;
   } catch(e) {}
 
-  // Album'u Firebase'den direkt çek (bootApp öncesi)
+  // 2) Firebase'den tüm state'i bootApp öncesi bekleyerek çek
   try {
-    const albumSnap = await get(ref(db, 'album'));
-    if(albumSnap.exists() && albumSnap.val()?.length) {
-      state.album = albumSnap.val();
-      try { localStorage.setItem('ty-album', JSON.stringify(state.album)); } catch(e) {}
-    } else {
-      // Migration: eski state/album'dan taşı
-      const oldSnap = await get(ref(db, 'state/album'));
-      if(oldSnap.exists() && oldSnap.val()?.length) {
-        state.album = oldSnap.val();
-        await set(ref(db, 'album'), state.album).catch(e=>console.error(e));
-        try { localStorage.setItem('ty-album', JSON.stringify(state.album)); } catch(e) {}
+    const snap = await get(ref(db, 'state'));
+    if(snap.exists()) {
+      const d = snap.val();
+      state.album         = d.album         || [];
+      state.memories      = d.memories      || {};
+      state.mood          = d.mood          || {};
+      state.dreams        = d.dreams        || [];
+      state.letters       = d.letters       || { tulay: null, yigit: null };
+      state.places        = d.places        || {};
+      state.kisses        = d.kisses        || {};
+      state.kissHistory   = d.kissHistory   || {};
+      if(d.compatHistory && Object.keys(d.compatHistory).length > 0) {
+        state.compatHistory = d.compatHistory;
+        try { localStorage.setItem('ty-compat', JSON.stringify(d.compatHistory)); } catch(e) {}
+      }
+      state.enler         = d.enler         || { tulay: [], yigit: [] };
+      state.gorevler      = d.gorevler      || {};
+      try { localStorage.setItem('ty-state', JSON.stringify({...d, drawings:{}})); } catch(e) {}
+    }
+    // Album ayrı path'te de olabilir (migration)
+    if(!state.album.length) {
+      const albumSnap = await get(ref(db, 'album'));
+      if(albumSnap.exists() && albumSnap.val()?.length) {
+        state.album = albumSnap.val();
+        set(ref(db, 'state/album'), state.album).catch(e=>console.error(e));
       }
     }
-  } catch(e) { console.error('Album yükleme hatası:', e); }
+  } catch(e) { console.error('Firebase yükleme hatası:', e); }
 
-  // bootApp'i çalıştır
+  // 3) bootApp'i çalıştır — veriler hazır
   try { bootApp(); } catch(e) { console.error('bootApp error:', e); }
 
-  // Album realtime listener — yeni eklenen fotoğrafları yakala
-  onValue(ref(db, 'album'), (snap) => {
-    const albumData = snap.exists() ? (snap.val() || []) : [];
-    if(albumData.length !== state.album.length || JSON.stringify(albumData) !== JSON.stringify(state.album)) {
-      state.album = albumData;
-      try { localStorage.setItem('ty-album', JSON.stringify(state.album)); } catch(e) {}
-      if(typeof renderAlbum === 'function') renderAlbum();
-    }
-  });
-
-  // Firebase'den çizimleri çek (ayrı path)
-  onValue(ref(db, 'drawings'), (snap) => {
-    if(snap.exists()) {
-      state.drawings = snap.val() || {};
-      try { localStorage.setItem('ty-drawings', JSON.stringify(state.drawings)); } catch(e) {}
-      renderDrawingShowcase();
-      renderDrawCalendar();
-    }
-  });
-
-  // Kisses için ayrı listener — grafik anında güncellensin
-  onValue(ref(db, 'state/kisses'), (snap) => {
+  // 4) Realtime listener — başka cihazdan değişiklik gelirse güncelle
+  onValue(ref(db, 'state'), (snap) => {
     if(!snap.exists()) return;
-    state.kisses = snap.val() || {};
+    const d = snap.val();
+    state.album         = d.album         || [];
+    state.memories      = d.memories      || {};
+    state.mood          = d.mood          || {};
+    state.dreams        = d.dreams        || [];
+    state.letters       = d.letters       || { tulay: null, yigit: null };
+    state.places        = d.places        || {};
+    state.kisses        = d.kisses        || {};
+    state.kissHistory   = d.kissHistory   || {};
+    // compatHistory: Firebase'de varsa al, yoksa mevcut state'i koru (ezme!)
+    if(d.compatHistory && Object.keys(d.compatHistory).length > 0) {
+      state.compatHistory = d.compatHistory;
+      try { localStorage.setItem('ty-compat', JSON.stringify(d.compatHistory)); } catch(e) {}
+    }
+    state.enler         = d.enler         || { tulay: [], yigit: [] };
+    state.gorevler      = d.gorevler      || {};
+    try { localStorage.setItem('ty-state', JSON.stringify({...d, drawings:{}})); } catch(e) {}
+
     const _today = toDateStr(new Date());
     const el1 = document.getElementById('kiss-count-tulay');
     const el2 = document.getElementById('kiss-count-yigit');
     if(el1) el1.textContent = state.kisses[_today]?.tulay || 0;
     if(el2) el2.textContent = state.kisses[_today]?.yigit || 0;
-    if(typeof renderKissHistory === 'function') renderKissHistory();
-    else if(window.renderKissHistory) window.renderKissHistory();
-  });
-
-  // kissHistory için ayrı listener
-  onValue(ref(db, 'state/kissHistory'), (snap) => {
-    state.kissHistory = snap.exists() ? snap.val() : {};
-    if(typeof renderKissHistory === 'function') renderKissHistory();
-    else if(window.renderKissHistory) window.renderKissHistory();
-  });
-
-  // Firebase'den gerçek veriyi çek ve güncelle (onValue = realtime)
-  onValue(ref(db, 'state'), (snap) => {
-    if(!snap.exists()) return;
-    const d = snap.val();
-    state.album = d.album || [];
-    state.memories = d.memories || {};
-    state.mood = d.mood || {};
-    state.dreams = d.dreams || [];
-    state.letters = d.letters || { tulay: null, yigit: null };
-    // drawings ayrı /drawings path'ten, profilePhotos ayrı /photos path'ten yükleniyor
-    state.places = d.places || {};
-    state.kisses = d.kisses || {};
-    state.kissHistory = d.kissHistory || {};
-    state.compatHistory = d.compatHistory || {};
-    state.enler = d.enler || { tulay: [], yigit: [] };
-    state.gorevler = d.gorevler || {};
-    // Sadece sayıları güncelle, sıfırlama döngüsünü önle
-    const _today = toDateStr(new Date());
-    if(state.kisses[_today]) {
-      const el1 = document.getElementById('kiss-count-tulay');
-      const el2 = document.getElementById('kiss-count-yigit');
-      if(el1) el1.textContent = state.kisses[_today].tulay || 0;
-      if(el2) el2.textContent = state.kisses[_today].yigit || 0;
-    }
     applyProfilePhoto('tulay');
     applyProfilePhoto('yigit');
     renderAlbum();
@@ -1287,9 +1263,28 @@ async function loadState() {
     renderKissHistory();
     renderCompatHistory();
     if(typeof renderEnler === 'function') renderEnler();
-    else if(window.renderEnler) window.renderEnler();
     if(typeof renderGorevCalendar === 'function') renderGorevCalendar();
-    else if(window.renderGorevCalendar) window.renderGorevCalendar();
+  });
+
+  // 5) Çizimler ayrı path'te
+  onValue(ref(db, 'drawings'), (snap) => {
+    if(!snap.exists()) return;
+    state.drawings = snap.val() || {};
+    try { localStorage.setItem('ty-drawings', JSON.stringify(state.drawings)); } catch(e) {}
+    if(typeof renderDrawingShowcase === 'function') renderDrawingShowcase();
+    if(typeof renderDrawCalendar === 'function') renderDrawCalendar();
+  });
+
+  // 6) Kisses anlık grafik için
+  onValue(ref(db, 'state/kisses'), (snap) => {
+    if(!snap.exists()) return;
+    state.kisses = snap.val() || {};
+    const _today = toDateStr(new Date());
+    const el1 = document.getElementById('kiss-count-tulay');
+    const el2 = document.getElementById('kiss-count-yigit');
+    if(el1) el1.textContent = state.kisses[_today]?.tulay || 0;
+    if(el2) el2.textContent = state.kisses[_today]?.yigit || 0;
+    if(typeof renderKissHistory === 'function') renderKissHistory();
   });
 }
 
@@ -1541,11 +1536,14 @@ async function loadHoroscope() {
     const parsed = JSON.parse(clean);
     parsed.date = todayKey;
 
-    // Firebase'e kaydet
+    // State'e kaydet
     state.compatHistory[todayKey] = parsed;
     const keys = Object.keys(state.compatHistory).sort();
     while(keys.length > 60) { delete state.compatHistory[keys.shift()]; }
-    set(ref(db, 'state/compatHistory'), state.compatHistory).catch(e => console.error(e));
+    // CompatHistory'yi AYRI path'e direkt yaz — saveState ezmesin
+    set(ref(db, 'state/compatHistory'), state.compatHistory).catch(e=>console.error(e));
+    try { localStorage.setItem('ty-compat', JSON.stringify(state.compatHistory)); } catch(e) {}
+    showSaving();
 
     applyHoroscope(parsed);
     renderCompatHistory();
@@ -1672,11 +1670,7 @@ function saveAlbumPhoto() {
 
   const item = { id: Date.now(), src: compressed, caption };
   state.album.push(item);
-
-  // Ayrı Firebase path'e kaydet
-  set(ref(db, 'album'), state.album).catch(e => console.error(e));
-  try { localStorage.setItem('ty-album', JSON.stringify(state.album)); } catch(e) {}
-
+  saveState();
   renderAlbum();
   closeModal('album-modal');
   document.getElementById('album-file-input').value='';
@@ -1684,8 +1678,7 @@ function saveAlbumPhoto() {
 function deleteAlbumPhoto(id) {
   if(!confirm('Bu fotoğrafı silmek istiyor musunuz?')) return;
   state.album = state.album.filter(p=>p.id!==id);
-  set(ref(db, 'album'), state.album).catch(e => console.error(e));
-  try { localStorage.setItem('ty-album', JSON.stringify(state.album)); } catch(e) {}
+  saveState();
   renderAlbum();
 }
 function renderAlbum() {
@@ -2927,7 +2920,25 @@ function deleteMap(id) {
 function initKissCounter() {
   const today = toDateStr(new Date());
   if (!state.kisses) state.kisses = {};
-  if (!state.kisses[today]) state.kisses[today] = { tulay: 0, yigit: 0 };
+
+  // Önceki günlerdeki öpücükleri history'e taşı
+  if(!state.kissHistory) state.kissHistory = {};
+  let changed = false;
+  Object.entries(state.kisses).forEach(([d, v]) => {
+    if(d !== today && (v.tulay > 0 || v.yigit > 0)) {
+      state.kissHistory[d] = { tulay: v.tulay||0, yigit: v.yigit||0 };
+      changed = true;
+    }
+  });
+  // Kisses'te sadece bugün kalsın
+  const todayData = state.kisses[today] || { tulay: 0, yigit: 0 };
+  state.kisses = { [today]: todayData };
+  if(changed) {
+    // KissHistory'yi Firebase'e direkt yaz
+    set(ref(db, 'state/kissHistory'), state.kissHistory).catch(e=>console.error(e));
+    set(ref(db, 'state/kisses'), state.kisses).catch(e=>console.error(e));
+    try { localStorage.setItem('ty-state', JSON.stringify({...state, drawings:{}, profilePhotos:{}})); } catch(e) {}
+  }
 
   document.getElementById('kiss-count-tulay').textContent = state.kisses[today].tulay || 0;
   document.getElementById('kiss-count-yigit').textContent = state.kisses[today].yigit || 0;
@@ -2957,7 +2968,11 @@ function scheduleKissReset() {
     }
     const today = toDateStr(new Date());
     state.kisses = { [today]: { tulay: 0, yigit: 0 } };
-    saveState();
+    // Firebase'e direkt yaz
+    set(ref(db, 'state/kissHistory'), state.kissHistory).catch(e=>console.error(e));
+    set(ref(db, 'state/kisses'), state.kisses).catch(e=>console.error(e));
+    try { localStorage.setItem('ty-state', JSON.stringify({...state, drawings:{}, profilePhotos:{}})); } catch(e) {}
+    showSaving();
     document.getElementById('kiss-count-tulay').textContent = '0';
     document.getElementById('kiss-count-yigit').textContent = '0';
     const label = document.getElementById('kiss-date-label');
@@ -3309,123 +3324,27 @@ drawCoin('yazi', 0);
 
 // ===== GÖREVLER =====
 const GOREVLER = [
-  // 🔥 ÇOK CESUR (%40 - 120 görev)
-  "Bir sonraki buluşmada onu dudaklarından en az 1 dakika öp, hiç ara verme",
-  "Bugün ona tam olarak ne yapmak istediğini detaylı anlat — utanma 😏",
-  "Bir sonraki buluşmada boynuna ısırık bırak",
-  "Ona bu gece yatmadan en çok neresini sevdiğini yaz",
-  "Bir sonraki buluşmada belinden tutup kendine çek ve kulağına ne istediğini fısılda",
-  "Bugün ona 'seni düşününce kendimi tutamıyorum' diye yaz",
-  "Bir sonraki buluşmada popona dokunmasına izin ver ve sen de aynısını yap",
-  "Ona bu gece sesli mesajla tam olarak ne hayal ettiğini anlat",
-  "Bir sonraki buluşmada üst düğmesini aç",
-  "Bugün ona 'seninle baş başa olmak istiyorum, sadece ikimiz' diye yaz ve ne için olduğunu açıkla",
-  "Bir sonraki buluşmada dizlerine otur, gözlerine bak ve ne hissettirdiğini söyle",
-  "Ona 'seni düşününce uyuyamıyorum' diye yaz ve nedenini açıkla 😈",
-  "Bir sonraki buluşmada tişörtünün altından sırtını ok şa",
-  "Bugün ona 'bir sonraki buluşmamızda sana bir sürprizim var' de ve ipucu verme",
-  "Bir sonraki buluşmada kulağını ısır, sonra öp",
-  "Ona bu gece 'seninle aynı yastığa başımı koymak istiyorum' diye yaz",
-  "Bir sonraki buluşmada gözlerini kapatmasını iste ve dudaklarına sürpriz yap",
-  "Bugün ona vücudunda en çok hangi yerini sevdiğini yaz",
-  "Bir sonraki buluşmada dizlerine oturken belinden kavra",
-  "Ona 'seni gördüğümde aklım başka yerlere gidiyor' diye yaz 😏",
-  "Bir sonraki buluşmada boynuna uzun uzun öpücük kondur",
-  "Bugün ona bir roleplay teklif et — karakterleri sen seç",
-  "Bir sonraki buluşmada elini tutup kendi tenine götür",
-  "Ona bu gece 'seninle çok şey yapmak istiyorum' diye başlayan bir mesaj yaz, devamını getir",
-  "Bir sonraki buluşmada onu duvara yasla ve gözlerine bak",
-  "Bugün ona 'seni öpmek yetmiyor' diye yaz ve devamını açıkla",
-  "Bir sonraki buluşmada bacağına dokunmasına izin ver",
-  "Ona 'sabah uyandığımda aklımda sen vardın, seninle ilgili şeyler düşünüyordum' diye yaz",
-  "Bir sonraki buluşmada karanlık bir köşe bul ve uzun uzun öp",
-  "Bugün ona favori fantezini yaz — utanma, o da anlatsın",
-  "Bir sonraki buluşmada üzerine eğil ve 'seni çok istiyorum' fısılda",
-  "Ona bu gece 'seninle baş başa kalsak ne yapardım' diye detaylı anlat",
-  "Bir sonraki buluşmada tişörtünü kaldır ve karnına öp",
-  "Bugün ona 'seni düşününce yanaklarım kızarıyor, başka yerler de' diye yaz 😏",
-  "Bir sonraki buluşmada bacaklarına otur ve sarılırken sıkıca kavra",
-  "Ona 'seninle aynı yatakta uyumak istiyorum, sabaha kadar' diye yaz",
-  "Bir sonraki buluşmada onu kimsenin göremeyeceği bir yere götür ve öp",
-  "Bugün ona fiziksel olarak en çok ne yapmak istediğini 3 madde halinde yaz",
-  "Bir sonraki buluşmada elini tutup dudaklarına götür ve öp",
-  "Ona bu gece 'seni sadece düşünmek bile beni etkiliyor' diye yaz",
-  "Bir sonraki buluşmada boynuna sarılırken kulağına 'seni istiyorum' fısılda",
-  "Bugün ona 'bir sonraki buluşmamızda ne yapacağımı hayal ediyorum' de ve anlat",
-  "Bir sonraki buluşmada arkasından sarılıp sıkıca tut, hiç bırakma",
-  "Ona 'seninle yakın olduğumda kendimi kaybediyorum' diye yaz",
-  "Bir sonraki buluşmada yavaşça saçlarını çek ve öp",
-  "Bugün ona en cesur fantezini yaz — o da anlatsın",
-  "Bir sonraki buluşmada dizlerine başını koy ve gözlerine bak",
-  "Ona bu gece 'seninle olmak istiyorum, gerçekten' diye sesli mesaj gönder",
-  "Bir sonraki buluşmada omzuna oturma noktasına öpücük kondur",
-  "Bugün ona 'seninle tek başımıza olsak ne yapardık' diye sor",
-  "Bir sonraki buluşmada göğsüne yaslan ve elini tut",
-  "Ona 'teninin sıcaklığını hissetmek istiyorum' diye yaz",
-  "Bir sonraki buluşmada derin bir nefes al ve 'seni çok istiyorum' de",
-  "Bugün ona en uzun ve en ateşli mesajı yaz — sansürsüz",
-  "Bir sonraki buluşmada kucağına oturup yüzüne bak ve ne hissettirdiğini söyle",
-  "Ona bu gece 'seninle olmak beni çıldırtıyor' diye yaz ve açıkla",
-  "Bir sonraki buluşmada dudaklarını ısır — hafifçe, sonra öp",
-  "Bugün ona 'seni her yerinden öpmek istiyorum' diye yaz",
-  "Bir sonraki buluşmada onu durdur ve aniden öp",
-  "Ona 'seninle baş başa kalmak istiyorum, telefonsuz, sadece biz' diye yaz ve ne planlıyorsun anlat",
-  "Bir sonraki buluşmada kulağına en cesur şeyi fısılda",
-  "Bugün ona gecenin en ateşli saatinde mesaj at",
-  "Bir sonraki buluşmada onu sandalyeye oturup önünde diz çök ve ellerini tut",
-  "Ona 'seninle olmak istiyorum, bu gece' diye yaz",
-  "Bir sonraki buluşmada yavaşça yaklaş ve burnunu boynuna göm",
-  "Bugün ona 'seni düşündüğümde bedenimi kontrol edemiyorum' diye yaz 😈",
-  "Bir sonraki buluşmada saçlarından tut ve öp",
-  "Ona bu gece en uzun aşk mesajını yaz — ama sadece fiziksel isteklerini anlat",
-  "Bir sonraki buluşmada belinden tutup döndür ve öp",
-  "Bugün ona 'seninle her şeyi denemek istiyorum' diye yaz",
-  "Bir sonraki buluşmada karnına öp ve yukarı doğru çık",
-  "Ona 'seni istemek bağımlılık gibi' diye yaz ve açıkla",
-  "Bir sonraki buluşmada omzuna hafifçe ısır",
-  "Bugün ona gece yatarken ne düşündüğünü anlat — dürüstçe 😏",
-  "Bir sonraki buluşmada göğsüne başını yasla ve nabzını say",
-  "Ona 'seninle aynı battaniyenin altında olmak istiyorum' diye yaz",
-  "Bir sonraki buluşmada sırtına uzun uzun masaj yap",
-  "Bugün ona 'beni çıldırtan şeyin ne olduğunu biliyor musun?' diye sor ve anlat",
-  "Bir sonraki buluşmada ellerini tutup dudaklarına bak",
-  "Ona bu gece 'seni düşünürken uyuyakaldım, rüyamda da senin yanındaydım' diye yaz",
-  "Bir sonraki buluşmada arkana geç ve beline sarıl",
-  "Bugün ona 'seninle tek başımıza olduğumuzda ne yapacağımı düşünüyorum' diye yaz",
-  "Bir sonraki buluşmada onu bir köşeye çek ve sadece ikiniz öpüşün",
-  "Ona 'tenin beni çıldırtıyor' diye yaz",
-  "Bir sonraki buluşmada yanaklarını avuçla ve dudaklarına bak",
-  "Bugün ona en cesur sesli mesajı gönder — ne düşündüğünü anlat",
-  "Bir sonraki buluşmada bacaklarını ok şa",
-  "Ona 'seninle sabaha kadar uyanık kalmak istiyorum' diye yaz ve ne yapacağınızı anlat",
-  "Bir sonraki buluşmada onu durdur, gözlerine bak ve 'seni çok istiyorum' de",
-  "Bugün ona 'en çok hangi yerimi seviyorsun?' diye sor",
-  "Bir sonraki buluşmada onu arkadan öp, sürpriz olsun",
-  "Ona 'seninle her dokunuş elektrik gibi' diye yaz",
-  "Bir sonraki buluşmada dudaklarının yanına öp — dudaklarının tam yanına",
-  "Bugün ona 'seninle olmak istiyorum, bu gece uyuyamıyorum' diye yaz",
-  "Bir sonraki buluşmada onu kaldır ve öp",
-  "Ona bu gece hayal ettiğin bir sahneyi adım adım anlat",
-  "Bir sonraki buluşmada tenine dokununca ne hissettirdiğini söyle",
-  "Bugün ona 'seni her gördüğümde kendimi tutmak zorundayım' diye yaz",
-  "Bir sonraki buluşmada karanlıkta uzun uzun öpüşün",
-  "Ona 'seninle baş başa kalmak istiyorum, sadece bu gece' diye yaz",
-  "Bir sonraki buluşmada elini tutup nefes al, sonra öp",
-  "Bugün ona 'seni en çok hangi anında istiyorum biliyor musun?' diye anlat",
-  "Bir sonraki buluşmada göğsüne yaslanıp gözlerini kapat ve sadece hisset",
-  "Ona bu gece 'seninle olmak istiyorum, sabaha kadar' diye yaz",
-  "Bir sonraki buluşmada tişörtünü kaldır ve karnına uzun uzun bak",
-  "Bugün ona en açık mesajını yaz — ne istediğini net söyle 🔥",
-  "Bir sonraki buluşmada yavaşça sarıl ve kulaklarına nefes ver",
-  "Ona 'senin yanında aklım hep başka yerlere gidiyor' diye yaz ve açıkla 😏",
-  "Bir sonraki buluşmada onu duvara dayandır ve uzun uzun öp",
-  "Bugün ona 'seni düşününce kalbim değil başka şeyler de hızlanıyor' diye yaz 😈",
-  "Bir sonraki buluşmada saçlarından tutarak öp",
-  "Ona bu gece 'seninle olmak en büyük isteğim' diye yaz ve detaylandır",
-  "Bir sonraki buluşmada ellerini teninde gezdirmesine izin ver",
-  "Bugün ona 'bir sonraki buluşmamızda sana doymak istemiyorum' diye yaz",
-
-  // 😄 EĞLENCELİ (%40 - 120 görev)
+  // 😄 EĞLENCELİ (%20 - 60 görev)
+  "Bugün ona sadece emoji ile mesaj at, hiç kelime kullanma",
+  "Partnerine bugün telefonda komik bir ses tonu tak, fark edene kadar söyleme",
+  "Ona bugün yaptığın en saçma şeyi anlat",
+  "Birlikte 5 dakika boyunca sadece kahkaha atın, sebep yok",
+  "Partnerinin en sevdiği şarkıyı yanlış söyle, düzeltmesini bekle",
+  "Ona bugün giymesi için kıyafet seç",
+  "Birlikte çocukken izlediğiniz çizgi filmi bulun, izleyin",
+  "Ona bugün 3 kez farklı lakap tak",
+  "Partnerine bugün konuşurken sadece şarkı sözleriyle cevap ver",
+  "Ona en kötü şakani anlat",
+  "Bugün ona sesli mesaj gönder ama içinde sadece komik sesler çıkar",
+  "Bir sonraki buluşmada kim daha uzun süreli öpücük verirse kazanır yarışması yapın",
+  "Ona şu an aklına gelen en saçma şeyi yaz",
+  "Bir sonraki buluşmada diğerinin gözlerine 1 dakika bak, kim önce güler kaybeder",
+  "Bugün ona 'seni seviyorum' yerine farklı bir dil ile yaz",
+  "Bir sonraki buluşmada yemek siparişini diğeri versin",
+  "Ona bu gece 'en garip rüyam' diye bir uydurma hikaye yaz",
+  "Bir sonraki buluşmada kamera önünde dans edin, en komik dans kazanır",
+  "Bugün ona 5 farklı formatta 'özledim' yaz",
+  "Bir sonraki buluşmada çizgi film izleyin ve hangi karakter olduğunuza karar verin",
   "Bugün ona her mesajın sonuna 🍑 emojisi koy, hiçbir şey açıklama",
   "Bir sonraki buluşmada taş kağıt makas oynayın, kaybeden diğerinin istediği şeyi yapar",
   "Ona en aptal selfie'ni gönder, o da göndersin",
@@ -3433,176 +3352,299 @@ const GOREVLER = [
   "Bir sonraki buluşmada 5 dakika boyunca sadece emoji ile iletişim kurun",
   "Ona bugün rastgele bir saatte 'düşünüyorum seni' yaz",
   "Bir sonraki buluşmada körebe oynayın, kaybeden öpücük borçlanır",
-  "Bugün ona sesli mesaj gönder ama içinde sadece komik sesler çıkar",
-  "Bir sonraki buluşmada kim daha uzun süreli öpücük verirse kazanır yarışması yapın",
-  "Ona şu an aklına gelen en saçma şeyi yaz",
-  "Bir sonraki buluşmada diğerinin gözlerine 1 dakika bak, kim önce güler kaybeder",
-  "Bugün ona 'seni seviyorum' yerine farklı bir dil ile yaz (Fransızca, İspanyolca vs.)",
-  "Bir sonraki buluşmada yemek siparişini diğeri versin",
-  "Ona bu gece 'en garip rüyam' diye bir uydurma hikaye yaz",
-  "Bir sonraki buluşmada kamera önünde dans edin, en komik dans kazanır",
-  "Bugün ona 5 farklı formatta 'özledim' yaz",
-  "Bir sonraki buluşmada çizgi film izleyin ve hangi karakter olduğunuza karar verin",
-  "Ona şu an baktığın ilk şeyin fotoğrafını gönder",
-  "Bir sonraki buluşmada yüzünüze maske yapın, birbirinize bakın ve gülmeyin",
-  "Bugün ona 'tahmin et şu an ne yapıyorum' diye sor",
-  "Bir sonraki buluşmada birbirinizin saçını yapın",
-  "Ona bugün sadece GIF ile cevap ver",
-  "Bir sonraki buluşmada en kötü şarkıyı söyleyin, kim daha kötü söyler kazanır",
   "Bugün ona rastgele bir meme gönder ve 'bu sensin' de",
   "Bir sonraki buluşmada eski fotoğraflarınıza bakın",
-  "Ona bu hafta içinde 'bugün seni görünce...' diye başlayan bir cümle yaz",
-  "Bir sonraki buluşmada yemek yapın, malzemeleri çekiliş ile belirleyin",
-  "Bugün ona en saçma tweetini gönder",
+  "Bir sonraki buluşmada birbirinizin saçını yapın",
+  "Bugün ona sadece GIF ile cevap ver",
+  "Bir sonraki buluşmada en kötü şarkıyı söyleyin, kim daha kötü söyler kazanır",
+  "Bugün ona sesli mesajla spiker gibi konuş",
+  "Bir sonraki buluşmada birlikte yüz maskesi yapın, birbirinize bakın ve gülmeyin",
+  "Bugün ona tamamen beklenmedik bir saatte mesaj at",
+  "Bir sonraki buluşmada en komik anınızı tekrar canlandırın",
+  "Ona bugün rastgele bir Wikipedia sayfası gönder",
+  "Birlikte en kötü şaka yarışması yapın",
+  "Bugün ona tamamen yanlış bir hava tahmini gönder",
   "Bir sonraki buluşmada birbirinizi çizin, sonuçları paylaşın",
-  "Ona bugün 'sabah uyandım ilk düşündüğüm senin o gülüşündü' yaz",
-  "Bir sonraki buluşmada 'eğer' oyunu oynayın",
-  "Bugün ona favori emojileriyle bir hikaye yaz",
-  "Bir sonraki buluşmada yavaş yarış yapın, kim en yavaş yürürse kazanır",
-  "Ona bu gece 'seni en çok ne zaman özledim biliyor musun?' diye sor",
-  "Bir sonraki buluşmada müzik yarışması yapın, birbirinize şarkı söyleyin",
-  "Bugün ona her saat başı bir emoji gönder, açıklama yapma",
-  "Bir sonraki buluşmada diğerinin favori yemeklerinden birini sipariş edin",
-  "Ona 'şu an düşündüklerimi bi tahmin et' diye yaz",
-  "Bir sonraki buluşmada birlikte yıldız sayın",
-  "Bugün ona 3 şey sor: bir renk, bir hayvan, bir şarkı — sonra bunları onunla ilişkilendir",
-  "Bir sonraki buluşmada kim daha çok bilgi sorusunu bilir yarışması yapın",
-  "Ona bugün 'seninle ilgili 3 şeyi tahmin et' diye sor",
-  "Bir sonraki buluşmada yürüyüşe çıkın ve yolu karşı taraf belirlesin",
-  "Bugün ona 'en komik anımız ne?' diye sor",
-  "Bir sonraki buluşmada birlikte playlist yapın",
-  "Ona şu an içinde bulunduğun odayı anlat",
-  "Bir sonraki buluşmada diğerinin favori filminden sahne canlandırın",
-  "Bugün ona 'seni düşündüğümde hep aklıma bu geliyor' diye bir fotoğraf gönder",
-  "Bir sonraki buluşmada birlikte ne yesek diye çark çevirin",
-  "Ona bu gece 'sen olmasaydın ne yapardım' diye sorun",
-  "Bir sonraki buluşmada fotoğraf çekilin, poz diğeri seçsin",
-  "Bugün ona rastgele bir 'neden seni seviyorum' listesi yaz",
-  "Bir sonraki buluşmada birlikte bir şey öğrenin (origami, sihirbazlık vs.)",
-  "Ona bugün 'bugün mutlu musun?' diye sor ve nedenini sor",
-  "Bir sonraki buluşmada birbirini taklit edin",
-  "Bugün ona 'seninle yaşamak istediğim 3 an' listesi yaz",
-  "Bir sonraki buluşmada renk renk mum alıp birlikte yak",
-  "Ona bu hafta 'hatırladın mı?' diye bir ortak anıyı anlat",
-  "Bir sonraki buluşmada dondurma yiyin, hangisi daha çabuk yer yarışması",
-  "Bugün ona en çok hangi özelliğini sevdiğini söyle",
-  "Bir sonraki buluşmada çay/kahve içerken derin bir soru sor",
-  "Ona bugün 'seni düşündüğümde ne hissediyorum' diye bir paragraf yaz",
-  "Bir sonraki buluşmada diğerinin telefonundaki müziği çal",
-  "Bugün ona 'şu an yanında olsaydım ne yapardım' diye yaz",
-  "Bir sonraki buluşmada birlikte fotoğraf albümü yapın",
-  "Ona bu gece 'en güzel hatıramız' diye sorun",
-  "Bir sonraki buluşmada birbirinizdeki en sevimli alışkanlığı söyleyin",
-  "Bugün ona 'seninle ilgili en çok neyi özlüyorum' diye yaz",
-  "Bir sonraki buluşmada birlikte bir şey pişirin",
-  "Ona bu hafta 'seninle ilgili bugün ne fark ettim' diye yaz",
-  "Bir sonraki buluşmada karanlıkta el ele yürüyün",
-  "Bugün ona en sevdiği şarkının sözlerinden bir kısmını yaz",
-  "Bir sonraki buluşmada 'daha önce hiç yapmadığımız bir şey yapalım' de",
-  "Ona bugün 'bugün seni kaç kez düşündüm biliyor musun?' diye sor",
-  "Bir sonraki buluşmada sadece gülüşünüzü fotoğraflayın",
-  "Bugün ona 'seninle olan en komik anımız' diye bir şey yaz",
-  "Bir sonraki buluşmada karşılıklı oturun ve sessizce bakın, kim önce konuşursa kaybeder",
-  "Ona bu gece 'seninle olduğumda zamanın nasıl geçtiğini fark etmiyorum' diye yaz",
-  "Bir sonraki buluşmada el ele tutuşarak bir şey izleyin",
-  "Bugün ona 'seninle yaşlanmak istiyorum' diye yaz",
-  "Bir sonraki buluşmada diğerini bir şeye davet et, nereye gittiğini söyleme",
-  "Ona bu hafta 'hayatımda olduğun için teşekkür ederim' diye yaz",
-  "Bir sonraki buluşmada birlikte bir film başlayın ama yarısında bırakın ve konuşun",
-  "Bugün ona 'şu an keşke yanımda olsaydın' de ve neden söyle",
-  "Bir sonraki buluşmada diğerinin istediği bir şeyi yapın, itiraz etmeden",
-  "Ona bugün 'hayatımın en güzel kararı sensinsin' diye yaz",
-  "Bir sonraki buluşmada birlikte yeni bir cafe/restoran keşfedin",
-  "Bugün ona rastgele bir saatte selfie gönder",
-  "Bir sonraki buluşmada karanlık bir parkta yürüyün",
-  "Ona bu gece 'seninle uyumak hayalim' diye yaz",
-  "Bir sonraki buluşmada diğerinin saçını tarayın",
-  "Bugün ona 'seninle ilk tanıştığımda ne düşündüm biliyor musun?' diye anlat",
-  "Bir sonraki buluşmada birlikte bir şey satın alın, ortak anı olsun",
-  "Ona bu hafta 'seninle her gün daha çok tanışıyorum' diye yaz",
-  "Bir sonraki buluşmada birlikte bir hediye paketleyin (birine göndermek için)",
-  "Bugün ona 'seninle hiç yaşamadığım bir şeyi yaşamak istiyorum' diye yaz",
-  "Bir sonraki buluşmada birbirinize şarkı söyleyin, en utanmadan söyleyen kazanır",
-  "Ona bu gece 'seninle bir yere kaçmak istiyorum' diye yaz",
-  "Bir sonraki buluşmada yıldızlı bir gecede dışarıda oturun",
-  "Bugün ona 'gelecekte birlikte ne yapmak istiyorum' listesi yaz",
-  "Bir sonraki buluşmada el ele gözler kapalı yürüyün",
-  "Ona bu hafta 'seninle her şeyi paylaşmak istiyorum' diye sesli mesaj gönder",
-  "Bir sonraki buluşmada kim önce uyursa kaybeder yarışması yapın",
-  "Bugün ona 'seninle olmak bağımlılık yapıyor' diye yaz",
-  "Bir sonraki buluşmada birlikte güneş batışı izleyin",
-  "Ona bu gece 'seninle sabaha kadar konuşmak istiyorum' diye yaz",
-  "Bir sonraki buluşmada diğerini güldürmeye çalışın, kim önce güler kaybeder",
-  "Bugün ona 'seninle her yerde evmiş gibi hissediyorum' diye yaz",
-  "Bir sonraki buluşmada el ele yürüyüp bir şeyler alın",
-  "Ona bu hafta 'seninle olmak en güzel his' diye sesli mesaj gönder",
-  "Bir sonraki buluşmada karşılıklı oturup birbirini anlatan şeyler söyleyin",
-  "Bugün ona 'seni gördüğümde kalbim ilk buluşmamızdaki gibi çarpıyor' diye yaz",
+  "Ona bugün sesli mesajla haber sunucusu gibi konuş",
+  "Bugün ona bir bilmece gönder, çözerse ödülü sen belirle",
+  "Bir sonraki buluşmada hangi hayvan olduğunuza karar verin",
+  "Ona bugün en komik anını anlat",
+  "Bugün ona tamamen abartılı bir iltifat yap",
+  "Bir sonraki buluşmada birlikte şehrin en saçma yerine gidin",
+  "Ona bugün sesli mesajla reklam sesi gibi konuş",
+  "Birlikte en sevdiğiniz yiyecekle ilgili bir trivia yarışması yapın",
+  "Bugün ona 'tahmin et şu an ne yapıyorum' diye sor",
+  "Bir sonraki buluşmada yemek yapın, malzemeleri çekiliş ile belirleyin",
+  "Ona bugün en sevdiğin meme'i gönder",
+  "Bugün ona sesli mesajla yarışmacı gibi konuş",
+  "Birlikte en sevdiğiniz anıyı drama gibi canlandırın",
+  "Ona bugün tamamen beklenmedik bir hediye öner",
+  "Bugün ona en saçma tweetini gönder",
+  "Bir sonraki buluşmada kim daha fazla saçmalık üretir yarışması",
+  "Ona bugün sesli mesajla masal anlat",
+  "Birlikte hangi dizi karakteri olduğunuza karar verin",
+  "Bugün ona rastgele bir komik video gönder",
+  "Bir sonraki buluşmada birlikte dans videosu çekin",
 
   // 💕 ROMANTİK (%20 - 60 görev)
-  "Ona el yazısıyla kısa bir not yaz, fotoğrafını çekip gönder",
-  "Bir sonraki buluşmada gittiğiniz ilk yere tekrar gidin",
-  "Ona bu hafta 'seninle olan ilk anımı hala hatırlıyorum' diye anlat",
-  "Bir sonraki buluşmada ona bir çiçek al",
-  "Bugün ona sesli mesaj gönder, sadece neden onu sevdiğini anlat",
-  "Bir sonraki buluşmada fotoğraf çektirin, çerçevelemeye söz verin",
-  "Ona bu gece 'hayatıma girdiğin gün her şey değişti' diye yaz",
-  "Bir sonraki buluşmada diğerinin en sevdiği şeyi yapın",
-  "Bugün ona 'seninle geçen her an hazine gibi' diye yaz",
-  "Bir sonraki buluşmada birlikte yeni bir şey deneyin",
-  "Ona bu hafta için özel bir çalma listesi yap ve gönder",
-  "Bir sonraki buluşmada geçmiş fotoğraflarınıza bakın",
-  "Bugün ona 'seni tanıdığım için ne kadar şanslıyım' diye yaz",
-  "Bir sonraki buluşmada beraber bir mum yak ve dilekler isteyin",
-  "Ona bu gece 'seni düşünerek uyuyacağım' diye yaz",
-  "Bir sonraki buluşmada telefonsuz 1 saat geçirin",
-  "Bugün ona 'seninle her şey daha anlamlı' diye sesli mesaj gönder",
-  "Bir sonraki buluşmada diğerine sürpriz yap",
-  "Ona bu hafta 'hayatımın en iyi kararı seni sevmek' diye yaz",
-  "Bir sonraki buluşmada birlikte yeni bir cafe keşfedin",
-  "Bugün ona 'seninle her gün daha güzel' diye yaz",
-  "Bir sonraki buluşmada el ele yürüyüşe çıkın",
-  "Ona bu gece hiç söylemediğin bir korkunu anlat",
-  "Bir sonraki buluşmada diğerinin gözleri içine bak ve ne hissettirdiğini anlat",
-  "Bugün ona 'seni kaybetmekten en çok ne korkutuyor biliyor musun?' diye aç",
-  "Bir sonraki buluşmada birlikte bir film seçin ve hiç konuşmadan izleyin",
-  "Ona bu hafta 'seninle bir ömür geçirmek istiyorum' diye yaz",
-  "Bir sonraki buluşmada diğerine teşekkür et, somut bir şey için",
-  "Bugün ona 'seni ilk gördüğümde ne hissetmiştim biliyor musun?' diye anlat",
-  "Bir sonraki buluşmada birlikte gün batımı izleyin",
-  "Ona bu gece 'seninle her şeyi paylaşmak istiyorum' diye yaz",
-  "Bir sonraki buluşmada çocukluğundan bir fotoğraf göster",
-  "Bugün ona 'hayallerimde hep sen varsın' diye sesli mesaj gönder",
-  "Bir sonraki buluşmada diğerini övün, sadece güzelliği değil karakterini",
-  "Ona bu hafta 'seninle olmak beni huzurlu yapıyor' diye yaz",
-  "Bir sonraki buluşmada birlikte 1 yıl sonra nerede olmak istediğinizi konuşun",
-  "Bugün ona 'seni her gördüğümde şükrediyorum' diye yaz",
-  "Bir sonraki buluşmada diğerinin gözlerine bak ve 'seni seviyorum' de",
-  "Ona bu gece 'seninle her şey yolunda gibi hissediyorum' diye yaz",
-  "Bir sonraki buluşmada birlikte bir şey üretin (yemek, çizim, video)",
-  "Bugün ona 'seni tanıyan en şanslı insanım' diye yaz",
-  "Bir sonraki buluşmada diğerine 5 yıl sonra ne hayal ettiğini sor",
-  "Ona bu hafta 'seninle olmak hayatımın en güzel bölümü' diye yaz",
-  "Bir sonraki buluşmada birlikte bir anı defteri başlatın",
-  "Bugün ona 'seninle her sabah uyanmak istiyorum' diye sesli mesaj gönder",
-  "Bir sonraki buluşmada diğerine en sevdiği şeyi sürpriz olarak getir",
-  "Ona bu gece 'seni düşünerek güldüm bugün' diye ve nedenini anlat",
-  "Bir sonraki buluşmada birlikte bir yıldızın altında oturun",
-  "Bugün ona 'seninle geçen her saniye değerli' diye yaz",
-  "Bir sonraki buluşmada diğerine 'seni ne zaman en çok özledim' söyle",
-  "Ona bu hafta 'varlığın benim için ne kadar önemli' diye uzun bir mesaj yaz",
-  "Bir sonraki buluşmada birlikte şiir okuyun veya yazın",
-  "Bugün ona 'seninle olmak en büyük armağan' diye yaz",
-  "Bir sonraki buluşmada diğerinin en sevdiği müziği çal ve birlikte dinleyin",
-  "Ona bu gece 'seninle ağlamak bile güzel olur' diye yaz",
-  "Bir sonraki buluşmada birlikte ilk nereye gitmek istediğinizi konuşun",
-  "Bugün ona 'seni sevmek en kolay şey' diye sesli mesaj gönder",
-  "Bir sonraki buluşmada diğerine 'seni en çok ne için seviyorum' söyle",
-  "Ona bu hafta 'seninle her gün aşık oluyorum' diye yaz",
-  "Bir sonraki buluşmada birlikte bir dilekte bulunun",
-  "Bugün ona 'hayatımın geri kalanını seninle geçirmek istiyorum' diye yaz",
-];
+  "Ona bugün neden seni seçtiğini anlat",
+  "Partnerine bugün el yazısıyla bir not bırak",
+  "Ona bugün ilk tanıştığınız anı anlat, detaylarıyla",
+  "Birlikte güneş batımını izleyin",
+  "Ona bugün en sevdiğin ortak anınızı anlat",
+  "Partnerine bugün sesli mesajla sevgi dolu bir şey söyle",
+  "Ona bugün gözlerinin içine bakarak bir şey anlat",
+  "Birlikte gelecek planları yapın",
+  "Ona bugün neden özel olduğunu 3 maddeyle anlat",
+  "Partnerine bugün beklenmedik bir anda 'seni seviyorum' de",
+  "Birlikte eski fotoğraflara bakın ve o anları konuşun",
+  "Ona bugün ilk randevunuzu anlat, ne hissettiğini söyle",
+  "Partnerine bugün bir mektup yaz",
+  "Ona bugün güne iyi başlaması için bir mesaj at",
+  "Birlikte en sevdiğiniz mekanı ziyaret edin",
+  "Ona bugün hayatına kattığı en güzel şeyi söyle",
+  "Birlikte yıldızlara bakın",
+  "Ona bugün onu ilk gördüğünde ne düşündüğünü anlat",
+  "Partnerine bugün bir söz ver, küçük ama anlamlı",
+  "Birlikte el ele yürüyüşe çıkın",
+  "Ona bugün hayalindeki anı anlat, beraber yaşayın",
+  "Partnerine bugün sabah uyandığında bir mesaj bırak",
+  "Birlikte romantik bir film izleyin",
+  "Ona bugün neden vazgeçilmez olduğunu anlat",
+  "Partnerine bugün bir şarkı ithaf et",
+  "Birlikte dans edin, müzik olmadan da olur",
+  "Ona bugün en çok saydığın özelliğini söyle",
+  "Birlikte çay/kahve içerken sadece birbirinize bakın",
+  "Ona bugün hayatındaki en önemli kişi olduğunu söyle",
+  "Partnerine bugün bir çiçek gönder",
+  "Birlikte gün batımında fotoğraf çekin",
+  "Ona bugün gelecekte birlikte yapmak istediğin bir şeyi anlat",
+  "Partnerine bugün sesli mesajla şiir oku",
+  "Birlikte mumlu akşam yemeği yiyin",
+  "Ona bugün en çok özlediğin anınızı anlat",
+  "Birlikte sabahın erken saatinde uyanın, sadece konuşun",
+  "Ona bugün gülüşünü ne kadar sevdiğini söyle",
+  "Partnerine bugün onu düşündüğün bir an anlat",
+  "Birlikte gökyüzünü izleyin, yıldız sayın",
+  "Ona bugün onu hayatına katan en büyük değişikliği söyle",
+  "Partnerine bugün beklenmedik bir anda sarıl",
+  "Birlikte gelecekteki evinizi hayal edin",
+  "Ona bugün birlikte yaşadığınız en güzel sürprizi anlat",
+  "Birlikte gelecek yıl için bir hedef belirleyin",
+  "Ona bugün sesli mesajla duygularını anlat",
+  "Partnerine bugün en sevdiğin ortak rutininizi anlat",
+  "Birlikte en sevdiğiniz kahvaltıyı yapın",
+  "Ona bugün neden güldüğünde mutlu olduğunu söyle",
+  "Partnerine bugün en samimi iltifatı yap",
+  "Birlikte en sevdiğiniz mevsimi ve neden sevdiğinizi anlatın",
+  "Ona bugün 'seninle bir ömür geçirmek istiyorum' diye yaz",
+  "Partnerine bugün çocukluğundan bir anı anlat",
+  "Birlikte bir anı defteri başlatın",
+  "Ona bugün 'seninle her şey yolunda gibi hissediyorum' diye yaz",
+  "Partnerine bugün en sevdiği müziği çal ve birlikte dinleyin",
+  "Ona bugün 'seni sevmek en kolay şey' diye sesli mesaj gönder",
+  "Birlikte bir dilekte bulunun",
+  "Ona bugün 'hayatımın geri kalanını seninle geçirmek istiyorum' diye yaz",
+  "Partnerine bugün el yazısıyla sevgi dolu bir liste yap",
+  "Birlikte ilk buluştuğunuz yere gidin",
 
+  // 📸 FOTOĞRAFLI (%15 - 45 görev)
+  "Bugünkü kıyafetinin fotoğrafını at",
+  "Ellerinin yakın çekimini gönder",
+  "Bulunduğun yerin fotoğrafını çek, 'buradan seni özlüyorum' yaz",
+  "Gözlerinin yakın çekimini at",
+  "Saçının bugünkü halinin fotoğrafını gönder",
+  "Ayakkabılarının fotoğrafını at, nerede olduğunu tahmin etsin",
+  "Bugün yediğin yemeğin fotoğrafını gönder",
+  "Yatmadan önceki halinin selfie'sini at",
+  "Güldüğünün fotoğrafını çek, gönder",
+  "Sabah uyandığındaki halinin fotoğrafını at",
+  "Dudaklarının yakın çekimini gönder",
+  "Bugün gördüğün en güzel şeyin fotoğrafını at",
+  "Ayak parmaklarının fotoğrafını çek, gönder",
+  "Omzunun fotoğrafını at",
+  "Boynunun yakın çekimini at",
+  "Bugün oturduğun yerin fotoğrafını at",
+  "Saçının dağınık halinin fotoğrafını gönder",
+  "Gülümserken selfie çek, gönder",
+  "Bugün içtiğin içeceğin fotoğrafını at",
+  "Yüzünün yan profilinden fotoğraf at",
+  "Kollarının fotoğrafını çek, at",
+  "Sırtının fotoğrafını at",
+  "Bugün en çok beğendiğin detayının fotoğrafını gönder",
+  "Parmak uçlarının fotoğrafını at",
+  "Güneşte gözlerini kısarken fotoğraf çek, gönder",
+  "Yatağında uzanırken selfie çek, at",
+  "Saçını topladığındaki halinin fotoğrafını gönder",
+  "Çeneni tutarken fotoğraf çek, at",
+  "Saçın ıslakken fotoğraf çek, at",
+  "Güneş gözlüklüyken selfie çek, gönder",
+  "Yüzünün tam cepheden yakın çekimini gönder",
+  "Geceyi bitirmeden son selfie'ni çek, gönder",
+  "Sabah aynada gördüğün halinin fotoğrafını at",
+  "Bugün en mutlu olduğun anın selfie'sini çek, gönder",
+  "Bugün kullandığın en sevdiğin eşyanın fotoğrafını at",
+  "Kaşlarının yakın çekimini gönder",
+  "Bugün giydiğin en sevdiğin parçanın fotoğrafını gönder",
+  "Burnunun yakın çekimini at",
+  "Bugün gördüğün en ilginç şeyin fotoğrafını gönder",
+  "Bugün en çok zaman geçirdiğin yerin fotoğrafını gönder",
+  "Yüzünde sadece gözlerin göründüğü bir fotoğraf gönder",
+  "Şu an baktığın ilk şeyin fotoğrafını gönder",
+  "Bugün giymek isteyip giymediğin kıyafetin fotoğrafını at",
+  "Bugün çevrendeki en renkli şeyin fotoğrafını gönder",
+  "Gece yatmadan önceki gözlerinin fotoğrafını gönder",
+
+  // 💪 CESUR (%45 - 135 görev)
+  "Bugün gece yatarken ne düşündüğünü anlat — dürüstçe 😏",
+  "Bugün ona her mesajın sonuna 🍑 emojisi koy, hiçbir şey açıklama",
+  "Ona bugün en mahrem sırrını anlat",
+  "Partnerine bugün en çok korktuğun şeyi söyle",
+  "Ona bugün fiziksel olarak en çok ne özlediğini söyle",
+  "Birlikte en uzun sarılma rekorunuzu kırın",
+  "Ona bugün omuzlarına masaj yap, en az 15 dakika",
+  "Birlikte uzun süre sarılın, hiç konuşmadan",
+  "Ona bugün saçını ok şa, uzun uzun",
+  "Partnerine bugün boynuna hafifçe öp",
+  "Ona bugün ellerini tut, bırakma",
+  "Birlikte aynı yastığa uzanın, sadece konuşun",
+  "Ona bugün ensesine öp",
+  "Partnerine bugün yüzüne bak, uzun uzun, gözlerini kaçırma",
+  "Ona bugün yanağına uzun bir öpücük kondur",
+  "Birlikte masaj alışverişi yapın",
+  "Ona bugün nerede öpülmekten hoşlandığını sor",
+  "Partnerine bugün en yakın durduğunda ne hissettiğini söyle",
+  "Ona bugün kucağına otur, konuşun",
+  "Birlikte tek battaniyeye sarının",
+  "Ona bugün saçına burnunu göm",
+  "Partnerine bugün ellerini öp",
+  "Ona bugün göğsüne yaslan, dinle kalbini",
+  "Ona bugün alnına öp",
+  "Partnerine bugün kollarının arasında uyu",
+  "Ona bugün onu ne zaman en çok istediğini söyle",
+  "Birlikte en yakın mesafede oturun, bacak bacağa",
+  "Ona bugün burnunun ucuna öp",
+  "Partnerine bugün saçlarını tara",
+  "Ona bugün kollarına sarıl, sıkıca",
+  "Ona bugün kulağına fısılda bir şey",
+  "Birlikte gökyüzüne bakarak uzanın",
+  "Ona bugün yüzünü avuçlarının içine al",
+  "Partnerine bugün başını kucağına yatır",
+  "Ona bugün gözlerini kapat, yüzünü hisset, anlat",
+  "Ona bugün dudaklarına hafifçe dokun",
+  "Partnerine bugün tam istediği yere masaj yap",
+  "Ona bugün nerede dokunulmasından hoşlandığını sor",
+  "Birlikte tek koltukta oturun",
+  "Partnerine bugün boynuna uzun uzun bak",
+  "Ona bugün en çok hangi anında güzel hissettirdiğini söyle",
+  "Ona bugün dudaklarına bak, uzun uzun",
+  "Partnerine bugün tenini hisset, sadece ellerinle",
+  "Birlikte gece geç saate kadar konuşun",
+  "Ona bugün en çok hangi dokunuşunu sevdiğini söyle",
+  "Partnerine bugün göğsüne yasla başını",
+  "Birlikte yavaş dans edin, müziksiz",
+  "Partnerine bugün sırtına yaslan, kollarını sar",
+  "Ona bugün en çok ne zaman onu istediğini söyle",
+  "Birlikte bire bir yüz yüze oturun, dizler dize",
+  "Partnerine bugün gözlerini kapat, sesi hisset",
+  "Birlikte en uzun öpücük rekorunuzu kırın",
+  "Partnerine bugün en yakın durduğunuzda ne hissettiklerini anlatın",
+  "Birlikte aynı yatakta kitap okuyun",
+  "Ona bugün en çok hangi sesini sevdiğini söyle",
+  "Ona bugün kollarının arasında kal, uzun süre",
+  "Ona bugün ne giydiğinde en çok etkilendiğini söyle",
+  "Partnerine bugün omuzlarına başını koy",
+  "Birlikte sabahın erken saatinde uyansın, konuşun",
+  "Partnerine bugün dudaklarına bak, ne düşündüğünü söyle",
+  "Ona bugün kucaklaşın, kim bırakırsa kaybeder",
+  "Birlikte en tenha yerde yürüyüşe çıkın",
+  "Partnerine bugün saçına çiçek tak",
+  "Ona bugün yanında uyumanın nasıl hissettirdiğini anlat",
+  "Ona bugün en cesur isteğini söyle",
+  "Partnerine bugün en dürüst itirafını yap",
+  "Ona bugün en çok ne zaman kalbinin hızlandığını söyle",
+  "Birlikte en romantik şarkıyı söyleyin, sarılarak",
+  "Ona bugün onu en çok ne zaman istediğini söyle",
+  "Partnerine bugün en uzun öpücüğü kondur",
+  "Birlikte en karanlık odada oturun, sadece konuşun",
+  "Ona bugün en yakın olduğunuzda ne hissettiğini anlat",
+  "Ona bugün en çok hangi anında mutlu hissettirdiğini söyle",
+  "Partnerine bugün kalp atışlarını say",
+  "Birlikte en sessiz odada oturun, birbirinizi hissedin",
+  "Ona bugün en çok hangi dokunuşuyla kendinden geçtiğini söyle",
+  "Ona bugün en cesur soruyu sor, cevabını dinle",
+  "Birlikte en yakın mesafede dans edin",
+  "Ona bugün onu en çok istediğin anı anlat",
+  "Partnerine bugün en derin gözleşmeyi yapın",
+  "Birlikte en romantik anınızı yeniden yaşayın",
+  "Ona bugün en yakın hissettiğin anı anlat",
+  "Partnerine bugün en cesur itirafını yap",
+  "Birlikte en uzun bakışmayı yapın",
+  "Ona bugün onu en çok istediğin anı sesli anlat",
+  "Partnerine bugün en romantik sürprizi yap",
+  "Birlikte en tenha yerde sarılın",
+  "Ona bugün en çok hangi anında etkilendiğini söyle",
+  "Bir sonraki buluşmada onu duvara yasla ve gözlerine bak",
+  "Bugün ona 'seni öpmek yetmiyor' diye yaz ve devamını açıkla",
+  "Bir sonraki buluşmada bacağına dokunmasına izin ver",
+  "Bir sonraki buluşmada karanlık bir köşe bul ve uzun uzun öp",
+  "Bugün ona favori fantezini yaz — utanma, o da anlatsın",
+  "Bir sonraki buluşmada üzerine eğil ve 'seni çok istiyorum' fısılda",
+  "Ona bu gece 'seninle baş başa kalsak ne yapardım' diye detaylı anlat",
+  "Bir sonraki buluşmada tişörtünü kaldır ve karnına öp",
+  "Bir sonraki buluşmada bacaklarına otur ve sarılırken sıkıca kavra",
+  "Ona 'seninle aynı yatakta uyumak istiyorum, sabaha kadar' diye yaz",
+  "Bugün ona fiziksel olarak en çok ne yapmak istediğini 3 madde halinde yaz",
+  "Bir sonraki buluşmada elini tutup dudaklarına götür ve öp",
+  "Bir sonraki buluşmada boynuna sarılırken kulağına 'seni istiyorum' fısılda",
+  "Bugün ona 'bir sonraki buluşmamızda ne yapacağımı hayal ediyorum' de ve anlat",
+  "Bir sonraki buluşmada arkasından sarılıp sıkıca tut, hiç bırakma",
+  "Bir sonraki buluşmada yavaşça saçlarını çek ve öp",
+  "Ona bu gece 'seninle olmak istiyorum, gerçekten' diye sesli mesaj gönder",
+  "Bir sonraki buluşmada omzuna oturma noktasına öpücük kondur",
+  "Bugün ona 'seninle tek başımıza olsak ne yapardık' diye sor",
+  "Bir sonraki buluşmada dudaklarını ısır — hafifçe, sonra öp",
+  "Bugün ona 'seni her yerinden öpmek istiyorum' diye yaz",
+  "Bir sonraki buluşmada onu durdur ve aniden öp",
+  "Bir sonraki buluşmada kulağına en cesur şeyi fısılda",
+  "Bugün ona gecenin en ateşli saatinde mesaj at",
+  "Bir sonraki buluşmada onu sandalyeye oturup önünde diz çök ve ellerini tut",
+  "Bir sonraki buluşmada yavaşça yaklaş ve burnunu boynuna göm",
+  "Bugün ona 'seni düşündüğümde bedenimi kontrol edemiyorum' diye yaz 😈",
+  "Bir sonraki buluşmada saçlarından tut ve öp",
+  "Bir sonraki buluşmada belinden tutup döndür ve öp",
+  "Bugün ona 'seninle her şeyi denemek istiyorum' diye yaz",
+  "Bir sonraki buluşmada karnına öp ve yukarı doğru çık",
+  "Bir sonraki buluşmada omzuna hafifçe ısır",
+  "Bir sonraki buluşmada göğsüne başını yasla ve nabzını say",
+  "Bir sonraki buluşmada sırtına uzun uzun masaj yap",
+  "Bugün ona 'beni çıldırtan şeyin ne olduğunu biliyor musun?' diye sor ve anlat",
+  "Bir sonraki buluşmada ellerini tutup dudaklarına bak",
+  "Bir sonraki buluşmada arkana geç ve beline sarıl",
+  "Bugün ona 'seninle tek başımıza olduğumuzda ne yapacağımı düşünüyorum' diye yaz",
+  "Bir sonraki buluşmada onu bir köşeye çek ve sadece ikiniz öpüşün",
+  "Bir sonraki buluşmada yanaklarını avuçla ve dudaklarına bak",
+  "Bugün ona en cesur sesli mesajı gönder — ne düşündüğünü anlat",
+  "Bir sonraki buluşmada bacaklarını ok şa",
+  "Bir sonraki buluşmada onu durdur, gözlerine bak ve 'seni çok istiyorum' de",
+  "Bugün ona 'en çok hangi yerimi seviyorsun?' diye sor",
+  "Bir sonraki buluşmada onu arkadan öp, sürpriz olsun",
+  "Bir sonraki buluşmada dudaklarının yanına öp — tam yanına",
+  "Bir sonraki buluşmada onu kaldır ve öp",
+  "Ona bu gece hayal ettiğin bir sahneyi adım adım anlat",
+  "Bir sonraki buluşmada tenine dokununca ne hissettirdiğini söyle",
+  "Bugün ona 'seni her gördüğümde kendimi tutmak zorundayım' diye yaz",
+  "Bir sonraki buluşmada karanlıkta uzun uzun öpüşün",
+  "Bugün ona 'seni en çok hangi anında istiyorum biliyor musun?' diye anlat",
+  "Bir sonraki buluşmada göğsüne yaslanıp gözlerini kapat ve sadece hisset",
+  "Bugün ona en açık mesajını yaz — ne istediğini net söyle 🔥",
+  "Bir sonraki buluşmada yavaşça sarıl ve kulaklarına nefes ver",
+  "Bir sonraki buluşmada onu duvara dayandır ve uzun uzun öp",
+  "Bugün ona 'seni düşününce kalbim değil başka şeyler de hızlanıyor' diye yaz 😈",
+  "Bir sonraki buluşmada saçlarından tutarak öp",
+  "Bir sonraki buluşmada ellerini teninde gezdirmesine izin ver",
+  "Bugün ona 'bir sonraki buluşmamızda sana doymak istemiyorum' diye yaz",
+];
 let gorevMonth = new Date().getMonth(), gorevYear = new Date().getFullYear();
 let currentGorevDate = null;
 
@@ -3624,16 +3666,16 @@ function renderGorevCalendar() {
     if(ds===currentGorevDate) el.classList.add('selected-draw-day');
     const gv = state.gorevler[ds];
     if(gv) {
-      const doneCount = (gv.tulay?.done?1:0)+(gv.yigit?.done?1:0);
-      const hasAny = gv.tulay?.text || gv.yigit?.text;
-      if(hasAny) el.innerHTML+=`<div style="font-size:0.65rem;line-height:1.2;">${doneCount===2?'✅✅':doneCount===1?'✅':''}</div>`;
+      const tulayIcon = gv.tulay?.done ? '\u2705' : gv.tulay?.text ? '\u23F0' : '';
+      const yigitIcon = gv.yigit?.done ? '\u2705' : gv.yigit?.text ? '\u23F0' : '';
+      const icons = [tulayIcon, yigitIcon].filter(Boolean).join('');
+      if(icons) el.innerHTML+=`<div style="font-size:0.65rem;line-height:1.2;">${icons}</div>`;
     }
     el.innerHTML+=`<div style="font-size:0.8rem;font-weight:600;">${d}</div>`;
     el.onclick=()=>openGorevDay(ds);
     body.appendChild(el);
   }
 }
-
 function changeGorevMonth(dir) {
   gorevMonth+=dir;
   if(gorevMonth>11){gorevMonth=0;gorevYear++;}
@@ -3651,6 +3693,54 @@ function openGorevDay(ds) {
   renderGorevPanel();
 }
 
+// Rastgele gorev sec, onay beklenir
+let _gorevOneri = {}; // who -> text
+
+function gorevSec(who) {
+  const usedTasks = Object.values(state.gorevler).flatMap(g => [g.tulay?.text, g.yigit?.text]).filter(Boolean);
+  let available = GOREVLER.filter(t => !usedTasks.includes(t));
+  if(available.length === 0) available = GOREVLER;
+  const task = available[Math.floor(Math.random() * available.length)];
+  _gorevOneri[who] = task;
+  const prevEl = document.getElementById(`gorev-${who}-preview`);
+  const prevText = document.getElementById(`gorev-${who}-preview-text`);
+  if(prevEl) prevEl.style.display = 'block';
+  if(prevText) prevText.textContent = task;
+  // Goster: Al ve Vazgec butonlari
+  document.getElementById(`btn-${who}-sec`).style.display = 'none';
+  document.getElementById(`btn-${who}-al`).style.display = 'inline-block';
+  document.getElementById(`btn-${who}-vazgec`).style.display = 'inline-block';
+  document.getElementById(`btn-${who}-tamam`).style.display = 'none';
+}
+
+function gorevAlOnayla(who) {
+  const ds = currentGorevDate;
+  if(!ds || !_gorevOneri[who]) return;
+  if(!state.gorevler[ds]) state.gorevler[ds] = {};
+  state.gorevler[ds][who] = { text: _gorevOneri[who], done: false };
+  delete _gorevOneri[who];
+  // Firebase'e direkt kaydet
+  set(ref(db, `state/gorevler/${ds}`), state.gorevler[ds]).catch(e=>console.error(e));
+  renderGorevPanel();
+  renderGorevCalendar();
+}
+
+function gorevVazgec(who) {
+  delete _gorevOneri[who];
+  const ds = currentGorevDate;
+  const gv = state.gorevler[ds] || {};
+  const g = gv[who];
+  // Eger onceden alinmis gorev varsa onu sil
+  if(g && g.text && !g.done) {
+    if(state.gorevler[ds]) {
+      delete state.gorevler[ds][who];
+      set(ref(db, `state/gorevler/${ds}`), state.gorevler[ds]).catch(e=>console.error(e));
+    }
+  }
+  renderGorevPanel();
+  renderGorevCalendar();
+}
+
 function renderGorevPanel() {
   const ds = currentGorevDate;
   if(!ds) return;
@@ -3659,38 +3749,53 @@ function renderGorevPanel() {
   ['tulay','yigit'].forEach(who => {
     const g = gv[who];
     const textEl = document.getElementById(`gorev-${who}-text`);
-    const doneBtn = document.getElementById(`gorev-${who}-done-btn`);
     const statusEl = document.getElementById(`gorev-${who}-status`);
+    const btnSec = document.getElementById(`btn-${who}-sec`);
+    const btnAl = document.getElementById(`btn-${who}-al`);
+    const btnVazgec = document.getElementById(`btn-${who}-vazgec`);
+    const btnTamam = document.getElementById(`btn-${who}-tamam`);
+    const prevEl = document.getElementById(`gorev-${who}-preview`);
+
+    if(!textEl) return;
+
+    // Oneri gosteriliyorsa gorev henuz alinmamis
+    if(_gorevOneri[who]) {
+      textEl.textContent = '—';
+      if(prevEl) prevEl.style.display = 'block';
+      btnSec.style.display = 'none';
+      btnAl.style.display = 'inline-block';
+      btnVazgec.style.display = 'inline-block';
+      btnTamam.style.display = 'none';
+      statusEl.textContent = '';
+      return;
+    }
+
+    if(prevEl) prevEl.style.display = 'none';
+
     if(g && g.text) {
       textEl.textContent = g.text;
       if(g.done) {
-        doneBtn.style.display='none';
-        statusEl.textContent='✅ Tamamlandı! 🎉';
+        btnSec.style.display = 'none';
+        btnAl.style.display = 'none';
+        btnVazgec.style.display = 'none';
+        btnTamam.style.display = 'none';
+        statusEl.textContent = '✅ Tamamlandı! 🎉';
       } else {
-        doneBtn.style.display='inline-block';
-        statusEl.textContent='';
+        btnSec.style.display = 'inline-block';
+        btnAl.style.display = 'none';
+        btnVazgec.style.display = 'inline-block';
+        btnTamam.style.display = 'inline-block';
+        statusEl.textContent = '⏰ Görev alındı, bekleniyor...';
       }
     } else {
-      textEl.textContent='—';
-      doneBtn.style.display='none';
-      statusEl.textContent='';
+      textEl.textContent = '—';
+      btnSec.style.display = 'inline-block';
+      btnAl.style.display = 'none';
+      btnVazgec.style.display = 'none';
+      btnTamam.style.display = 'none';
+      statusEl.textContent = '';
     }
   });
-}
-
-function gorevAl(who) {
-  const ds = currentGorevDate;
-  if(!ds) return;
-  if(!state.gorevler[ds]) state.gorevler[ds] = {};
-  // Pick a random task (avoid repeating same task if possible)
-  const usedTasks = Object.values(state.gorevler).flatMap(g => [g.tulay?.text, g.yigit?.text]).filter(Boolean);
-  let available = GOREVLER.filter(t => !usedTasks.includes(t));
-  if(available.length === 0) available = GOREVLER; // reset if all used
-  const task = available[Math.floor(Math.random() * available.length)];
-  state.gorevler[ds][who] = { text: task, done: false };
-  set(ref(db, `state/gorevler/${ds}`), state.gorevler[ds]).catch(e=>console.error(e));
-  renderGorevPanel();
-  renderGorevCalendar();
 }
 
 function gorevTamamla(who) {
@@ -3721,14 +3826,14 @@ function renderEnler() {
     if(!list) return;
     const items = state.enler?.[who] || [];
     if(!items.length) {
-      list.innerHTML='<div style="text-align:center;color:var(--text-light);font-size:0.8rem;padding:10px;">Henüz eklenmedi 🌸</div>';
+      list.innerHTML='<div style="text-align:center;color:var(--text-light);font-size:0.85rem;padding:20px;background:rgba(255,255,255,0.6);border-radius:14px;">Henüz eklenmedi 🌸<br><span style="font-size:0.75rem;">Yukarıdan ekle butonuna bas!</span></div>';
       return;
     }
     list.innerHTML = items.map((item,i)=>`
-      <div style="background:white;border:1.5px solid ${who==='tulay'?'var(--rose-light)':'#c0d8f0'};border-radius:14px;padding:10px 12px;position:relative;">
-        <div style="font-size:0.72rem;font-weight:700;color:${who==='tulay'?'var(--rose)':'#4a7ac0'};margin-bottom:3px;">${item.baslik}</div>
-        <div style="font-size:0.88rem;color:var(--text);">${item.deger}</div>
-        <button onclick="enlerSil('${who}',${i})" style="position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;font-size:0.8rem;color:var(--text-light);">✕</button>
+      <div style="background:white;border:1.5px solid ${who==='tulay'?'var(--rose-light)':'#c0d8f0'};border-radius:16px;padding:14px 16px;position:relative;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+        <div style="font-size:0.7rem;font-weight:800;color:${who==='tulay'?'var(--rose)':'#4a7ac0'};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">${item.baslik}</div>
+        <div style="font-size:0.95rem;color:var(--text);font-weight:500;">${item.deger}</div>
+        <button onclick="enlerSil('${who}',${i})" style="position:absolute;top:10px;right:10px;background:${who==='tulay'?'var(--rose-light)':'#d0e4f8'};border:none;border-radius:8px;cursor:pointer;font-size:0.75rem;color:${who==='tulay'?'var(--rose-dark)':'#4a7ac0'};width:24px;height:24px;display:flex;align-items:center;justify-content:center;">✕</button>
       </div>
     `).join('');
   });
@@ -3749,7 +3854,10 @@ function enlerKaydet() {
   if(!state.enler) state.enler = {tulay:[], yigit:[]};
   if(!state.enler[enlerWho]) state.enler[enlerWho]=[];
   state.enler[enlerWho].push({baslik, deger});
-  saveState();
+  // Firebase'e direkt yaz
+  set(ref(db, 'state/enler'), state.enler).catch(e=>console.error(e));
+  try { localStorage.setItem('ty-state', JSON.stringify({...state, drawings:{}, profilePhotos:{}})); } catch(e) {}
+  showSaving();
   closeModal('enler-modal');
   renderEnler();
 }
@@ -3757,7 +3865,9 @@ function enlerKaydet() {
 function enlerSil(who, index) {
   if(!confirm('Bu eni silmek istiyor musun?')) return;
   state.enler[who].splice(index,1);
-  saveState();
+  set(ref(db, 'state/enler'), state.enler).catch(e=>console.error(e));
+  try { localStorage.setItem('ty-state', JSON.stringify({...state, drawings:{}, profilePhotos:{}})); } catch(e) {}
+  showSaving();
   renderEnler();
 }
 
@@ -3766,7 +3876,9 @@ function enlerSil(who, index) {
 
 window.changeGorevMonth = changeGorevMonth;
 window.openGorevDay = openGorevDay;
-window.gorevAl = gorevAl;
+window.gorevSec = gorevSec;
+window.gorevAlOnayla = gorevAlOnayla;
+window.gorevVazgec = gorevVazgec;
 window.gorevTamamla = gorevTamamla;
 window.enlerEkle = enlerEkle;
 window.enlerKaydet = enlerKaydet;
@@ -3873,10 +3985,16 @@ loadState();
     <!-- Tülay Görevi -->
     <div style="background:linear-gradient(135deg,#fff0f5,#ffe8f2);border-radius:18px;padding:16px;margin-bottom:12px;border:1.5px solid var(--rose-light);">
       <div style="font-weight:700;color:var(--rose);margin-bottom:10px;font-size:0.9rem;">💕 Tülay'ın Görevi</div>
+      <div id="gorev-tulay-preview" style="display:none;background:white;border-radius:12px;padding:10px;margin-bottom:10px;border:1px dashed var(--rose-light);">
+        <div style="font-size:0.7rem;color:var(--text-light);margin-bottom:4px;">🎲 Öneri:</div>
+        <div id="gorev-tulay-preview-text" style="font-size:0.85rem;color:var(--text);font-style:italic;line-height:1.5;"></div>
+      </div>
       <div id="gorev-tulay-text" style="font-size:0.88rem;color:var(--text);line-height:1.6;min-height:40px;font-style:italic;margin-bottom:10px;">—</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button onclick="gorevAl('tulay')" style="background:var(--rose);color:white;border:none;border-radius:12px;padding:8px 16px;cursor:pointer;font-size:0.82rem;font-weight:700;">🎲 Görev Al</button>
-        <button id="gorev-tulay-done-btn" onclick="gorevTamamla('tulay')" style="display:none;background:#4CAF50;color:white;border:none;border-radius:12px;padding:8px 16px;cursor:pointer;font-size:0.82rem;font-weight:700;">✅ Tamamlandı!</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;" id="gorev-tulay-btns">
+        <button onclick="gorevSec('tulay')" id="btn-tulay-sec" style="background:var(--rose-light);color:var(--rose-dark);border:none;border-radius:12px;padding:8px 16px;cursor:pointer;font-size:0.82rem;font-weight:700;">🔀 Görev Seç</button>
+        <button onclick="gorevAlOnayla('tulay')" id="btn-tulay-al" style="display:none;background:var(--rose);color:white;border:none;border-radius:12px;padding:8px 16px;cursor:pointer;font-size:0.82rem;font-weight:700;">✔️ Görevi Al</button>
+        <button onclick="gorevVazgec('tulay')" id="btn-tulay-vazgec" style="display:none;background:#e0e0e0;color:#666;border:none;border-radius:12px;padding:8px 16px;cursor:pointer;font-size:0.82rem;font-weight:700;">❌ Görevden Vazgeç</button>
+        <button onclick="gorevTamamla('tulay')" id="btn-tulay-tamam" style="display:none;background:#4CAF50;color:white;border:none;border-radius:12px;padding:8px 16px;cursor:pointer;font-size:0.82rem;font-weight:700;">✅ Tamamlandı!</button>
       </div>
       <div id="gorev-tulay-status" style="font-size:0.75rem;color:#4CAF50;margin-top:6px;font-weight:700;"></div>
     </div>
@@ -3884,10 +4002,16 @@ loadState();
     <!-- Yiğit Görevi -->
     <div style="background:linear-gradient(135deg,#eef4ff,#e0ecff);border-radius:18px;padding:16px;border:1.5px solid #c0d8f0;">
       <div style="font-weight:700;color:#4a7ac0;margin-bottom:10px;font-size:0.9rem;">💙 Yiğit'in Görevi</div>
+      <div id="gorev-yigit-preview" style="display:none;background:white;border-radius:12px;padding:10px;margin-bottom:10px;border:1px dashed #c0d8f0;">
+        <div style="font-size:0.7rem;color:var(--text-light);margin-bottom:4px;">🎲 Öneri:</div>
+        <div id="gorev-yigit-preview-text" style="font-size:0.85rem;color:var(--text);font-style:italic;line-height:1.5;"></div>
+      </div>
       <div id="gorev-yigit-text" style="font-size:0.88rem;color:var(--text);line-height:1.6;min-height:40px;font-style:italic;margin-bottom:10px;">—</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button onclick="gorevAl('yigit')" style="background:#4a7ac0;color:white;border:none;border-radius:12px;padding:8px 16px;cursor:pointer;font-size:0.82rem;font-weight:700;">🎲 Görev Al</button>
-        <button id="gorev-yigit-done-btn" onclick="gorevTamamla('yigit')" style="display:none;background:#4CAF50;color:white;border:none;border-radius:12px;padding:8px 16px;cursor:pointer;font-size:0.82rem;font-weight:700;">✅ Tamamlandı!</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;" id="gorev-yigit-btns">
+        <button onclick="gorevSec('yigit')" id="btn-yigit-sec" style="background:#d0e4f8;color:#4a7ac0;border:none;border-radius:12px;padding:8px 16px;cursor:pointer;font-size:0.82rem;font-weight:700;">🔀 Görev Seç</button>
+        <button onclick="gorevAlOnayla('yigit')" id="btn-yigit-al" style="display:none;background:#4a7ac0;color:white;border:none;border-radius:12px;padding:8px 16px;cursor:pointer;font-size:0.82rem;font-weight:700;">✔️ Görevi Al</button>
+        <button onclick="gorevVazgec('yigit')" id="btn-yigit-vazgec" style="display:none;background:#e0e0e0;color:#666;border:none;border-radius:12px;padding:8px 16px;cursor:pointer;font-size:0.82rem;font-weight:700;">❌ Görevden Vazgeç</button>
+        <button onclick="gorevTamamla('yigit')" id="btn-yigit-tamam" style="display:none;background:#4CAF50;color:white;border:none;border-radius:12px;padding:8px 16px;cursor:pointer;font-size:0.82rem;font-weight:700;">✅ Tamamlandı!</button>
       </div>
       <div id="gorev-yigit-status" style="font-size:0.75rem;color:#4CAF50;margin-top:6px;font-weight:700;"></div>
     </div>
@@ -3898,21 +4022,24 @@ loadState();
 <!-- ======================== ENLER PAGE ======================== -->
 <div class="page" id="page-enler">
   <div class="page-title-bar">🏆 Enler Köşesi</div>
-  <p style="font-size:0.88rem;color:var(--text-light);margin-bottom:20px;">Kendinize ait "enler"i ekleyin! 💕</p>
+  <p style="font-size:0.88rem;color:var(--text-light);margin-bottom:20px;">Birbirinize özel en güzel "enler"inizi kaydedin! Her şey kalıcı olarak saklanır 💕</p>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-    <!-- Tülay -->
-    <div>
-      <div style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--rose-dark);margin-bottom:12px;text-align:center;">💕 Tülay</div>
-      <div id="enler-tulay-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
-      <button onclick="enlerEkle('tulay')" style="width:100%;background:var(--rose);color:white;border:none;border-radius:14px;padding:10px;cursor:pointer;font-size:0.85rem;font-weight:700;">+ Başlık Ekle</button>
+  <!-- Tülay Enler -->
+  <div style="background:linear-gradient(135deg,#fff0f5,#ffe8f2);border-radius:20px;padding:18px;margin-bottom:16px;border:1.5px solid var(--rose-light);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--rose-dark);font-weight:700;">💕 Tülay'ın Enleri</div>
+      <button onclick="enlerEkle('tulay')" style="background:var(--rose);color:white;border:none;border-radius:12px;padding:7px 14px;cursor:pointer;font-size:0.8rem;font-weight:700;">+ Ekle</button>
     </div>
-    <!-- Yiğit -->
-    <div>
-      <div style="font-family:'Playfair Display',serif;font-size:1rem;color:#4a7ac0;margin-bottom:12px;text-align:center;">💙 Yiğit</div>
-      <div id="enler-yigit-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
-      <button onclick="enlerEkle('yigit')" style="width:100%;background:#4a7ac0;color:white;border:none;border-radius:14px;padding:10px;cursor:pointer;font-size:0.85rem;font-weight:700;">+ Başlık Ekle</button>
+    <div id="enler-tulay-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+  </div>
+
+  <!-- Yiğit Enler -->
+  <div style="background:linear-gradient(135deg,#eef4ff,#e0ecff);border-radius:20px;padding:18px;border:1.5px solid #c0d8f0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:#4a7ac0;font-weight:700;">💙 Yiğit'in Enleri</div>
+      <button onclick="enlerEkle('yigit')" style="background:#4a7ac0;color:white;border:none;border-radius:12px;padding:7px 14px;cursor:pointer;font-size:0.8rem;font-weight:700;">+ Ekle</button>
     </div>
+    <div id="enler-yigit-list" style="display:flex;flex-direction:column;gap:10px;"></div>
   </div>
 </div>
 
