@@ -834,6 +834,66 @@ canvas.drawing-canvas {
 
   </div>
 
+  <!-- OYUN REKORLARI -->
+  <div id="home-rekorlar" style="background:linear-gradient(135deg,#0f0f1a,#1a1020);border-radius:24px;padding:22px 18px;margin-bottom:20px;border:1.5px solid #3a2a4a;box-shadow:0 8px 32px rgba(0,0,0,0.3),0 0 0 1px rgba(232,105,138,0.1);position:relative;overflow:hidden;">
+    <!-- Arka plan parlama -->
+    <div style="position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:200px;height:200px;background:radial-gradient(circle,rgba(232,105,138,0.12) 0%,transparent 70%);pointer-events:none;"></div>
+
+    <div style="text-align:center;margin-bottom:18px;position:relative;">
+      <div style="font-size:1.6rem;margin-bottom:4px;">🏆</div>
+      <div style="font-family:'Playfair Display',serif;font-size:1.2rem;color:white;font-weight:700;letter-spacing:1px;">Oyun Rekorları</div>
+      <div style="width:40px;height:2px;background:linear-gradient(90deg,#e8698a,#d4a853);margin:8px auto 0;border-radius:2px;"></div>
+    </div>
+
+    <!-- Engelli Yol -->
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <span style="font-size:1.1rem;">🚗</span>
+        <span style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:2px;text-transform:uppercase;">Engelli Yol</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div id="home-rek-araba-tulay-card" style="background:rgba(255,143,171,0.1);border:1px solid rgba(255,143,171,0.25);border-radius:16px;padding:14px;text-align:center;position:relative;transition:all 0.3s;">
+          <div style="font-size:0.68rem;color:rgba(255,143,171,0.7);font-weight:700;margin-bottom:4px;">💕 TÜLAY</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;color:#ff8fab;line-height:1;" id="home-rek-araba-tulay">0</div>
+          <div style="font-size:0.62rem;color:rgba(255,255,255,0.3);margin-top:3px;">saniye</div>
+          <div id="home-rek-araba-tulay-crown" style="display:none;position:absolute;top:-10px;right:-4px;font-size:1.2rem;">👑</div>
+        </div>
+        <div id="home-rek-araba-yigit-card" style="background:rgba(91,168,232,0.1);border:1px solid rgba(91,168,232,0.25);border-radius:16px;padding:14px;text-align:center;position:relative;transition:all 0.3s;">
+          <div style="font-size:0.68rem;color:rgba(91,168,232,0.7);font-weight:700;margin-bottom:4px;">💙 YİĞİT</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;color:#5ba8e8;line-height:1;" id="home-rek-araba-yigit">0</div>
+          <div style="font-size:0.62rem;color:rgba(255,255,255,0.3);margin-top:3px;">saniye</div>
+          <div id="home-rek-araba-yigit-crown" style="display:none;position:absolute;top:-10px;right:-4px;font-size:1.2rem;">👑</div>
+        </div>
+      </div>
+      <div id="home-rek-araba-taunt" style="text-align:center;font-size:0.75rem;color:rgba(255,255,255,0.45);margin-top:8px;font-style:italic;min-height:18px;"></div>
+    </div>
+
+    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent);margin-bottom:14px;"></div>
+
+    <!-- Snake -->
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <span style="font-size:1.1rem;">🐍</span>
+        <span style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:2px;text-transform:uppercase;">Snake</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div id="home-rek-snake-tulay-card" style="background:rgba(255,143,171,0.1);border:1px solid rgba(255,143,171,0.25);border-radius:16px;padding:14px;text-align:center;position:relative;transition:all 0.3s;">
+          <div style="font-size:0.68rem;color:rgba(255,143,171,0.7);font-weight:700;margin-bottom:4px;">💕 TÜLAY</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;color:#ff8fab;line-height:1;" id="home-rek-snake-tulay">0</div>
+          <div style="font-size:0.62rem;color:rgba(255,255,255,0.3);margin-top:3px;">puan</div>
+          <div id="home-rek-snake-tulay-crown" style="display:none;position:absolute;top:-10px;right:-4px;font-size:1.2rem;">👑</div>
+        </div>
+        <div id="home-rek-snake-yigit-card" style="background:rgba(91,168,232,0.1);border:1px solid rgba(91,168,232,0.25);border-radius:16px;padding:14px;text-align:center;position:relative;transition:all 0.3s;">
+          <div style="font-size:0.68rem;color:rgba(91,168,232,0.7);font-weight:700;margin-bottom:4px;">💙 YİĞİT</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;color:#5ba8e8;line-height:1;" id="home-rek-snake-yigit">0</div>
+          <div style="font-size:0.62rem;color:rgba(255,255,255,0.3);margin-top:3px;">puan</div>
+          <div id="home-rek-snake-yigit-crown" style="display:none;position:absolute;top:-10px;right:-4px;font-size:1.2rem;">👑</div>
+        </div>
+      </div>
+      <div id="home-rek-snake-taunt" style="text-align:center;font-size:0.75rem;color:rgba(255,255,255,0.45);margin-top:8px;font-style:italic;min-height:18px;"></div>
+    </div>
+  </div>
+
   <!-- YEMEK ÇARKI -->
   <div style="background:linear-gradient(135deg,#fff0f5,#fff8f0);border-radius:24px;padding:24px;margin-bottom:20px;border:1px solid var(--rose-light);box-shadow:var(--shadow);">
     <div style="font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--rose-dark);text-align:center;margin-bottom:6px;">🍽️ Ne Yesek Çarkı</div>
@@ -4003,6 +4063,7 @@ function oyunLoadScores() {
   get(ref(db, 'state/oyunScores2')).then(snap => {
     if(snap.exists()) oyunScores = snap.val();
     oyunRefreshRekorBoard();
+    if(typeof renderHomeRekorlar === 'function') renderHomeRekorlar();
   }).catch(()=>{});
 }
 
@@ -4071,6 +4132,7 @@ function oyunSaveScore(game, score) {
     set(ref(db, 'state/oyunScores2'), oyunScores).catch(e=>console.error(e));
     document.getElementById('oyun-area-rekor').textContent = score;
     oyunRefreshRekorBoard();
+    if(typeof renderHomeRekorlar === 'function') renderHomeRekorlar();
     return true; // new record
   }
   return false;
@@ -4301,6 +4363,183 @@ function arabaGameOver() {
 window.arabaInit = arabaInit;
 window.arabaStart = arabaStart;
 window.arabaLane = arabaLane;
+
+// ===== HOME REKORLAR =====
+const ARABA_TAUNTS = {
+  tulay_leads: [
+    "Tülay ileride, Yiğit direksiyonu sallıyor 😏",
+    "Tülay pedala basmış, Yiğit hâlâ park halinde 🚗💨",
+    "Tülay yolu bilir, Yiğit GPS'e bakar 🗺️",
+    "Tülay rekoru ezmiş, Yiğit kaskını takıyor hâlâ 😌",
+    "Tülay gaz veriyor, Yiğit 'dur biraz bekle' diyor 🙄",
+    "Tülay bence şoför lisansını Yiğit'ten aldı 🪪😂",
+    "Tülay hız yapıyor, Yiğit korna çalıyor uzaktan 📯",
+    "Tülay engelleri geçti, Yiğit hâlâ ilk engeldi 🚧😬",
+    "Tülay sürücü koltuğunda, Yiğit bagajda gibi 😂",
+    "Tülay rekoru kırdı, Yiğit 'şans eseri' diyor 🎲",
+    "Yiğit çok çalışmalı, Tülay arabayla çıkmış bile 🏎️",
+    "Tülay yolun kraliçesi, Yiğit tali yolda kalmış 👑",
+    "Tülay bu skoru kolayca yaptı, Yiğit ter döküyor 💦",
+    "Tülay gaz + fren + rekor — Yiğit hâlâ ısınıyor 🔥",
+    "Tülay önde, Yiğit 'benim arabam daha hızlıydı' diyor 🤡",
+    "Tülay geçti gitti, Yiğit tabelaya baktı kaldı 😅",
+    "Tülay'ı geçmek için Yiğit'in çok antrenman lazım 💪",
+    "Tülay rekorda, Yiğit ikinci — ama seviyorum diyor 🥺",
+    "Yiğit bu skoru görunce arabaya atladı sanırım 🚀",
+    "Tülay zaten hep böyle, Yiğit bunu biliyordu 😏"
+  ],
+  yigit_leads: [
+    "Yiğit hız yapmış, Tülay dur-kalk yapıyor 😏",
+    "Yiğit rekoru kaptı, Tülay dur sinyali veriyor 🚦",
+    "Yiğit ileride, Tülay ona el sallıyor 👋",
+    "Yiğit sürdü geçti, Tülay 'hile mi?' diye bakıyor 🧐",
+    "Yiğit gaz veriyor, Tülay hâlâ kemer takıyor 😅",
+    "Yiğit rekoru ezdi, Tülay 'tamam sen oynama artık' dedi 😤",
+    "Yiğit engelleri uçtu, Tülay engelde takıldı 🚧",
+    "Yiğit direksiyona hakim, Tülay GPS'e bağımlı 🗺️",
+    "Yiğit önde, Tülay 'ben de deneyeceğim' dedi 💪",
+    "Yiğit bu rekoru kırdığında Tülay şoke oldu 😲",
+    "Yiğit yolu bilir, Tülay tabelaları okur 📌",
+    "Yiğit rekorcu — Tülay bunu hazmedemiyor 😂",
+    "Yiğit bu kadar mı hızlıydı, Tülay yeni öğrendi 😳",
+    "Yiğit gaz bastı, Tülay 'bekle seni alayım' dedi 🚗",
+    "Yiğit rekoru kırdı, Tülay 'şans işte' dedi 🍀",
+    "Yiğit yarışı kazandı, Tülay kupa arıyor hâlâ 🏆",
+    "Yiğit bu skoru görünce Tülay derin nefes aldı 😤",
+    "Yiğit önde gidiyor, Tülay ona klakson çalıyor 📣",
+    "Yiğit iyi oynadı, ama Tülay biraz sonra geçecek 😇",
+    "Yiğit kazandı — ama Tülay zaten daha iyi biliyorsun 🙃"
+  ],
+  equal: [
+    "Berabere! İkisi de birbirini geçmeye çalışıyor 😅",
+    "Aynı skorda — kim önce geçecek? 👀",
+    "Eşitlik bozulacak, kim önce hareket eder? 🤔",
+    "İkisi de aynı noktada, rekabet kızışıyor! 🔥",
+    "Berabere — ama bu uzun sürmez! 😏",
+    "Aynı skor, farklı hırs — çok yakında biri geçer 🏎️"
+  ]
+};
+const SNAKE_TAUNTS = {
+  tulay_leads: [
+    "Tülay yılanı büyütmüş, Yiğit hâlâ sürünüyor 🐍😂",
+    "Tülay ileride! Yiğit kendi kuyruğuna bastı sanki 😬",
+    "Tülay'ın yılanı kocaman, Yiğit'inki hâlâ bebek 🐛",
+    "Tülay yılanı besledi, Yiğit yılanı kaybetti 😅",
+    "Tülay uzun uzun gidiyor, Yiğit kısa kesmek zorunda 😂",
+    "Tülay bu yılanı büyüttü, Yiğit hâlâ yem arıyor 🍎",
+    "Tülay snake ustası çıktı, Yiğit 'nasıl yaptın?' diye soruyor 🧐",
+    "Tülay yılana hükmetmiş, Yiğit yılanın peşinde 😹",
+    "Tülay rekorda! Yiğit 'bir daha denerim' dedi 🔄",
+    "Tülay'ın yılanı duvara çarpmaz, Yiğit'inki ilk köşede gider 💥",
+    "Tülay çok iyi, Yiğit bunu kabullenmekte zorlanıyor 😤",
+    "Tülay ustalaştı, Yiğit hâlâ acemi gibi oynuyor 🎮",
+    "Tülay'ın skoru Yiğit'i kıskandırıyor olmalı 👀",
+    "Tülay yılana bindi, Yiğit kendi ayağına bastı 😂",
+    "Tülay bu rekoru kolay kırdı, Yiğit ter döküyor 💦",
+    "Tülay ileride — Yiğit 'o yılan hile yapıyor' diyor 🐍",
+    "Tülay'ın snake'i büyüdü, Yiğit'inki hâlâ yavru 🐣",
+    "Tülay bu oyunu çok seviyor, Yiğit'ten belli ki 😏",
+    "Tülay maşallah, Yiğit 'bir daha, bir daha' diyor 😵",
+    "Tülay kazandı, Yiğit 'kontroller bozuk' dedi 🕹️"
+  ],
+  yigit_leads: [
+    "Yiğit rekorcu, Tülay 'bu adil değil' diyor 😤",
+    "Yiğit çok iyi, Tülay ona baktı kafası karıştı 😵",
+    "Yiğit önde gidiyor, Tülay tekrar oyna dedi 🔄",
+    "Yiğit yılanı büyüttü, Tülay hayretle izliyor 👀",
+    "Yiğit snake ustası, Tülay 'bunu nasıl yaptın?' dedi 😮",
+    "Yiğit rekoru kaptı, Tülay 'şans bu' dedi 🍀",
+    "Yiğit uzun uzun gidiyor, Tülay köşede sıkışıyor 🐍",
+    "Yiğit ilerliyor, Tülay 'dur biraz bak nasıl yapıyorsun' dedi 🧐",
+    "Yiğit bu skoru gördüğünde Tülay şoke oldu 😲",
+    "Yiğit yılanı doyurdu, Tülay yılanını kaybetti 😅",
+    "Yiğit önde, Tülay 'ben daha iyiyim ama bugün yorgunum' dedi 😴",
+    "Yiğit rekorcu — Tülay bunu hazmedemiyor 😂",
+    "Yiğit iyi oynadı, Tülay 'şimdi ben oynayacağım' dedi 💪",
+    "Yiğit yılanı büyüttü, Tülay 'bekle ben de denerim' dedi 🔁",
+    "Yiğit bu skoru ezdi, Tülay derin nefes alıyor 😤",
+    "Yiğit kazandı, Tülay 'telefonumu versen ben de yaparım' dedi 📱",
+    "Yiğit maşallah, Tülay 'aferin' dedi ama içten değil 😇",
+    "Yiğit'in yılanı kocaman, Tülay'ınki ufacık 🐛",
+    "Yiğit rekoru kırdı — Tülay'ın sırası yakında 👀",
+    "Yiğit önde, ama Tülay'ın gözü parlıyor 🔥"
+  ],
+  equal: [
+    "Berabere! Hangisi önce kaybeder bakalım 👀",
+    "Eşit skor — ikisi de çekişiyor! 🏆",
+    "Aynı seviyedeler — bu rekabet kızışacak 🔥",
+    "Berabere! İkisi de pes etmeyecek gibi 😤",
+    "Eşitlik var — ama bu uzun sürmez! 😏",
+    "Aynı skorda kalmak zor — kim önce bozar? 🤔"
+  ]
+};
+
+function renderHomeRekorlar() {
+  const s = oyunScores;
+  const tAraba = s.tulay?.araba || 0;
+  const yAraba = s.yigit?.araba || 0;
+  const tSnake = s.tulay?.snake || 0;
+  const ySnake = s.yigit?.snake || 0;
+
+  const el = id => document.getElementById(id);
+  if(!el('home-rek-araba-tulay')) return;
+
+  el('home-rek-araba-tulay').textContent = tAraba;
+  el('home-rek-araba-yigit').textContent = yAraba;
+  el('home-rek-snake-tulay').textContent = tSnake;
+  el('home-rek-snake-yigit').textContent = ySnake;
+
+  // Crowns + glow + taunts — Araba
+  const arabaTulayCard = el('home-rek-araba-tulay-card');
+  const arabaYigitCard = el('home-rek-araba-yigit-card');
+  el('home-rek-araba-tulay-crown').style.display = tAraba > yAraba ? 'block' : 'none';
+  el('home-rek-araba-yigit-crown').style.display = yAraba > tAraba ? 'block' : 'none';
+  if(tAraba > yAraba) {
+    arabaTulayCard.style.borderColor = 'rgba(255,143,171,0.7)';
+    arabaTulayCard.style.boxShadow = '0 0 16px rgba(255,143,171,0.25)';
+    arabaYigitCard.style.borderColor = 'rgba(91,168,232,0.2)';
+    arabaYigitCard.style.boxShadow = 'none';
+    const pool = ARABA_TAUNTS.tulay_leads;
+    el('home-rek-araba-taunt').textContent = pool[Math.floor(Math.random()*pool.length)];
+  } else if(yAraba > tAraba) {
+    arabaYigitCard.style.borderColor = 'rgba(91,168,232,0.7)';
+    arabaYigitCard.style.boxShadow = '0 0 16px rgba(91,168,232,0.25)';
+    arabaTulayCard.style.borderColor = 'rgba(255,143,171,0.2)';
+    arabaTulayCard.style.boxShadow = 'none';
+    const pool = ARABA_TAUNTS.yigit_leads;
+    el('home-rek-araba-taunt').textContent = pool[Math.floor(Math.random()*pool.length)];
+  } else {
+    arabaTulayCard.style.borderColor = 'rgba(255,143,171,0.25)'; arabaTulayCard.style.boxShadow = 'none';
+    arabaYigitCard.style.borderColor = 'rgba(91,168,232,0.25)'; arabaYigitCard.style.boxShadow = 'none';
+    el('home-rek-araba-taunt').textContent = tAraba > 0 ? ARABA_TAUNTS.equal[0] : '';
+  }
+
+  // Crowns + glow + taunts — Snake
+  const snakeTulayCard = el('home-rek-snake-tulay-card');
+  const snakeYigitCard = el('home-rek-snake-yigit-card');
+  el('home-rek-snake-tulay-crown').style.display = tSnake > ySnake ? 'block' : 'none';
+  el('home-rek-snake-yigit-crown').style.display = ySnake > tSnake ? 'block' : 'none';
+  if(tSnake > ySnake) {
+    snakeTulayCard.style.borderColor = 'rgba(255,143,171,0.7)';
+    snakeTulayCard.style.boxShadow = '0 0 16px rgba(255,143,171,0.25)';
+    snakeYigitCard.style.borderColor = 'rgba(91,168,232,0.2)';
+    snakeYigitCard.style.boxShadow = 'none';
+    const pool = SNAKE_TAUNTS.tulay_leads;
+    el('home-rek-snake-taunt').textContent = pool[Math.floor(Math.random()*pool.length)];
+  } else if(ySnake > tSnake) {
+    snakeYigitCard.style.borderColor = 'rgba(91,168,232,0.7)';
+    snakeYigitCard.style.boxShadow = '0 0 16px rgba(91,168,232,0.25)';
+    snakeTulayCard.style.borderColor = 'rgba(255,143,171,0.2)';
+    snakeTulayCard.style.boxShadow = 'none';
+    const pool = SNAKE_TAUNTS.yigit_leads;
+    el('home-rek-snake-taunt').textContent = pool[Math.floor(Math.random()*pool.length)];
+  } else {
+    snakeTulayCard.style.borderColor = 'rgba(255,143,171,0.25)'; snakeTulayCard.style.boxShadow = 'none';
+    snakeYigitCard.style.borderColor = 'rgba(91,168,232,0.25)'; snakeYigitCard.style.boxShadow = 'none';
+    el('home-rek-snake-taunt').textContent = tSnake > 0 ? SNAKE_TAUNTS.equal[0] : '';
+  }
+}
+window.renderHomeRekorlar = renderHomeRekorlar;
 
 // Keyboard for araba
 document.addEventListener('keydown', (e) => {
