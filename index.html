@@ -2773,7 +2773,7 @@ window.sendAIMessage = function() {
 
 // ===== MODAL UTILS =====
 function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function closeModal(id) { const el = document.getElementById(id); el.classList.remove('open'); el.style.display = ''; }
 document.querySelectorAll('.modal-backdrop').forEach(b=>b.addEventListener('click',e=>{if(e.target===b)b.classList.remove('open');}));
 
 // Initial renders
@@ -2858,7 +2858,7 @@ function openBucketAdd() {
   document.getElementById('bucket-lat').value = '';
   document.getElementById('bucket-lng').value = '';
   document.querySelectorAll('input[name="bucket-priority"]').forEach(r => r.checked = r.value === 'orta');
-  document.getElementById('bucket-modal').style.display = 'flex';
+  document.getElementById('bucket-modal').classList.add('open');
 }
 
 function saveBucketItem() {
@@ -2920,7 +2920,7 @@ function editBucketItem(id) {
   } else {
     document.getElementById('bucket-map-preview').style.display = 'none';
   }
-  document.getElementById('bucket-modal').style.display = 'flex';
+  document.getElementById('bucket-modal').classList.add('open');
 }
 
 function renderBucketList() {
